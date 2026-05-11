@@ -1,0 +1,381 @@
+<div class="comparison">
+
+  <!-- Chargement -->
+  @if (loading) {
+    <div class="comparison__loading">
+      <span class="comparison__spinner"></span>
+      <p>Chargement des offres…</p>
+    </div>
+  }
+
+  <!-- Erreur -->
+  @if (error && !loading) {
+    <div class="comparison__error">
+      <span>⚠️</span>
+      <p>{{ error }}</p>
+      <button (click)="loadData()">Réessayer</button>
+    </div>
+  }
+
+  @if (!loading && !error) {
+
+    <!-- Filtre par pays -->
+    @if (countryOptions.length > 2) {
+      <div class="comparison__country-filter">
+        <ui-filter-bar
+          label="Pays :"
+          [options]="countryOptions"
+          [active]="activeCountry"
+          (change)="onCountryChange($event)"
+        />
+      </div>
+    }
+
+    <!-- Stats -->
+    <div class="comparison__stats">
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ totalOperators }}</span>
+        <span class="comparison__stat-label">Opérateurs</span>
+      </div>
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ totalPlans }}</span>
+        <span class="comparison__stat-label">Forfaits</span>
+      </div>
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ totalFiltered }}</span>
+        <span class="comparison__stat-label">Affichés</span>
+      </div>
+    </div>
+
+    <!-- Bannière meilleure valeur -->
+    <app-best-value-banner [bestValue]="bestValue" />
+
+    <!-- Toolbar -->
+    <div class="comparison__toolbar">
+      <ui-search-input
+        placeholder="Rechercher un forfait…"
+        (search)="search = $event"
+      />
+      <ui-sort-select
+        [options]="sortOptions"
+        [active]="sortKey"
+        (change)="sortKey = $any($event)"
+      />
+      <!-- Sélecteur de vue -->
+      <div class="comparison__view-toggle">
+        <button
+          class="comparison__view-btn"
+          [class.comparison__view-btn--active]="viewMode === 'cards'"
+          (click)="viewMode = 'cards'"
+          title="Vue cartes"
+        >📋 Cartes</button>
+        <button
+          class="comparison__view-btn"
+          [class.comparison__view-btn--active]="viewMode === 'compare'"
+          (click)="viewMode = 'compare'"
+          title="Comparaison côte à côte"
+        >⚖️ Comparer</button>
+        <button
+          class="comparison__view-btn"
+          [class.comparison__view-btn--active]="viewMode === 'chart'"
+          (click)="viewMode = 'chart'"
+          title="Graphique"
+        >📊 Graphique</button>
+      </div>
+    </div>
+
+    <!-- Onglets par durée (filtre forfait) -->
+    <div class="comparison__tabs">
+      @for (tab of tabs; track tab.value) {
+        <button
+          class="comparison__tab"
+          [class.comparison__tab--active]="activeTab === tab.value"
+          (click)="activeTab = $any(tab.value)"
+        >
+          {{ tab.label }}
+          <span class="comparison__tab-count">{{ countByTab($any(tab.value)) }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Calculateur -->
+    <app-calculator [operators]="filteredOperators" />
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- VUE GRAPHIQUE                                                          -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode === 'chart') {
+      <ui-bar-chart
+        [bars]="chartBars"
+        title="Comparaison des prix (FCFA)"
+        unit="FCFA"
+      />
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- VUE COMPARAISON CÔTE À CÔTE                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode === 'compare') {
+
+      <!-- Sélecteurs d'opérateurs -->
+      <div class="compare-selectors">
+        <div class="compare-selectors__side">
+          <label class="compare-selectors__label">Opérateur gauche</label>
+          <div class="compare-selectors__btns">
+            @for (opt of compareOptions; track opt.value) {
+              <button
+                class="compare-selectors__btn"
+                [class.compare-selectors__btn--active]="compareLeft === opt.value"
+                (click)="compareLeft = opt.value"
+              >{{ opt.label }}</button>
+            }
+          </div>
+        </div>
+        <div class="compare-selectors__vs">VS</div>
+        <div class="compare-selectors__side">
+          <label class="compare-selectors__label">Opérateur droit</label>
+          <div class="compare-selectors__btns">
+            @for (opt of compareOptions; track opt.value) {
+              <button
+                class="compare-selectors__btn"
+                [class.compare-selectors__btn--active]="compareRight === opt.value"
+                (click)="compareRight = opt.value"
+              >{{ opt.label }}</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- En-têtes opérateurs -->
+      @if (leftOperator && rightOperator) {
+        <div class="compare-header">
+          <div class="compare-header__op" [style.border-bottom-color]="leftOperator.color">
+            <span class="compare-header__logo">{{ leftOperator.logo }}</span>
+            <span class="compare-header__name" [style.color]="leftOperator.color">
+              {{ leftOperator.name }}
+            </span>
+            @if (leftOperator.country) {
+              <span class="compare-header__country">{{ leftOperator.country }}</span>
+            }
+          </div>
+          <div class="compare-header__mid"></div>
+          <div class="compare-header__op" [style.border-bottom-color]="rightOperator.color">
+            <span class="compare-header__logo">{{ rightOperator.logo }}</span>
+            <span class="compare-header__name" [style.color]="rightOperator.color">
+              {{ rightOperator.name }}
+            </span>
+            @if (rightOperator.country) {
+              <span class="compare-header__country">{{ rightOperator.country }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Tableau de comparaison -->
+        @if (planPairs.length === 0) {
+          <div class="comparison__empty">
+            <span>🔍</span>
+            <p>Aucun forfait commun pour cette sélection.</p>
+          </div>
+        }
+
+        @for (pair of planPairs; track pair.data + pair.duration) {
+          <div class="compare-row" [class.compare-row--highlight]="pair.cheaperSide !== null">
+
+            <!-- Côté gauche -->
+            <div class="compare-row__cell compare-row__cell--left"
+              [class.compare-row__cell--winner]="pair.cheaperSide === 'left'"
+              [class.compare-row__cell--loser]="pair.cheaperSide === 'right'"
+              [class.compare-row__cell--empty]="!pair.left"
+            >
+              @if (pair.left) {
+                <div class="compare-card" [style.--op-color]="pair.left.operatorColor">
+                  @if (pair.cheaperSide === 'left') {
+                    <span class="compare-card__badge compare-card__badge--win">✅ Moins cher</span>
+                  } @else if (pair.cheaperSide === 'right') {
+                    <span class="compare-card__badge compare-card__badge--lose">❌ Plus cher</span>
+                  } @else if (pair.cheaperSide === 'equal') {
+                    <span class="compare-card__badge compare-card__badge--equal">➖ Même prix</span>
+                  }
+                  <div class="compare-card__data">
+                    <span class="compare-card__data-val">
+                      {{ pair.left.data >= 1000 ? (pair.left.data / 1000) : pair.left.data }}
+                    </span>
+                    <span class="compare-card__data-unit">
+                      {{ pair.left.data >= 1000 ? 'Go' : 'Mo' }}
+                    </span>
+                  </div>
+                  <div class="compare-card__price" [style.color]="pair.left.operatorColor">
+                    {{ pair.left.price | number:'1.0-0' }}
+                    <span class="compare-card__currency">FCFA</span>
+                  </div>
+                  <div class="compare-card__ratio">
+                    {{ (pair.left.data / pair.left.price).toFixed(2) }} Mo/FCFA
+                  </div>
+                  @if (pair.left.features.length > 0) {
+                    <ul class="compare-card__features">
+                      @for (f of pair.left.features; track f) {
+                        <li>✓ {{ f }}</li>
+                      }
+                    </ul>
+                  }
+                </div>
+              } @else {
+                <div class="compare-card compare-card--absent">
+                  <span>—</span>
+                  <small>Non disponible</small>
+                </div>
+              }
+            </div>
+
+            <!-- Colonne centrale : volume + durée + diff prix -->
+            <div class="compare-row__mid">
+              <span class="compare-row__vol">{{ formatData(pair.data) }}</span>
+              <span class="compare-row__dur"
+                [class.compare-row__dur--daily]="pair.duration === 'daily'"
+                [class.compare-row__dur--weekly]="pair.duration === 'weekly'"
+                [class.compare-row__dur--monthly]="pair.duration === 'monthly'"
+              >{{ durationLabel(pair.duration) }}</span>
+              @if (pair.left && pair.right) {
+                <span class="compare-row__diff">{{ priceDiff(pair) }}</span>
+              }
+            </div>
+
+            <!-- Côté droit -->
+            <div class="compare-row__cell compare-row__cell--right"
+              [class.compare-row__cell--winner]="pair.cheaperSide === 'right'"
+              [class.compare-row__cell--loser]="pair.cheaperSide === 'left'"
+              [class.compare-row__cell--empty]="!pair.right"
+            >
+              @if (pair.right) {
+                <div class="compare-card" [style.--op-color]="pair.right.operatorColor">
+                  @if (pair.cheaperSide === 'right') {
+                    <span class="compare-card__badge compare-card__badge--win">✅ Moins cher</span>
+                  } @else if (pair.cheaperSide === 'left') {
+                    <span class="compare-card__badge compare-card__badge--lose">❌ Plus cher</span>
+                  } @else if (pair.cheaperSide === 'equal') {
+                    <span class="compare-card__badge compare-card__badge--equal">➖ Même prix</span>
+                  }
+                  <div class="compare-card__data">
+                    <span class="compare-card__data-val">
+                      {{ pair.right.data >= 1000 ? (pair.right.data / 1000) : pair.right.data }}
+                    </span>
+                    <span class="compare-card__data-unit">
+                      {{ pair.right.data >= 1000 ? 'Go' : 'Mo' }}
+                    </span>
+                  </div>
+                  <div class="compare-card__price" [style.color]="pair.right.operatorColor">
+                    {{ pair.right.price | number:'1.0-0' }}
+                    <span class="compare-card__currency">FCFA</span>
+                  </div>
+                  <div class="compare-card__ratio">
+                    {{ (pair.right.data / pair.right.price).toFixed(2) }} Mo/FCFA
+                  </div>
+                  @if (pair.right.features.length > 0) {
+                    <ul class="compare-card__features">
+                      @for (f of pair.right.features; track f) {
+                        <li>✓ {{ f }}</li>
+                      }
+                    </ul>
+                  }
+                </div>
+              } @else {
+                <div class="compare-card compare-card--absent">
+                  <span>—</span>
+                  <small>Non disponible</small>
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+      }
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- VUE CARTES                                                             -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode === 'cards') {
+
+      @if (filteredPlans.length === 0) {
+        <div class="comparison__empty">
+          <span>🔍</span>
+          <p>Aucun forfait ne correspond à votre recherche.</p>
+        </div>
+      }
+
+      <!-- Un bloc par opérateur -->
+      @for (group of groupedByOperator; track group.op.id) {
+        <div class="comparison__group">
+
+          <!-- En-tête opérateur -->
+          <div class="comparison__group-header" [style.border-left-color]="group.op.color">
+            <span class="comparison__group-logo">{{ group.op.logo }}</span>
+            <span class="comparison__group-name" [style.color]="group.op.color">
+              {{ group.op.name }}
+            </span>
+            @if (group.op.country) {
+              <span class="comparison__group-country">{{ group.op.country }}</span>
+            }
+            <span class="comparison__group-count">{{ group.plans.length }} forfaits</span>
+          </div>
+
+          <!-- Grille de cartes -->
+          <div class="comparison__grid">
+            @for (plan of group.plans; track plan.id) {
+              <div class="plan-card" [style.--op-color]="plan.operatorColor">
+
+                <!-- Durée badge -->
+                <span class="plan-card__duration"
+                  [class.plan-card__duration--daily]="plan.duration === 'daily'"
+                  [class.plan-card__duration--weekly]="plan.duration === 'weekly'"
+                  [class.plan-card__duration--monthly]="plan.duration === 'monthly'"
+                >
+                  {{ durationLabel(plan.duration) }}
+                </span>
+
+                <!-- Volume data (gros) -->
+                <div class="plan-card__data">
+                  <span class="plan-card__data-value">
+                    {{ plan.data >= 1000 ? (plan.data % 1000 === 0 ? plan.data/1000 : (plan.data/1000).toFixed(1)) : plan.data }}
+                  </span>
+                  <span class="plan-card__data-unit">
+                    {{ plan.data >= 1000 ? 'Go' : 'Mo' }}
+                  </span>
+                </div>
+
+                <!-- Prix -->
+                <div class="plan-card__price">
+                  <span class="plan-card__price-amount">{{ plan.price | number:'1.0-0' }}</span>
+                  <span class="plan-card__price-currency">FCFA</span>
+                </div>
+
+                <!-- Features -->
+                @if (plan.features.length > 0) {
+                  <ul class="plan-card__features">
+                    @for (f of plan.features; track f) {
+                      <li>✓ {{ f }}</li>
+                    }
+                  </ul>
+                }
+
+                <!-- Ratio valeur -->
+                <div class="plan-card__ratio">
+                  {{ (plan.data / plan.price).toFixed(2) }} Mo/FCFA
+                </div>
+
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+
+    }
+
+    <p class="comparison__disclaimer">
+      * Données scrapées automatiquement. Vérifiez sur les sites officiels des opérateurs.
+    </p>
+
+  }
+
+</div>

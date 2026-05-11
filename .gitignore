@@ -1,0 +1,19 @@
+# Dépendances
+node_modules/
+
+# Build
+dist/
+
+# Cache Angular
+.angular/
+
+# Environnement
+.env
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*

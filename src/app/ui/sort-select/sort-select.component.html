@@ -1,0 +1,10 @@
+<div class="sort">
+  @if (label) {
+    <span class="sort__label">{{ label }}</span>
+  }
+  <select class="sort__select" [(ngModel)]="active" (ngModelChange)="change.emit($event)">
+    @for (opt of options; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+</div>

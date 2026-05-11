@@ -1,0 +1,59 @@
+<div class="calc">
+  <h3 class="calc__title">🧮 Quel forfait me convient ?</h3>
+  <p class="calc__sub">Estimez votre consommation mensuelle</p>
+
+  <div class="calc__form">
+    <div class="calc__slider-row">
+      <input
+        type="range"
+        class="calc__slider"
+        [min]="sliderMin"
+        [max]="sliderMax"
+        [step]="sliderStep"
+        [(ngModel)]="monthlyMo"
+        (ngModelChange)="compute()"
+      />
+      <span class="calc__value">{{ displayValue }}</span>
+    </div>
+
+    @if (presets.length > 0) {
+      <div class="calc__presets">
+        @for (p of presets; track p.mo) {
+          <button
+            class="calc__preset"
+            [class.calc__preset--active]="monthlyMo === p.mo"
+            (click)="setPreset(p.mo)"
+          >
+            {{ p.label }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (result) {
+    <div class="calc__result" [style.border-left-color]="result.operatorColor">
+      <span class="calc__result-tag">Recommandation</span>
+      <p class="calc__result-op" [style.color]="result.operatorColor">
+        {{ result.operatorName }}
+      </p>
+      <p class="calc__result-plan">{{ result.plan.name }}</p>
+      <p class="calc__result-price">
+        {{ result.plan.price | number:'1.0-0' }} FCFA
+        <span>
+          · {{ result.plan.data >= 1000
+                ? (result.plan.data / 1000) + ' Go'
+                : result.plan.data + ' Mo' }}
+          / 30 jours
+        </span>
+      </p>
+      <p class="calc__result-ratio">
+        {{ (result.plan.data / result.plan.price).toFixed(2) }} Mo par FCFA
+      </p>
+    </div>
+  } @else {
+    <p class="calc__no-result">
+      Aucun forfait mensuel disponible pour cette consommation.
+    </p>
+  }
+</div>

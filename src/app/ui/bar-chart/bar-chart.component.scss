@@ -1,0 +1,131 @@
+.chart {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  &__count {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  // ─── Légende ───────────────────────────────────────────────────────────────
+  &__legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__legend-label {
+    font-size: 0.78rem;
+    color: #475569;
+    font-weight: 500;
+  }
+
+  // ─── Barres ────────────────────────────────────────────────────────────────
+  &__bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 160px 1fr 40px;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  &__label {
+    font-size: 0.76rem;
+    color: #475569;
+    font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__track {
+    background: #f1f5f9;
+    border-radius: 6px;
+    height: 26px;
+    overflow: visible;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__fill {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    min-width: 4px;
+    transition: width 0.5s ease;
+    position: relative;
+  }
+
+  &__value {
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+
+    &--inside {
+      color: #fff;
+      padding: 0 0.4rem;
+    }
+
+    &--outside {
+      color: #475569;
+      padding-left: 0.4rem;
+      position: absolute;
+      left: 100%;
+    }
+  }
+
+  &__sublabel {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  &__empty {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+  }
+}

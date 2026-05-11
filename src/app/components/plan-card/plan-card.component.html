@@ -1,0 +1,58 @@
+@if (plan) {
+  <div class="card" [style.border-top-color]="operatorColor">
+
+    <!-- Badge comparaison -->
+    <span class="badge" [ngClass]="badgeClass">{{ badgeLabel }}</span>
+
+    <!-- Nom du forfait -->
+    <h3 class="card__name">{{ plan.name }}</h3>
+
+    <!-- Prix -->
+    <div class="card__price-block">
+      @if (plan.originalPrice) {
+        <span class="card__original-price">{{ plan.originalPrice | number:'1.0-0' }} F</span>
+      }
+      <span class="card__price" [style.color]="operatorColor">
+        {{ plan.price | number:'1.0-0' }}
+      </span>
+      <span class="card__currency">FCFA</span>
+    </div>
+
+    <!-- Data -->
+    <div class="card__data-block">
+      <span class="card__data-value">
+        {{ plan.data >= 1000 ? (plan.data / 1000) : plan.data }}
+      </span>
+      <span class="card__data-unit">
+        {{ plan.data >= 1000 ? 'Go' : 'Mo' }}
+      </span>
+      <span class="card__duration-badge">
+        {{ plan.duration === 'daily' ? '24h'
+         : plan.duration === 'weekly' ? '7 jours'
+         : '30 jours' }}
+      </span>
+    </div>
+
+    <!-- Features (volume brut, validité, bonus) -->
+    @if (plan.features.length > 0) {
+      <ul class="card__features">
+        @for (feature of plan.features; track feature) {
+          <li class="card__feature-item">
+            <span class="card__check">✓</span> {{ feature }}
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- Valeur Mo/FCFA -->
+    <div class="card__ratio">
+      {{ ratio }} Mo / FCFA
+    </div>
+
+  </div>
+} @else {
+  <div class="card card--empty">
+    <span>—</span>
+    <small>Non disponible</small>
+  </div>
+}

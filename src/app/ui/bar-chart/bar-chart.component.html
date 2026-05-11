@@ -1,0 +1,52 @@
+<div class="chart">
+  @if (title) {
+    <div class="chart__header">
+      <h3 class="chart__title">{{ title }}</h3>
+      <span class="chart__count">{{ bars.length }} forfaits</span>
+    </div>
+  }
+
+  @if (legend.length > 0) {
+    <div class="chart__legend">
+      @for (item of legend; track item.label) {
+        <div class="chart__legend-item">
+          <span class="chart__legend-dot" [style.background]="item.color"></span>
+          <span class="chart__legend-label">{{ item.label }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="chart__bars">
+    @for (bar of bars; track bar.label) {
+      <div class="chart__row">
+        <span class="chart__label" [title]="bar.label">{{ bar.label }}</span>
+        <div class="chart__track">
+          <div
+            class="chart__fill"
+            [style.width.%]="getPercent(bar.value)"
+            [style.background]="bar.color"
+          >
+            @if (getPercent(bar.value) > 20) {
+              <span class="chart__value chart__value--inside">
+                {{ bar.value | number:'1.0-0' }} {{ unit }}
+              </span>
+            }
+          </div>
+          @if (getPercent(bar.value) <= 20) {
+            <span class="chart__value chart__value--outside">
+              {{ bar.value | number:'1.0-0' }} {{ unit }}
+            </span>
+          }
+        </div>
+        @if (bar.sublabel) {
+          <span class="chart__sublabel">{{ bar.sublabel }}</span>
+        }
+      </div>
+    }
+
+    @if (bars.length === 0) {
+      <p class="chart__empty">Aucune donnée à afficher pour cette durée.</p>
+    }
+  </div>
+</div>

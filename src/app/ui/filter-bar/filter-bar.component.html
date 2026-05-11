@@ -1,0 +1,14 @@
+<div class="filter-bar">
+  @if (label) {
+    <span class="filter-bar__label">{{ label }}</span>
+  }
+  @for (opt of options; track opt.value) {
+    <button
+      class="filter-bar__btn"
+      [class.filter-bar__btn--active]="active === opt.value"
+      (click)="change.emit(opt.value)"
+    >
+      {{ opt.label }}
+    </button>
+  }
+</div>

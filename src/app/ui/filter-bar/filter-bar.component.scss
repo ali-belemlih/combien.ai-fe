@@ -1,0 +1,35 @@
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  &__label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-right: 0.25rem;
+  }
+
+  &__btn {
+    border: none;
+    border-radius: 20px;
+    padding: 5px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #e2e8f0;
+    color: #475569;
+    transition: background 0.2s, color 0.2s;
+    font-family: inherit;
+
+    &--active {
+      background: #0f3460;
+      color: #fff;
+    }
+
+    &:hover:not(.filter-bar__btn--active) {
+      background: #cbd5e1;
+    }
+  }
+}

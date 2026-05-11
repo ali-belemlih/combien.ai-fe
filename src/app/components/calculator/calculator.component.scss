@@ -1,0 +1,125 @@
+.calc {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+  }
+
+  &__sub {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__slider-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__slider {
+    flex: 1;
+    accent-color: #0f3460;
+    cursor: pointer;
+  }
+
+  &__value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f3460;
+    min-width: 75px;
+    text-align: right;
+  }
+
+  &__presets {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  &__preset {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 3px 11px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f8fafc;
+    color: #475569;
+    font-family: inherit;
+    transition: all 0.2s;
+
+    &:hover,
+    &--active {
+      background: #0f3460;
+      color: #fff;
+      border-color: #0f3460;
+    }
+  }
+
+  &__result {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid;
+    border-radius: 0 8px 8px 0;
+    background: #f8fafc;
+
+    &-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+
+    &-op {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0.2rem 0 0.1rem;
+    }
+
+    &-plan {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    &-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 0.25rem;
+
+      span {
+        font-size: 0.78rem;
+        font-weight: 400;
+        color: #94a3b8;
+      }
+    }
+
+    &-ratio {
+      font-size: 0.72rem;
+      color: #22c55e;
+      font-weight: 600;
+      margin-top: 0.2rem;
+    }
+  }
+
+  &__no-result {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-style: italic;
+  }
+}

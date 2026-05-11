@@ -1,0 +1,256 @@
+<div class="quiz">
+
+  <!-- ─── Chargement ─────────────────────────────────────────────────────────── -->
+  @if (loading) {
+    <div class="quiz__loading">
+      <div class="quiz__spinner"></div>
+      <p>Chargement des forfaits…</p>
+    </div>
+  }
+
+  <!-- ─── Erreur ─────────────────────────────────────────────────────────────── -->
+  @if (error && !loading) {
+    <div class="quiz__error">
+      <span class="quiz__error-icon">⚠️</span>
+      <p>{{ error }}</p>
+      <button class="btn btn--primary" (click)="ngOnInit()">Réessayer</button>
+    </div>
+  }
+
+  <!-- ─── Quiz ───────────────────────────────────────────────────────────────── -->
+  @if (!loading && !error) {
+    <div class="quiz__card">
+
+      <!-- En-tête avec progression -->
+      <div class="quiz__header">
+        <div class="quiz__progress-bar">
+          <div class="quiz__progress-fill" [style.width.%]="progress"></div>
+        </div>
+        <div class="quiz__step-info">
+          <span class="quiz__step-count">Étape {{ currentStep }} / {{ totalSteps }}</span>
+          <span class="quiz__step-icon">{{ currentStepData.icon }}</span>
+        </div>
+        <h2 class="quiz__title">{{ currentStepData.title }}</h2>
+        <p class="quiz__subtitle">{{ currentStepData.subtitle }}</p>
+      </div>
+
+      <!-- ─── Étape 1 : Pays ──────────────────────────────────────────────────── -->
+      @if (currentStep === 1) {
+        <div class="quiz__body">
+          <div class="quiz__options quiz__options--grid">
+            <button
+              class="quiz__option"
+              [class.quiz__option--active]="answers.country === 'all'"
+              (click)="selectCountry('all')"
+            >
+              <span class="quiz__option-icon">🌍</span>
+              <span class="quiz__option-label">Tous les pays</span>
+            </button>
+            @for (country of availableCountries; track country) {
+              <button
+                class="quiz__option"
+                [class.quiz__option--active]="answers.country === country"
+                (click)="selectCountry(country)"
+              >
+                <span class="quiz__option-icon">📍</span>
+                <span class="quiz__option-label">{{ country }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ─── Étape 2 : Durée ─────────────────────────────────────────────────── -->
+      @if (currentStep === 2) {
+        <div class="quiz__body">
+          <div class="quiz__options quiz__options--grid">
+            @for (opt of durationOptions; track opt.value) {
+              <button
+                class="quiz__option quiz__option--tall"
+                [class.quiz__option--active]="answers.duration === opt.value"
+                (click)="selectDuration(opt.value)"
+              >
+                <span class="quiz__option-icon">{{ opt.icon }}</span>
+                <span class="quiz__option-label">{{ opt.label }}</span>
+                <span class="quiz__option-desc">{{ opt.desc }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ─── Étape 3 : Budget ────────────────────────────────────────────────── -->
+      @if (currentStep === 3) {
+        <div class="quiz__body">
+          <div class="quiz__options quiz__options--list">
+            @for (opt of budgetOptions; track opt.label) {
+              <button
+                class="quiz__option quiz__option--row"
+                [class.quiz__option--active]="answers.budget === opt.value"
+                (click)="selectBudget(opt.value)"
+              >
+                <div class="quiz__option-content">
+                  <span class="quiz__option-label">{{ opt.label }}</span>
+                  <span class="quiz__option-desc">{{ opt.description }}</span>
+                </div>
+                @if (answers.budget === opt.value) {
+                  <span class="quiz__option-check">✓</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ─── Étape 4 : Usages ────────────────────────────────────────────────── -->
+      @if (currentStep === 4) {
+        <div class="quiz__body">
+          <p class="quiz__hint">Sélectionnez un ou plusieurs usages</p>
+          <div class="quiz__options quiz__options--grid">
+            @for (opt of usageOptions; track opt.value) {
+              <button
+                class="quiz__option quiz__option--tall"
+                [class.quiz__option--active]="isUsageSelected(opt.value)"
+                (click)="toggleUsage(opt.value)"
+              >
+                <span class="quiz__option-icon">{{ opt.icon }}</span>
+                <span class="quiz__option-label">{{ opt.label }}</span>
+                <span class="quiz__option-desc">~{{ opt.dataPerDay }} Mo/jour</span>
+                @if (isUsageSelected(opt.value)) {
+                  <span class="quiz__option-badge">✓</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ─── Étape 5 : Résultats ─────────────────────────────────────────────── -->
+      @if (currentStep === 5) {
+        <div class="quiz__body quiz__body--results">
+
+          <!-- Résumé des réponses -->
+          <div class="quiz__summary">
+            <div class="quiz__summary-item">
+              <span class="quiz__summary-icon">🌍</span>
+              <span>{{ answers.country === 'all' ? 'Tous les pays' : answers.country }}</span>
+            </div>
+            <div class="quiz__summary-item">
+              <span class="quiz__summary-icon">📅</span>
+              <span>{{ answers.duration === 'any' ? 'Toutes durées' : answers.duration }}</span>
+            </div>
+            <div class="quiz__summary-item">
+              <span class="quiz__summary-icon">💰</span>
+              <span>{{ selectedBudgetLabel }}</span>
+            </div>
+            <div class="quiz__summary-item">
+              <span class="quiz__summary-icon">📊</span>
+              <span>~{{ estimatedDataLabel }} estimés</span>
+            </div>
+          </div>
+
+          <!-- Résultats -->
+          @if (recommendations.length === 0) {
+            <div class="quiz__no-results">
+              <span class="quiz__no-results-icon">😕</span>
+              <h3>Aucun forfait trouvé</h3>
+              <p>Essayez d'élargir votre budget ou de changer vos critères.</p>
+              <button class="btn btn--outline" (click)="restart()">Recommencer</button>
+            </div>
+          } @else {
+            <div class="quiz__results-header">
+              <h3 class="quiz__results-title">
+                🎯 {{ recommendations.length }} forfait{{ recommendations.length > 1 ? 's' : '' }} recommandé{{ recommendations.length > 1 ? 's' : '' }}
+              </h3>
+            </div>
+
+            <div class="quiz__results-grid">
+              @for (rec of recommendations; track rec.plan.id; let i = $index) {
+                <div class="result-card" [style.--op-color]="rec.operator.color">
+                  @if (i === 0) {
+                    <div class="result-card__badge">⭐ Meilleur choix</div>
+                  }
+
+                  <!-- En-tête opérateur -->
+                  <div class="result-card__header">
+                    <span class="result-card__logo">{{ rec.operator.logo }}</span>
+                    <div>
+                      <p class="result-card__op-name" [style.color]="rec.operator.color">
+                        {{ rec.operator.name }}
+                      </p>
+                      <p class="result-card__plan-name">{{ rec.plan.name }}</p>
+                    </div>
+                    <div class="result-card__score" [ngClass]="getScoreClass(rec.score)">
+                      {{ getScoreLabel(rec.score) }}
+                    </div>
+                  </div>
+
+                  <!-- Données principales -->
+                  <div class="result-card__stats">
+                    <div class="result-card__stat">
+                      <span class="result-card__stat-value">{{ formatData(rec.plan.data) }}</span>
+                      <span class="result-card__stat-label">Data</span>
+                    </div>
+                    <div class="result-card__stat result-card__stat--price">
+                      <span class="result-card__stat-value">{{ formatPrice(rec.plan.price) }}</span>
+                      @if (rec.plan.originalPrice) {
+                        <span class="result-card__original-price">{{ formatPrice(rec.plan.originalPrice) }}</span>
+                      }
+                      <span class="result-card__stat-label">Prix</span>
+                    </div>
+                    <div class="result-card__stat">
+                      <span class="result-card__stat-value">{{ rec.plan.network }}</span>
+                      <span class="result-card__stat-label">Réseau</span>
+                    </div>
+                  </div>
+
+                  <!-- Raisons de la recommandation -->
+                  <ul class="result-card__reasons">
+                    @for (reason of rec.matchReasons; track reason) {
+                      <li>{{ reason }}</li>
+                    }
+                  </ul>
+
+                  <!-- Badges -->
+                  <div class="result-card__tags">
+                    @if (rec.plan.promo) {
+                      <span class="tag tag--promo">Promo</span>
+                    }
+                    <span class="tag tag--duration">{{ rec.plan.duration }}</span>
+                    @if (rec.plan.calls !== 'Non inclus') {
+                      <span class="tag tag--calls">📞 Appels</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ─── Navigation ──────────────────────────────────────────────────────── -->
+      <div class="quiz__footer">
+        @if (currentStep > 1 && currentStep < 5) {
+          <button class="btn btn--outline" (click)="prev()">← Retour</button>
+        }
+        @if (currentStep === 5) {
+          <button class="btn btn--outline" (click)="restart()">🔄 Recommencer</button>
+          <button class="btn btn--secondary" (click)="goToComparison()">📊 Voir tous les forfaits</button>
+        } @else {
+          <button
+            class="btn btn--primary"
+            [disabled]="!canGoNext"
+            (click)="next()"
+          >
+            @if (currentStep === 4) {
+              Voir mes résultats 🎯
+            } @else {
+              Suivant →
+            }
+          </button>
+        }
+      </div>
+
+    </div>
+  }
+</div>
