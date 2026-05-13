@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { DropdownModule } from 'primeng/dropdown';
 import { SortOption } from '../../models/operator.model';
 
 /**
@@ -11,7 +12,7 @@ import { SortOption } from '../../models/operator.model';
 @Component({
   selector: 'ui-sort-select',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DropdownModule],
   templateUrl: './sort-select.component.html',
   styleUrl: './sort-select.component.scss',
 })

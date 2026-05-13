@@ -1,11 +1,13 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
 import { Plan } from '../../models/operator.model';
 
 @Component({
   selector: 'app-plan-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CardModule, TagModule],
   templateUrl: './plan-card.component.html',
   styleUrl: './plan-card.component.scss',
 })

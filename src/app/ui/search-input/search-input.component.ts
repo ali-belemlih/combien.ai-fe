@@ -1,5 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
 
 /**
  * Champ de recherche générique avec debounce intégré.
@@ -9,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'ui-search-input',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, InputTextModule, ButtonModule],
   templateUrl: './search-input.component.html',
   styleUrl: './search-input.component.scss',
 })

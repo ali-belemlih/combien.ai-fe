@@ -2,6 +2,11 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { DividerModule } from 'primeng/divider';
 
 import {
   QuestionnaireAnswers,
@@ -26,7 +31,7 @@ export interface RecommendedPlan {
 @Component({
   selector: 'app-questionnaire',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TagModule, ProgressBarModule, DividerModule],
   templateUrl: './questionnaire.component.html',
   styleUrl: './questionnaire.component.scss',
 })

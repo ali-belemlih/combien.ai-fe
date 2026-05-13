@@ -1,0 +1,476 @@
+// ─── Variables ────────────────────────────────────────────────────────────────
+$bg:        #0f1117;
+$surface:   #1a1d27;
+$surface2:  #22263a;
+$border:    #2e3250;
+$primary:   #6c63ff;
+$primary-h: #5a52e0;
+$success:   #22c55e;
+$danger:    #ef4444;
+$warning:   #f59e0b;
+$info:      #3b82f6;
+$text:      #e2e8f0;
+$text-muted:#94a3b8;
+$radius:    10px;
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
+.admin {
+  min-height: 100vh;
+  background: $bg;
+  color: $text;
+  padding: 2rem;
+  font-family: 'Inter', system-ui, sans-serif;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid $border;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  &__back {
+    color: $text-muted;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+    white-space: nowrap;
+    &:hover { color: $primary; }
+  }
+
+  &__title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, $primary, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  &__subtitle {
+    color: $text-muted;
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0;
+  }
+
+  &__header-stats {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  &__stat {
+    text-align: center;
+    padding: 0.75rem 1.25rem;
+    background: $surface;
+    border-radius: $radius;
+    border: 1px solid $border;
+
+    &--running {
+      border-color: $warning;
+      background: rgba($warning, 0.1);
+    }
+  }
+
+  &__stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $primary;
+  }
+
+  &__stat-label {
+    font-size: 0.75rem;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+// ─── Onglets ──────────────────────────────────────────────────────────────────
+.admin__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid $border;
+  padding-bottom: 0;
+}
+
+.admin__tab {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: $text-muted;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: -1px;
+
+  &:hover { color: $text; }
+
+  &--active {
+    color: $primary;
+    border-bottom-color: $primary;
+  }
+
+  &-count {
+    background: $surface2;
+    color: $text-muted;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+  }
+}
+
+// ─── Panel ────────────────────────────────────────────────────────────────────
+.admin__panel {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 1.5rem;
+
+  &-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &-subtitle {
+    font-size: 0.9rem;
+    color: $text-muted;
+    font-weight: 400;
+  }
+}
+
+.admin__toolbar-btns {
+  display: flex;
+  gap: 0.75rem;
+}
+
+// ─── Formulaire ───────────────────────────────────────────────────────────────
+.admin__form-card {
+  background: $surface2;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  &--scrape {
+    border-color: rgba($primary, 0.4);
+    background: rgba($primary, 0.05);
+  }
+}
+
+.admin__form-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+}
+
+.admin__form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.admin__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 200px;
+
+  &--wide { flex: 2; }
+}
+
+.admin__label {
+  font-size: 0.8rem;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin__input,
+.admin__select {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 6px;
+  color: $text;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+
+  &:focus { border-color: $primary; }
+  &::placeholder { color: $text-muted; }
+
+  option { background: $surface; }
+}
+
+.admin__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: $text-muted;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: $primary;
+    cursor: pointer;
+  }
+}
+
+.admin__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+.admin__table-wrap {
+  overflow-x: auto;
+  border-radius: $radius;
+  border: 1px solid $border;
+}
+
+.admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th {
+    background: $surface2;
+    color: $text-muted;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid $border;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba($border, 0.5);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba($primary, 0.04); }
+}
+
+.admin__row--inactive td {
+  opacity: 0.5;
+}
+
+.admin__op-name {
+  font-weight: 600;
+  color: $text;
+}
+
+.admin__url {
+  color: $info;
+  text-decoration: none;
+  font-size: 0.8rem;
+  word-break: break-all;
+  &:hover { text-decoration: underline; }
+}
+
+.admin__id {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: $text-muted;
+  background: $surface2;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.admin__date {
+  font-size: 0.8rem;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.admin__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.admin__count {
+  font-size: 0.85rem;
+  color: $text-muted;
+  margin: 0 0 1rem;
+}
+
+// ─── États ────────────────────────────────────────────────────────────────────
+.admin__loading,
+.admin__empty {
+  text-align: center;
+  padding: 3rem;
+  color: $text-muted;
+  font-size: 0.95rem;
+
+  p { margin: 0.25rem 0; }
+}
+
+.admin__error {
+  background: rgba($danger, 0.1);
+  border: 1px solid rgba($danger, 0.3);
+  border-radius: 6px;
+  color: #fca5a5;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.admin__success {
+  background: rgba($success, 0.1);
+  border: 1px solid rgba($success, 0.3);
+  border-radius: 6px;
+  color: #86efac;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &--success  { background: rgba($success, 0.15); color: #86efac; }
+  &--failed   { background: rgba($danger, 0.15);  color: #fca5a5; }
+  &--running  { background: rgba($warning, 0.15); color: #fde68a; animation: pulse 1.5s infinite; }
+  &--pending  { background: rgba($text-muted, 0.15); color: $text-muted; }
+  &--info     { background: rgba($info, 0.15);    color: #93c5fd; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+// ─── Boutons ──────────────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &--primary {
+    background: $primary;
+    color: #fff;
+    &:hover:not(:disabled) { background: $primary-h; }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $text-muted;
+    border: 1px solid $border;
+    &:hover:not(:disabled) { color: $text; border-color: $text-muted; }
+  }
+
+  &--danger {
+    background: transparent;
+    color: #fca5a5;
+    border: 1px solid rgba($danger, 0.3);
+    &:hover:not(:disabled) { background: rgba($danger, 0.1); }
+  }
+
+  &--sm {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  &--launch {
+    padding: 0.75rem 1.75rem;
+    font-size: 1rem;
+  }
+}
+
+// ─── Spinner ──────────────────────────────────────────────────────────────────
+.admin__spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .admin {
+    padding: 1rem;
+  }
+
+  .admin__header {
+    flex-direction: column;
+  }
+
+  .admin__header-stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .admin__tabs {
+    overflow-x: auto;
+  }
+
+  .admin__form-row {
+    flex-direction: column;
+  }
+}

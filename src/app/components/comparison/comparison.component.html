@@ -3,7 +3,7 @@
   <!-- Chargement -->
   @if (loading) {
     <div class="comparison__loading">
-      <span class="comparison__spinner"></span>
+      <i class="pi pi-spin pi-spinner comparison__spinner"></i>
       <p>Chargement des offres…</p>
     </div>
   }
@@ -11,9 +11,9 @@
   <!-- Erreur -->
   @if (error && !loading) {
     <div class="comparison__error">
-      <span>⚠️</span>
+      <i class="pi pi-exclamation-triangle"></i>
       <p>{{ error }}</p>
-      <button (click)="loadData()">Réessayer</button>
+      <button pButton label="Réessayer" icon="pi pi-refresh" (click)="loadData()"></button>
     </div>
   }
 
@@ -64,32 +64,39 @@
       <!-- Sélecteur de vue -->
       <div class="comparison__view-toggle">
         <button
-          class="comparison__view-btn"
-          [class.comparison__view-btn--active]="viewMode === 'cards'"
+          pButton
+          type="button"
+          icon="pi pi-th-large"
+          label="Cartes"
+          [class]="viewMode === 'cards' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
           (click)="viewMode = 'cards'"
-          title="Vue cartes"
-        >📋 Cartes</button>
+        ></button>
         <button
-          class="comparison__view-btn"
-          [class.comparison__view-btn--active]="viewMode === 'compare'"
+          pButton
+          type="button"
+          icon="pi pi-arrows-h"
+          label="Comparer"
+          [class]="viewMode === 'compare' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
           (click)="viewMode = 'compare'"
-          title="Comparaison côte à côte"
-        >⚖️ Comparer</button>
+        ></button>
         <button
-          class="comparison__view-btn"
-          [class.comparison__view-btn--active]="viewMode === 'chart'"
+          pButton
+          type="button"
+          icon="pi pi-chart-bar"
+          label="Graphique"
+          [class]="viewMode === 'chart' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
           (click)="viewMode = 'chart'"
-          title="Graphique"
-        >📊 Graphique</button>
+        ></button>
       </div>
     </div>
 
-    <!-- Onglets par durée (filtre forfait) -->
+    <!-- Onglets par durée -->
     <div class="comparison__tabs">
       @for (tab of tabs; track tab.value) {
         <button
-          class="comparison__tab"
-          [class.comparison__tab--active]="activeTab === tab.value"
+          pButton
+          type="button"
+          [class]="activeTab === tab.value ? 'p-button-sm comparison__tab' : 'p-button-sm p-button-outlined comparison__tab'"
           (click)="activeTab = $any(tab.value)"
         >
           {{ tab.label }}
@@ -124,10 +131,12 @@
           <div class="compare-selectors__btns">
             @for (opt of compareOptions; track opt.value) {
               <button
-                class="compare-selectors__btn"
-                [class.compare-selectors__btn--active]="compareLeft === opt.value"
+                pButton
+                type="button"
+                [label]="opt.label"
+                [class]="compareLeft === opt.value ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
                 (click)="compareLeft = opt.value"
-              >{{ opt.label }}</button>
+              ></button>
             }
           </div>
         </div>
@@ -137,10 +146,12 @@
           <div class="compare-selectors__btns">
             @for (opt of compareOptions; track opt.value) {
               <button
-                class="compare-selectors__btn"
-                [class.compare-selectors__btn--active]="compareRight === opt.value"
+                pButton
+                type="button"
+                [label]="opt.label"
+                [class]="compareRight === opt.value ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
                 (click)="compareRight = opt.value"
-              >{{ opt.label }}</button>
+              ></button>
             }
           </div>
         </div>
@@ -170,10 +181,9 @@
           </div>
         </div>
 
-        <!-- Tableau de comparaison -->
         @if (planPairs.length === 0) {
           <div class="comparison__empty">
-            <span>🔍</span>
+            <i class="pi pi-search"></i>
             <p>Aucun forfait commun pour cette sélection.</p>
           </div>
         }
@@ -190,11 +200,11 @@
               @if (pair.left) {
                 <div class="compare-card" [style.--op-color]="pair.left.operatorColor">
                   @if (pair.cheaperSide === 'left') {
-                    <span class="compare-card__badge compare-card__badge--win">✅ Moins cher</span>
+                    <p-tag value="✅ Moins cher" severity="success" />
                   } @else if (pair.cheaperSide === 'right') {
-                    <span class="compare-card__badge compare-card__badge--lose">❌ Plus cher</span>
+                    <p-tag value="❌ Plus cher" severity="danger" />
                   } @else if (pair.cheaperSide === 'equal') {
-                    <span class="compare-card__badge compare-card__badge--equal">➖ Même prix</span>
+                    <p-tag value="➖ Même prix" severity="warn" />
                   }
                   <div class="compare-card__data">
                     <span class="compare-card__data-val">
@@ -214,7 +224,7 @@
                   @if (pair.left.features.length > 0) {
                     <ul class="compare-card__features">
                       @for (f of pair.left.features; track f) {
-                        <li>✓ {{ f }}</li>
+                        <li><i class="pi pi-check"></i> {{ f }}</li>
                       }
                     </ul>
                   }
@@ -227,7 +237,7 @@
               }
             </div>
 
-            <!-- Colonne centrale : volume + durée + diff prix -->
+            <!-- Colonne centrale -->
             <div class="compare-row__mid">
               <span class="compare-row__vol">{{ formatData(pair.data) }}</span>
               <span class="compare-row__dur"
@@ -249,11 +259,11 @@
               @if (pair.right) {
                 <div class="compare-card" [style.--op-color]="pair.right.operatorColor">
                   @if (pair.cheaperSide === 'right') {
-                    <span class="compare-card__badge compare-card__badge--win">✅ Moins cher</span>
+                    <p-tag value="✅ Moins cher" severity="success" />
                   } @else if (pair.cheaperSide === 'left') {
-                    <span class="compare-card__badge compare-card__badge--lose">❌ Plus cher</span>
+                    <p-tag value="❌ Plus cher" severity="danger" />
                   } @else if (pair.cheaperSide === 'equal') {
-                    <span class="compare-card__badge compare-card__badge--equal">➖ Même prix</span>
+                    <p-tag value="➖ Même prix" severity="warn" />
                   }
                   <div class="compare-card__data">
                     <span class="compare-card__data-val">
@@ -273,7 +283,7 @@
                   @if (pair.right.features.length > 0) {
                     <ul class="compare-card__features">
                       @for (f of pair.right.features; track f) {
-                        <li>✓ {{ f }}</li>
+                        <li><i class="pi pi-check"></i> {{ f }}</li>
                       }
                     </ul>
                   }
@@ -298,12 +308,11 @@
 
       @if (filteredPlans.length === 0) {
         <div class="comparison__empty">
-          <span>🔍</span>
+          <i class="pi pi-search"></i>
           <p>Aucun forfait ne correspond à votre recherche.</p>
         </div>
       }
 
-      <!-- Un bloc par opérateur -->
       @for (group of groupedByOperator; track group.op.id) {
         <div class="comparison__group">
 
@@ -316,24 +325,28 @@
             @if (group.op.country) {
               <span class="comparison__group-country">{{ group.op.country }}</span>
             }
-            <span class="comparison__group-count">{{ group.plans.length }} forfaits</span>
+            <p-tag [value]="group.plans.length + ' forfaits'" severity="info" styleClass="comparison__group-count" />
           </div>
 
           <!-- Grille de cartes -->
           <div class="comparison__grid">
             @for (plan of group.plans; track plan.id) {
-              <div class="plan-card" [style.--op-color]="plan.operatorColor">
+              <p-card styleClass="plan-card" [style]="{'--op-color': plan.operatorColor, 'border-top': '3px solid ' + plan.operatorColor}">
 
                 <!-- Durée badge -->
-                <span class="plan-card__duration"
-                  [class.plan-card__duration--daily]="plan.duration === 'daily'"
-                  [class.plan-card__duration--weekly]="plan.duration === 'weekly'"
-                  [class.plan-card__duration--monthly]="plan.duration === 'monthly'"
-                >
-                  {{ durationLabel(plan.duration) }}
-                </span>
+                <ng-template pTemplate="header">
+                  <div class="plan-card__header-row">
+                    <p-tag
+                      [value]="durationLabel(plan.duration)"
+                      [severity]="plan.duration === 'daily' ? 'warn' : plan.duration === 'weekly' ? 'info' : 'success'"
+                    />
+                    @if (plan.promo) {
+                      <p-tag value="Promo" severity="danger" />
+                    }
+                  </div>
+                </ng-template>
 
-                <!-- Volume data (gros) -->
+                <!-- Volume data -->
                 <div class="plan-card__data">
                   <span class="plan-card__data-value">
                     {{ plan.data >= 1000 ? (plan.data % 1000 === 0 ? plan.data/1000 : (plan.data/1000).toFixed(1)) : plan.data }}
@@ -353,17 +366,20 @@
                 @if (plan.features.length > 0) {
                   <ul class="plan-card__features">
                     @for (f of plan.features; track f) {
-                      <li>✓ {{ f }}</li>
+                      <li><i class="pi pi-check"></i> {{ f }}</li>
                     }
                   </ul>
                 }
 
                 <!-- Ratio valeur -->
-                <div class="plan-card__ratio">
-                  {{ (plan.data / plan.price).toFixed(2) }} Mo/FCFA
-                </div>
+                <ng-template pTemplate="footer">
+                  <div class="plan-card__ratio">
+                    <i class="pi pi-chart-line"></i>
+                    {{ (plan.data / plan.price).toFixed(2) }} Mo/FCFA
+                  </div>
+                </ng-template>
 
-              </div>
+              </p-card>
             }
           </div>
 

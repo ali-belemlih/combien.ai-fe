@@ -8,6 +8,9 @@ import { SearchInputComponent } from '../../ui/search-input/search-input.compone
 import { SortSelectComponent } from '../../ui/sort-select/sort-select.component';
 import { BarChartComponent } from '../../ui/bar-chart/bar-chart.component';
 import { FilterBarComponent } from '../../ui/filter-bar/filter-bar.component';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { CardModule } from 'primeng/card';
 
 export type TabKey = 'all' | 'daily' | 'weekly' | 'monthly';
 export type ViewMode = 'cards' | 'compare' | 'chart';
@@ -34,7 +37,7 @@ export interface PlanPair {
     CommonModule,
     BestValueBannerComponent, CalculatorComponent,
     SearchInputComponent, SortSelectComponent, BarChartComponent,
-    FilterBarComponent,
+    FilterBarComponent, ButtonModule, TagModule, CardModule,
   ],
   templateUrl: './comparison.component.html',
   styleUrl: './comparison.component.scss',

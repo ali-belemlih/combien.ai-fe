@@ -1,58 +1,69 @@
 @if (plan) {
-  <div class="card" [style.border-top-color]="operatorColor">
+  <p-card styleClass="plan-card" [style]="{'border-top': '3px solid ' + operatorColor}">
 
     <!-- Badge comparaison -->
-    <span class="badge" [ngClass]="badgeClass">{{ badgeLabel }}</span>
+    <ng-template pTemplate="header">
+      <div class="plan-card__badge-row">
+        <p-tag
+          [value]="badgeLabel"
+          [severity]="isCheaper ? 'success' : isMoreExpensive ? 'danger' : 'warn'"
+        />
+      </div>
+    </ng-template>
 
     <!-- Nom du forfait -->
-    <h3 class="card__name">{{ plan.name }}</h3>
+    <h3 class="plan-card__name">{{ plan.name }}</h3>
 
     <!-- Prix -->
-    <div class="card__price-block">
+    <div class="plan-card__price-block">
       @if (plan.originalPrice) {
-        <span class="card__original-price">{{ plan.originalPrice | number:'1.0-0' }} F</span>
+        <span class="plan-card__original-price">{{ plan.originalPrice | number:'1.0-0' }} F</span>
       }
-      <span class="card__price" [style.color]="operatorColor">
+      <span class="plan-card__price" [style.color]="operatorColor">
         {{ plan.price | number:'1.0-0' }}
       </span>
-      <span class="card__currency">FCFA</span>
+      <span class="plan-card__currency">FCFA</span>
     </div>
 
     <!-- Data -->
-    <div class="card__data-block">
-      <span class="card__data-value">
+    <div class="plan-card__data-block">
+      <span class="plan-card__data-value">
         {{ plan.data >= 1000 ? (plan.data / 1000) : plan.data }}
       </span>
-      <span class="card__data-unit">
+      <span class="plan-card__data-unit">
         {{ plan.data >= 1000 ? 'Go' : 'Mo' }}
       </span>
-      <span class="card__duration-badge">
-        {{ plan.duration === 'daily' ? '24h'
-         : plan.duration === 'weekly' ? '7 jours'
-         : '30 jours' }}
-      </span>
+      <p-tag
+        [value]="plan.duration === 'daily' ? '24h' : plan.duration === 'weekly' ? '7 jours' : '30 jours'"
+        severity="info"
+        styleClass="plan-card__duration-tag"
+      />
     </div>
 
-    <!-- Features (volume brut, validité, bonus) -->
+    <!-- Features -->
     @if (plan.features.length > 0) {
-      <ul class="card__features">
+      <ul class="plan-card__features">
         @for (feature of plan.features; track feature) {
-          <li class="card__feature-item">
-            <span class="card__check">✓</span> {{ feature }}
+          <li class="plan-card__feature-item">
+            <i class="pi pi-check plan-card__check"></i> {{ feature }}
           </li>
         }
       </ul>
     }
 
-    <!-- Valeur Mo/FCFA -->
-    <div class="card__ratio">
-      {{ ratio }} Mo / FCFA
-    </div>
+    <!-- Ratio -->
+    <ng-template pTemplate="footer">
+      <div class="plan-card__ratio">
+        <i class="pi pi-chart-line"></i> {{ ratio }} Mo / FCFA
+      </div>
+    </ng-template>
 
-  </div>
+  </p-card>
 } @else {
-  <div class="card card--empty">
-    <span>—</span>
-    <small>Non disponible</small>
-  </div>
+  <p-card styleClass="plan-card plan-card--empty">
+    <div class="plan-card__empty-body">
+      <span>—</span>
+      <small>Non disponible</small>
+    </div>
+  </p-card>
 }

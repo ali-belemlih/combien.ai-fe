@@ -1,11 +1,13 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
 import { BestValue } from '../../models/operator.model';
 
 @Component({
   selector: 'app-best-value-banner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CardModule, TagModule],
   templateUrl: './best-value-banner.component.html',
   styleUrl: './best-value-banner.component.scss',
 })

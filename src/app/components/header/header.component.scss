@@ -19,6 +19,7 @@
 
   &__icon {
     font-size: 2rem;
+    color: #4fc3f7;
   }
 
   &__title {
@@ -46,45 +47,39 @@
     margin-top: 1.25rem;
   }
 
-  &__nav-link {
+  &__nav-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.5rem 1.25rem;
-    border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #90caf9;
+    color: #90caf9 !important;
     text-decoration: none;
-    border: 1.5px solid rgba(144, 202, 249, 0.3);
+    border: 1.5px solid rgba(144, 202, 249, 0.3) !important;
+    border-radius: 8px !important;
     transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(79, 195, 247, 0.15);
-      border-color: #4fc3f7;
-      color: #fff;
+      background: rgba(79, 195, 247, 0.15) !important;
+      border-color: #4fc3f7 !important;
+      color: #fff !important;
     }
 
     &--active {
-      background: rgba(79, 195, 247, 0.2);
-      border-color: #4fc3f7;
-      color: #fff;
+      background: rgba(79, 195, 247, 0.2) !important;
+      border-color: #4fc3f7 !important;
+      color: #fff !important;
     }
 
     &--cta {
-      background: #4fc3f7;
-      border-color: #4fc3f7;
-      color: #0f3460;
+      background: #4fc3f7 !important;
+      border-color: #4fc3f7 !important;
+      color: #0f3460 !important;
 
       &:hover {
-        background: #81d4fa;
-        border-color: #81d4fa;
-        color: #0f3460;
-      }
-
-      &.header__nav-link--active {
-        background: #81d4fa;
-        color: #0f3460;
+        background: #81d4fa !important;
+        border-color: #81d4fa !important;
+        color: #0f3460 !important;
       }
     }
   }

@@ -3,7 +3,7 @@
   <!-- ─── Chargement ─────────────────────────────────────────────────────────── -->
   @if (loading) {
     <div class="quiz__loading">
-      <div class="quiz__spinner"></div>
+      <i class="pi pi-spin pi-spinner quiz__spinner"></i>
       <p>Chargement des forfaits…</p>
     </div>
   }
@@ -11,49 +11,51 @@
   <!-- ─── Erreur ─────────────────────────────────────────────────────────────── -->
   @if (error && !loading) {
     <div class="quiz__error">
-      <span class="quiz__error-icon">⚠️</span>
+      <i class="pi pi-exclamation-triangle quiz__error-icon"></i>
       <p>{{ error }}</p>
-      <button class="btn btn--primary" (click)="ngOnInit()">Réessayer</button>
+      <button pButton label="Réessayer" icon="pi pi-refresh" (click)="ngOnInit()"></button>
     </div>
   }
 
   <!-- ─── Quiz ───────────────────────────────────────────────────────────────── -->
   @if (!loading && !error) {
-    <div class="quiz__card">
+    <p-card styleClass="quiz__card">
 
       <!-- En-tête avec progression -->
-      <div class="quiz__header">
-        <div class="quiz__progress-bar">
-          <div class="quiz__progress-fill" [style.width.%]="progress"></div>
+      <ng-template pTemplate="header">
+        <div class="quiz__header">
+          <p-progressBar [value]="progress" [showValue]="false" styleClass="quiz__progress" />
+          <div class="quiz__step-info">
+            <span class="quiz__step-count">Étape {{ currentStep }} / {{ totalSteps }}</span>
+            <span class="quiz__step-icon">{{ currentStepData.icon }}</span>
+          </div>
+          <h2 class="quiz__title">{{ currentStepData.title }}</h2>
+          <p class="quiz__subtitle">{{ currentStepData.subtitle }}</p>
         </div>
-        <div class="quiz__step-info">
-          <span class="quiz__step-count">Étape {{ currentStep }} / {{ totalSteps }}</span>
-          <span class="quiz__step-icon">{{ currentStepData.icon }}</span>
-        </div>
-        <h2 class="quiz__title">{{ currentStepData.title }}</h2>
-        <p class="quiz__subtitle">{{ currentStepData.subtitle }}</p>
-      </div>
+      </ng-template>
 
       <!-- ─── Étape 1 : Pays ──────────────────────────────────────────────────── -->
       @if (currentStep === 1) {
         <div class="quiz__body">
           <div class="quiz__options quiz__options--grid">
             <button
-              class="quiz__option"
-              [class.quiz__option--active]="answers.country === 'all'"
+              pButton
+              type="button"
+              [class]="answers.country === 'all' ? 'quiz__option-btn' : 'quiz__option-btn p-button-outlined'"
               (click)="selectCountry('all')"
             >
               <span class="quiz__option-icon">🌍</span>
-              <span class="quiz__option-label">Tous les pays</span>
+              <span>Tous les pays</span>
             </button>
             @for (country of availableCountries; track country) {
               <button
-                class="quiz__option"
-                [class.quiz__option--active]="answers.country === country"
+                pButton
+                type="button"
+                [class]="answers.country === country ? 'quiz__option-btn' : 'quiz__option-btn p-button-outlined'"
                 (click)="selectCountry(country)"
               >
                 <span class="quiz__option-icon">📍</span>
-                <span class="quiz__option-label">{{ country }}</span>
+                <span>{{ country }}</span>
               </button>
             }
           </div>
@@ -66,8 +68,9 @@
           <div class="quiz__options quiz__options--grid">
             @for (opt of durationOptions; track opt.value) {
               <button
-                class="quiz__option quiz__option--tall"
-                [class.quiz__option--active]="answers.duration === opt.value"
+                pButton
+                type="button"
+                [class]="answers.duration === opt.value ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
                 (click)="selectDuration(opt.value)"
               >
                 <span class="quiz__option-icon">{{ opt.icon }}</span>
@@ -85,8 +88,9 @@
           <div class="quiz__options quiz__options--list">
             @for (opt of budgetOptions; track opt.label) {
               <button
-                class="quiz__option quiz__option--row"
-                [class.quiz__option--active]="answers.budget === opt.value"
+                pButton
+                type="button"
+                [class]="answers.budget === opt.value ? 'quiz__option-btn quiz__option-btn--row' : 'quiz__option-btn quiz__option-btn--row p-button-outlined'"
                 (click)="selectBudget(opt.value)"
               >
                 <div class="quiz__option-content">
@@ -94,7 +98,7 @@
                   <span class="quiz__option-desc">{{ opt.description }}</span>
                 </div>
                 @if (answers.budget === opt.value) {
-                  <span class="quiz__option-check">✓</span>
+                  <i class="pi pi-check quiz__option-check"></i>
                 }
               </button>
             }
@@ -109,15 +113,16 @@
           <div class="quiz__options quiz__options--grid">
             @for (opt of usageOptions; track opt.value) {
               <button
-                class="quiz__option quiz__option--tall"
-                [class.quiz__option--active]="isUsageSelected(opt.value)"
+                pButton
+                type="button"
+                [class]="isUsageSelected(opt.value) ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
                 (click)="toggleUsage(opt.value)"
               >
                 <span class="quiz__option-icon">{{ opt.icon }}</span>
                 <span class="quiz__option-label">{{ opt.label }}</span>
                 <span class="quiz__option-desc">~{{ opt.dataPerDay }} Mo/jour</span>
                 @if (isUsageSelected(opt.value)) {
-                  <span class="quiz__option-badge">✓</span>
+                  <i class="pi pi-check quiz__option-badge"></i>
                 }
               </button>
             }
@@ -132,43 +137,51 @@
           <!-- Résumé des réponses -->
           <div class="quiz__summary">
             <div class="quiz__summary-item">
-              <span class="quiz__summary-icon">🌍</span>
+              <i class="pi pi-globe"></i>
               <span>{{ answers.country === 'all' ? 'Tous les pays' : answers.country }}</span>
             </div>
             <div class="quiz__summary-item">
-              <span class="quiz__summary-icon">📅</span>
+              <i class="pi pi-calendar"></i>
               <span>{{ answers.duration === 'any' ? 'Toutes durées' : answers.duration }}</span>
             </div>
             <div class="quiz__summary-item">
-              <span class="quiz__summary-icon">💰</span>
+              <i class="pi pi-wallet"></i>
               <span>{{ selectedBudgetLabel }}</span>
             </div>
             <div class="quiz__summary-item">
-              <span class="quiz__summary-icon">📊</span>
+              <i class="pi pi-chart-bar"></i>
               <span>~{{ estimatedDataLabel }} estimés</span>
             </div>
           </div>
 
+          <p-divider />
+
           <!-- Résultats -->
           @if (recommendations.length === 0) {
             <div class="quiz__no-results">
-              <span class="quiz__no-results-icon">😕</span>
+              <i class="pi pi-face-smile quiz__no-results-icon"></i>
               <h3>Aucun forfait trouvé</h3>
               <p>Essayez d'élargir votre budget ou de changer vos critères.</p>
-              <button class="btn btn--outline" (click)="restart()">Recommencer</button>
+              <button pButton label="Recommencer" icon="pi pi-refresh" class="p-button-outlined" (click)="restart()"></button>
             </div>
           } @else {
             <div class="quiz__results-header">
               <h3 class="quiz__results-title">
-                🎯 {{ recommendations.length }} forfait{{ recommendations.length > 1 ? 's' : '' }} recommandé{{ recommendations.length > 1 ? 's' : '' }}
+                <i class="pi pi-compass"></i>
+                {{ recommendations.length }} forfait{{ recommendations.length > 1 ? 's' : '' }} recommandé{{ recommendations.length > 1 ? 's' : '' }}
               </h3>
             </div>
 
             <div class="quiz__results-grid">
               @for (rec of recommendations; track rec.plan.id; let i = $index) {
-                <div class="result-card" [style.--op-color]="rec.operator.color">
+                <p-card styleClass="result-card" [style]="{'--op-color': rec.operator.color}">
+
                   @if (i === 0) {
-                    <div class="result-card__badge">⭐ Meilleur choix</div>
+                    <ng-template pTemplate="header">
+                      <div class="result-card__best">
+                        <p-tag value="⭐ Meilleur choix" severity="warn" />
+                      </div>
+                    </ng-template>
                   }
 
                   <!-- En-tête opérateur -->
@@ -180,9 +193,11 @@
                       </p>
                       <p class="result-card__plan-name">{{ rec.plan.name }}</p>
                     </div>
-                    <div class="result-card__score" [ngClass]="getScoreClass(rec.score)">
-                      {{ getScoreLabel(rec.score) }}
-                    </div>
+                    <p-tag
+                      [value]="getScoreLabel(rec.score)"
+                      [severity]="rec.score >= 70 ? 'success' : rec.score >= 50 ? 'info' : 'warn'"
+                      styleClass="result-card__score"
+                    />
                   </div>
 
                   <!-- Données principales -->
@@ -204,24 +219,27 @@
                     </div>
                   </div>
 
-                  <!-- Raisons de la recommandation -->
+                  <!-- Raisons -->
                   <ul class="result-card__reasons">
                     @for (reason of rec.matchReasons; track reason) {
                       <li>{{ reason }}</li>
                     }
                   </ul>
 
-                  <!-- Badges -->
-                  <div class="result-card__tags">
-                    @if (rec.plan.promo) {
-                      <span class="tag tag--promo">Promo</span>
-                    }
-                    <span class="tag tag--duration">{{ rec.plan.duration }}</span>
-                    @if (rec.plan.calls !== 'Non inclus') {
-                      <span class="tag tag--calls">📞 Appels</span>
-                    }
-                  </div>
-                </div>
+                  <!-- Tags -->
+                  <ng-template pTemplate="footer">
+                    <div class="result-card__tags">
+                      @if (rec.plan.promo) {
+                        <p-tag value="Promo" severity="danger" />
+                      }
+                      <p-tag [value]="rec.plan.duration" severity="info" />
+                      @if (rec.plan.calls !== 'Non inclus') {
+                        <p-tag value="📞 Appels" severity="success" />
+                      }
+                    </div>
+                  </ng-template>
+
+                </p-card>
               }
             </div>
           }
@@ -229,28 +247,25 @@
       }
 
       <!-- ─── Navigation ──────────────────────────────────────────────────────── -->
-      <div class="quiz__footer">
-        @if (currentStep > 1 && currentStep < 5) {
-          <button class="btn btn--outline" (click)="prev()">← Retour</button>
-        }
-        @if (currentStep === 5) {
-          <button class="btn btn--outline" (click)="restart()">🔄 Recommencer</button>
-          <button class="btn btn--secondary" (click)="goToComparison()">📊 Voir tous les forfaits</button>
-        } @else {
-          <button
-            class="btn btn--primary"
-            [disabled]="!canGoNext"
-            (click)="next()"
-          >
-            @if (currentStep === 4) {
-              Voir mes résultats 🎯
-            } @else {
-              Suivant →
-            }
-          </button>
-        }
-      </div>
+      <ng-template pTemplate="footer">
+        <div class="quiz__footer">
+          @if (currentStep > 1 && currentStep < 5) {
+            <button pButton label="← Retour" class="p-button-outlined" (click)="prev()"></button>
+          }
+          @if (currentStep === 5) {
+            <button pButton label="🔄 Recommencer" class="p-button-outlined" (click)="restart()"></button>
+            <button pButton label="📊 Voir tous les forfaits" class="p-button-secondary" (click)="goToComparison()"></button>
+          } @else {
+            <button
+              pButton
+              [label]="currentStep === 4 ? 'Voir mes résultats 🎯' : 'Suivant →'"
+              [disabled]="!canGoNext"
+              (click)="next()"
+            ></button>
+          }
+        </div>
+      </ng-template>
 
-    </div>
+    </p-card>
   }
 </div>

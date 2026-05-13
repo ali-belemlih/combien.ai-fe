@@ -1,19 +1,23 @@
 @if (bestValue) {
-  <div class="banner" [style.border-left-color]="bestValue.operatorColor">
-    <div class="banner__icon">🏆</div>
-    <div class="banner__content">
-      <span class="banner__tag">Meilleur rapport data / prix</span>
-      <p class="banner__title">
-        <strong>{{ bestValue.operatorName }}</strong> — {{ bestValue.plan.name }}
-      </p>
-      <p class="banner__detail">
-        <strong>{{ dataLabel }}</strong> pour
-        <strong>{{ bestValue.plan.price | number:'1.0-0' }} FCFA</strong>
-        · {{ (bestValue.ratio).toFixed(2) }} Mo / FCFA
-      </p>
+  <p-card styleClass="banner" [style]="{'border-left': '4px solid ' + bestValue.operatorColor}">
+    <div class="banner__body">
+      <div class="banner__icon">
+        <i class="pi pi-trophy" [style.color]="bestValue.operatorColor"></i>
+      </div>
+      <div class="banner__content">
+        <p-tag value="Meilleur rapport data / prix" severity="success" styleClass="banner__tag" />
+        <p class="banner__title">
+          <strong>{{ bestValue.operatorName }}</strong> — {{ bestValue.plan.name }}
+        </p>
+        <p class="banner__detail">
+          <strong>{{ dataLabel }}</strong> pour
+          <strong>{{ bestValue.plan.price | number:'1.0-0' }} FCFA</strong>
+          · {{ (bestValue.ratio).toFixed(2) }} Mo / FCFA
+        </p>
+      </div>
+      <div class="banner__price" [style.color]="bestValue.operatorColor">
+        {{ bestValue.plan.price | number:'1.0-0' }}<span>FCFA</span>
+      </div>
     </div>
-    <div class="banner__price" [style.color]="bestValue.operatorColor">
-      {{ bestValue.plan.price | number:'1.0-0' }}<span>FCFA</span>
-    </div>
-  </div>
+  </p-card>
 }

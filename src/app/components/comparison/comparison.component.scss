@@ -71,28 +71,6 @@
     padding: 3px;
   }
 
-  &__view-btn {
-    border: none;
-    border-radius: 8px;
-    padding: 5px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    background: transparent;
-    color: #64748b;
-    font-family: inherit;
-    transition: all 0.2s;
-    white-space: nowrap;
-
-    &--active {
-      background: #fff;
-      color: #0f3460;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-
-    &:hover:not(&--active) { color: #1e293b; }
-  }
-
   // ─── Onglets ─────────────────────────────────────────────────────────────────
   &__tabs {
     display: flex;
@@ -105,26 +83,9 @@
   }
 
   &__tab {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    background: transparent;
-    color: #64748b;
-    font-family: inherit;
-    transition: all 0.2s;
-
-    &:hover { background: #f1f5f9; color: #1e293b; }
-
-    &--active {
-      background: #0f3460;
-      color: #fff;
-    }
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
   }
 
   &__tab-count {
@@ -133,11 +94,6 @@
     background: rgba(255,255,255,0.25);
     padding: 1px 6px;
     border-radius: 10px;
-
-    .comparison__tab:not(.comparison__tab--active) & {
-      background: #e2e8f0;
-      color: #64748b;
-    }
   }
 
   // ─── Groupe opérateur (vue cartes) ───────────────────────────────────────────
@@ -172,9 +128,6 @@
   }
 
   &__group-count {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-weight: 500;
     margin-left: auto;
   }
 
@@ -194,7 +147,8 @@
     padding: 3rem;
     color: #94a3b8;
     font-size: 0.9rem;
-    span { font-size: 2rem; }
+
+    i { font-size: 2rem; }
   }
 
   &__disclaimer {
@@ -216,15 +170,9 @@
   }
 
   &__spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #e2e8f0;
-    border-top-color: #0f3460;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    font-size: 2.5rem;
+    color: #0f3460;
   }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
 
   // ─── Erreur ──────────────────────────────────────────────────────────────────
   &__error {
@@ -236,20 +184,8 @@
     color: #ef4444;
     font-size: 0.9rem;
     text-align: center;
-    span { font-size: 2rem; }
 
-    button {
-      padding: 0.5rem 1.5rem;
-      background: #0f3460;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      &:hover { background: #1e4a8a; }
-    }
+    i { font-size: 2rem; }
   }
 
   // ─── Responsive ──────────────────────────────────────────────────────────────
@@ -260,43 +196,46 @@
 }
 
 // ─── Plan Card (vue cartes) ───────────────────────────────────────────────────
-.plan-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  border-top: 3px solid var(--op-color, #0f3460);
+::ng-deep .plan-card {
+  border-radius: 14px !important;
   transition: transform 0.15s, box-shadow 0.15s;
-  position: relative;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
   }
 
-  &__duration {
-    display: inline-block;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-    align-self: flex-start;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+  .p-card-body {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
 
-    &--daily   { background: #fef3c7; color: #92400e; }
-    &--weekly  { background: #dbeafe; color: #1e40af; }
-    &--monthly { background: #dcfce7; color: #166534; }
+  .p-card-content {
+    padding: 0.75rem 1rem;
+    flex: 1;
+  }
+
+  .p-card-footer {
+    padding: 0.5rem 1rem 0.75rem;
+    border-top: 1px solid var(--surface-border);
+  }
+}
+
+.plan-card {
+  &__header-row {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem 0;
+    flex-wrap: wrap;
   }
 
   &__data {
     display: flex;
     align-items: baseline;
     gap: 0.2rem;
-    margin: 0.25rem 0;
+    margin: 0.5rem 0 0.25rem;
   }
 
   &__data-value {
@@ -316,6 +255,7 @@
     display: flex;
     align-items: baseline;
     gap: 0.25rem;
+    margin-bottom: 0.5rem;
   }
 
   &__price-amount {
@@ -339,22 +279,25 @@
     gap: 0.2rem;
     border-top: 1px solid #f1f5f9;
     padding-top: 0.4rem;
-    flex: 1;
 
     li {
       font-size: 0.72rem;
       color: #475569;
       line-height: 1.4;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.3rem;
+
+      i { color: #22c55e; font-size: 0.7rem; margin-top: 2px; }
     }
   }
 
   &__ratio {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     color: #94a3b8;
-    text-align: right;
-    margin-top: auto;
-    padding-top: 0.3rem;
-    border-top: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
   }
 }
 
@@ -389,27 +332,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-  }
-
-  &__btn {
-    border: 1.5px solid #e2e8f0;
-    border-radius: 20px;
-    padding: 5px 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    background: #f8fafc;
-    color: #475569;
-    font-family: inherit;
-    transition: all 0.2s;
-
-    &--active {
-      background: #0f3460;
-      color: #fff;
-      border-color: #0f3460;
-    }
-
-    &:hover:not(&--active) { background: #e2e8f0; }
   }
 
   &__vs {
@@ -546,19 +468,6 @@
     small { font-size: 0.72rem; color: #94a3b8; }
   }
 
-  &__badge {
-    display: inline-block;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-    align-self: flex-start;
-
-    &--win   { background: #dcfce7; color: #166534; }
-    &--lose  { background: #fee2e2; color: #991b1b; }
-    &--equal { background: #f1f5f9; color: #64748b; }
-  }
-
   &__data {
     display: flex;
     align-items: baseline;
@@ -613,6 +522,11 @@
       font-size: 0.68rem;
       color: #475569;
       line-height: 1.4;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.3rem;
+
+      i { color: #22c55e; font-size: 0.65rem; margin-top: 2px; }
     }
   }
 }

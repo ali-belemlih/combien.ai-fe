@@ -1,17 +1,36 @@
 <header class="header">
   <div class="header__inner">
     <div class="header__logo">
-      <span class="header__icon">📡</span>
+      <i class="pi pi-wifi header__icon"></i>
       <span class="header__title">combien<span class="header__dot">.ai</span></span>
     </div>
     <p class="header__tagline">Comparez les forfaits mobiles en un coup d'œil</p>
 
     <nav class="header__nav">
-      <a class="header__nav-link" routerLink="/" routerLinkActive="header__nav-link--active" [routerLinkActiveOptions]="{ exact: true }">
-        📊 Comparer
+      <a
+        pButton
+        class="p-button-text header__nav-btn"
+        routerLink="/"
+        routerLinkActive="header__nav-btn--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <i class="pi pi-chart-bar"></i> Comparer
       </a>
-      <a class="header__nav-link header__nav-link--cta" routerLink="/questionnaire" routerLinkActive="header__nav-link--active">
-        🎯 Trouver mon forfait
+      <a
+        pButton
+        class="p-button-rounded header__nav-btn header__nav-btn--cta"
+        routerLink="/questionnaire"
+        routerLinkActive="header__nav-btn--active"
+      >
+        <i class="pi pi-compass"></i> Trouver mon forfait
+      </a>
+      <a
+        pButton
+        class="p-button-text header__nav-btn header__nav-btn--admin"
+        routerLink="/admin"
+        routerLinkActive="header__nav-btn--active"
+      >
+        <i class="pi pi-cog"></i> Admin
       </a>
     </nav>
   </div>

@@ -1,0 +1,420 @@
+<div class="admin">
+
+  <!-- ─── Header ──────────────────────────────────────────────────────────── -->
+  <div class="admin__header">
+    <div class="admin__header-left">
+      <a routerLink="/" class="admin__back">← Retour</a>
+      <div>
+        <h1 class="admin__title">⚙️ Administration</h1>
+        <p class="admin__subtitle">Gestion du scraping et des données</p>
+      </div>
+    </div>
+    <div class="admin__header-stats">
+      <div class="admin__stat">
+        <span class="admin__stat-value">{{ websites.length }}</span>
+        <span class="admin__stat-label">Sites</span>
+      </div>
+      <div class="admin__stat">
+        <span class="admin__stat-value">{{ jobs.length }}</span>
+        <span class="admin__stat-label">Jobs</span>
+      </div>
+      @if (runningJobs.length > 0) {
+        <div class="admin__stat admin__stat--running">
+          <span class="admin__stat-value">{{ runningJobs.length }}</span>
+          <span class="admin__stat-label">En cours ⏳</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ─── Onglets ──────────────────────────────────────────────────────────── -->
+  <div class="admin__tabs">
+    <button
+      class="admin__tab"
+      [class.admin__tab--active]="activeTab === 'websites'"
+      (click)="setTab('websites')"
+    >
+      🌐 Sites <span class="admin__tab-count">{{ websites.length }}</span>
+    </button>
+    <button
+      class="admin__tab"
+      [class.admin__tab--active]="activeTab === 'jobs'"
+      (click)="setTab('jobs')"
+    >
+      🔄 Jobs <span class="admin__tab-count">{{ jobs.length }}</span>
+    </button>
+    <button
+      class="admin__tab"
+      [class.admin__tab--active]="activeTab === 'offres'"
+      (click)="setTab('offres')"
+    >
+      📦 Offres
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ONGLET SITES                                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'websites') {
+    <div class="admin__panel">
+
+      <div class="admin__panel-toolbar">
+        <h2 class="admin__panel-title">Sites à scraper</h2>
+        <button class="btn btn--primary" (click)="showAddWebsite = !showAddWebsite">
+          + Ajouter un site
+        </button>
+      </div>
+
+      @if (websitesError) {
+        <div class="admin__error">⚠️ {{ websitesError }}</div>
+      }
+
+      <!-- Formulaire ajout -->
+      @if (showAddWebsite) {
+        <div class="admin__form-card">
+          <h3 class="admin__form-title">Nouveau site</h3>
+          <div class="admin__form-row">
+            <div class="admin__field">
+              <label class="admin__label">Opérateur</label>
+              <input
+                class="admin__input"
+                type="text"
+                placeholder="ex: Moov Africa"
+                [(ngModel)]="newWebsite.operator"
+              />
+            </div>
+            <div class="admin__field admin__field--wide">
+              <label class="admin__label">URL</label>
+              <input
+                class="admin__input"
+                type="url"
+                placeholder="https://www.moov-africa.bj/forfaits"
+                [(ngModel)]="newWebsite.url"
+              />
+            </div>
+          </div>
+          <div class="admin__form-actions">
+            <button class="btn btn--ghost" (click)="showAddWebsite = false">Annuler</button>
+            <button
+              class="btn btn--primary"
+              [disabled]="addingWebsite || !newWebsite.operator || !newWebsite.url"
+              (click)="addWebsite()"
+            >
+              @if (addingWebsite) { ⏳ Ajout… } @else { ✅ Ajouter }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Liste des sites -->
+      @if (websitesLoading) {
+        <div class="admin__loading">⏳ Chargement des sites…</div>
+      } @else if (websites.length === 0) {
+        <div class="admin__empty">
+          <p>Aucun site enregistré.</p>
+          <p>Ajoutez un site pour pouvoir lancer des scrapings.</p>
+        </div>
+      } @else {
+        <div class="admin__table-wrap">
+          <table class="admin__table">
+            <thead>
+              <tr>
+                <th>Opérateur</th>
+                <th>URL</th>
+                <th>Statut</th>
+                <th>Ajouté le</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (site of websites; track site.id) {
+                <tr [class.admin__row--inactive]="!site.is_active">
+                  <td>
+                    <span class="admin__op-name">{{ site.operator }}</span>
+                  </td>
+                  <td>
+                    <a [href]="site.url" target="_blank" class="admin__url">
+                      {{ site.url }}
+                    </a>
+                  </td>
+                  <td>
+                    <span [class]="site.is_active ? 'badge badge--success' : 'badge badge--pending'">
+                      {{ site.is_active ? '✅ Actif' : '⏸ Inactif' }}
+                    </span>
+                  </td>
+                  <td class="admin__date">{{ formatDate(site.created_at) }}</td>
+                  <td>
+                    <div class="admin__actions">
+                      <button
+                        class="btn btn--sm btn--ghost"
+                        (click)="toggleWebsiteActive(site)"
+                        [title]="site.is_active ? 'Désactiver' : 'Activer'"
+                      >
+                        {{ site.is_active ? '⏸' : '▶️' }}
+                      </button>
+                      <button
+                        class="btn btn--sm btn--danger"
+                        (click)="deleteWebsite(site.id)"
+                        title="Supprimer"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ONGLET JOBS                                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'jobs') {
+    <div class="admin__panel">
+
+      <div class="admin__panel-toolbar">
+        <h2 class="admin__panel-title">Jobs de scraping</h2>
+        <div class="admin__toolbar-btns">
+          <button class="btn btn--ghost" (click)="loadJobs()">🔄 Rafraîchir</button>
+          <button class="btn btn--primary" (click)="showScrapeForm = !showScrapeForm">
+            🚀 Lancer un scraping
+          </button>
+        </div>
+      </div>
+
+      @if (jobsError) {
+        <div class="admin__error">⚠️ {{ jobsError }}</div>
+      }
+
+      @if (scrapeSuccess) {
+        <div class="admin__success">{{ scrapeSuccess }}</div>
+      }
+
+      <!-- Formulaire scraping -->
+      @if (showScrapeForm) {
+        <div class="admin__form-card admin__form-card--scrape">
+          <h3 class="admin__form-title">🚀 Nouveau scraping</h3>
+
+          <div class="admin__form-row">
+            <div class="admin__field">
+              <label class="admin__label">Site enregistré (optionnel)</label>
+              <select
+                class="admin__select"
+                [(ngModel)]="scrapeWebsiteId"
+                (ngModelChange)="onWebsiteSelect()"
+              >
+                <option value="">— URL manuelle —</option>
+                @for (site of activeWebsites; track site.id) {
+                  <option [value]="site.id">{{ site.operator }} — {{ site.url }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="admin__form-row">
+            <div class="admin__field admin__field--wide">
+              <label class="admin__label">URL cible</label>
+              <input
+                class="admin__input"
+                type="url"
+                placeholder="https://www.operateur.bj/forfaits-internet"
+                [(ngModel)]="scrapeUrl"
+              />
+            </div>
+          </div>
+
+          <div class="admin__form-row">
+            <label class="admin__checkbox-label">
+              <input type="checkbox" [(ngModel)]="scrapeJsEnabled" />
+              <span>Activer JavaScript (Playwright) — pour les sites dynamiques</span>
+            </label>
+          </div>
+
+          @if (scrapeError) {
+            <div class="admin__error">⚠️ {{ scrapeError }}</div>
+          }
+
+          <div class="admin__form-actions">
+            <button class="btn btn--ghost" (click)="showScrapeForm = false">Annuler</button>
+            <button
+              class="btn btn--primary btn--launch"
+              [disabled]="scraping || !scrapeUrl"
+              (click)="launchScrape()"
+            >
+              @if (scraping) {
+                <span class="admin__spinner"></span> Scraping en cours…
+              } @else {
+                🚀 Lancer le scraping
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Liste des jobs -->
+      @if (jobsLoading) {
+        <div class="admin__loading">⏳ Chargement des jobs…</div>
+      } @else if (jobs.length === 0) {
+        <div class="admin__empty">
+          <p>Aucun job trouvé.</p>
+          <p>Lancez un scraping pour commencer.</p>
+        </div>
+      } @else {
+        <div class="admin__table-wrap">
+          <table class="admin__table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Site</th>
+                <th>URL</th>
+                <th>JS</th>
+                <th>Statut</th>
+                <th>Créé le</th>
+                <th>Mis à jour</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (job of jobsByDate; track job.id) {
+                <tr>
+                  <td>
+                    <code class="admin__id">{{ job.id.slice(0, 8) }}…</code>
+                  </td>
+                  <td>{{ websiteName(job.website_id) }}</td>
+                  <td>
+                    <a [href]="job.target_url" target="_blank" class="admin__url">
+                      {{ job.target_url.length > 40 ? job.target_url.slice(0, 40) + '…' : job.target_url }}
+                    </a>
+                  </td>
+                  <td>
+                    <span [class]="job.js_enabled ? 'badge badge--info' : 'badge badge--pending'">
+                      {{ job.js_enabled ? 'JS' : 'HTTP' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span [class]="statusClass(job.status)">
+                      {{ statusIcon(job.status) }} {{ job.status }}
+                    </span>
+                  </td>
+                  <td class="admin__date">{{ formatDate(job.created_at) }}</td>
+                  <td class="admin__date">{{ formatDate(job.updated_at) }}</td>
+                  <td>
+                    <div class="admin__actions">
+                      <button
+                        class="btn btn--sm btn--ghost"
+                        (click)="viewJobOffres(job)"
+                        title="Voir les offres"
+                      >
+                        📦
+                      </button>
+                      <button
+                        class="btn btn--sm btn--ghost"
+                        (click)="rerunJob(job.id)"
+                        [disabled]="job.status === 'RUNNING'"
+                        title="Relancer"
+                      >
+                        🔄
+                      </button>
+                      <button
+                        class="btn btn--sm btn--danger"
+                        (click)="deleteJob(job.id)"
+                        [disabled]="job.status === 'RUNNING'"
+                        title="Supprimer"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ONGLET OFFRES                                                          -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'offres') {
+    <div class="admin__panel">
+
+      <div class="admin__panel-toolbar">
+        <h2 class="admin__panel-title">
+          📦 Offres
+          @if (offresJobLabel) {
+            <span class="admin__panel-subtitle">— {{ offresJobLabel }}</span>
+          }
+        </h2>
+        <button class="btn btn--ghost" (click)="loadAllOffres()">Toutes les offres</button>
+      </div>
+
+      @if (offresError) {
+        <div class="admin__error">⚠️ {{ offresError }}</div>
+      }
+
+      @if (offresLoading) {
+        <div class="admin__loading">⏳ Chargement des offres…</div>
+      } @else if (offres.length === 0) {
+        <div class="admin__empty">
+          <p>Aucune offre trouvée.</p>
+          @if (selectedJobId) {
+            <p>Ce job n'a extrait aucune offre.</p>
+          }
+        </div>
+      } @else {
+        <p class="admin__count">{{ offres.length }} offre{{ offres.length > 1 ? 's' : '' }}</p>
+        <div class="admin__table-wrap">
+          <table class="admin__table">
+            <thead>
+              <tr>
+                <th>Opérateur</th>
+                <th>Catégorie</th>
+                <th>Nom</th>
+                <th>Volume</th>
+                <th>Bonus</th>
+                <th>Tarif (FCFA)</th>
+                <th>Validité</th>
+                <th>Actif</th>
+                <th>Scrapé le</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (offre of offres; track offre.id) {
+                <tr [class.admin__row--inactive]="!offre.actif">
+                  <td><strong>{{ offre.operator }}</strong></td>
+                  <td>
+                    <span class="badge badge--info">{{ offre.categorie }}</span>
+                  </td>
+                  <td>{{ offre.plan_name ?? '—' }}</td>
+                  <td>{{ offre.volume ?? '—' }}</td>
+                  <td>{{ offre.bonus ?? '—' }}</td>
+                  <td>
+                    @if (offre.tarif_fcfa) {
+                      <strong>{{ offre.tarif_fcfa | number:'1.0-0' }} F</strong>
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td>{{ offre.validite ?? '—' }}</td>
+                  <td>
+                    <span [class]="offre.actif ? 'badge badge--success' : 'badge badge--pending'">
+                      {{ offre.actif ? '✅' : '⏸' }}
+                    </span>
+                  </td>
+                  <td class="admin__date">{{ formatDate(offre.scraped_at) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+</div>

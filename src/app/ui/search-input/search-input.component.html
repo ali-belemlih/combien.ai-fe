@@ -1,13 +1,20 @@
-<div class="search">
-  <span class="search__icon">🔍</span>
+<span class="p-input-icon-left search-wrapper">
+  <i class="pi pi-search"></i>
   <input
-    class="search__input"
+    pInputText
     type="text"
     [placeholder]="placeholder"
     [(ngModel)]="value"
     (ngModelChange)="onInput($event)"
+    class="search-input"
   />
   @if (value) {
-    <button class="search__clear" (click)="clear()">✕</button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-times"
+      class="p-button-text p-button-rounded p-button-sm search-clear"
+      (click)="clear()"
+    ></button>
   }
-</div>
+</span>

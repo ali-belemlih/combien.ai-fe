@@ -4,11 +4,11 @@
   }
   @for (opt of options; track opt.value) {
     <button
-      class="filter-bar__btn"
-      [class.filter-bar__btn--active]="active === opt.value"
+      pButton
+      type="button"
+      [label]="opt.label"
+      [class]="active === opt.value ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
       (click)="change.emit(opt.value)"
-    >
-      {{ opt.label }}
-    </button>
+    ></button>
   }
 </div>

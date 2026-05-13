@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
 import { FilterOption } from '../../models/operator.model';
 
 /**
@@ -10,7 +11,7 @@ import { FilterOption } from '../../models/operator.model';
 @Component({
   selector: 'ui-filter-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonModule],
   templateUrl: './filter-bar.component.html',
   styleUrl: './filter-bar.component.scss',
 })

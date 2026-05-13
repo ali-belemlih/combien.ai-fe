@@ -1,13 +1,17 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SliderModule } from 'primeng/slider';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
 import { Operator } from '../../models/operator.model';
 import { OperatorService } from '../../services/operator.service';
 
 @Component({
   selector: 'app-calculator',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SliderModule, ButtonModule, CardModule, TagModule],
   templateUrl: './calculator.component.html',
   styleUrl: './calculator.component.scss',
 })
