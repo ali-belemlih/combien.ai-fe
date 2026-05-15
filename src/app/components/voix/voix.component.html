@@ -1,0 +1,378 @@
+<div class="voix">
+
+  <!-- ─── Header ──────────────────────────────────────────────────────────── -->
+  <div class="voix__hero">
+    <h1 class="voix__hero-title">📞 Offres Voix & Bonus</h1>
+    <p class="voix__hero-sub">Comparez les forfaits voix et bonus crédit des opérateurs</p>
+  </div>
+
+  <!-- ─── Chargement ───────────────────────────────────────────────────────── -->
+  @if (loading) {
+    <div class="voix__loading">
+      <i class="pi pi-spin pi-spinner voix__spinner"></i>
+      <p>Chargement des offres voix…</p>
+    </div>
+  }
+
+  <!-- ─── Erreur ───────────────────────────────────────────────────────────── -->
+  @if (error && !loading) {
+    <div class="voix__error">
+      <i class="pi pi-exclamation-triangle"></i>
+      <p>{{ error }}</p>
+      <button class="voix__btn" (click)="ngOnInit()">Réessayer</button>
+    </div>
+  }
+
+  @if (!loading && !error) {
+
+    <!-- ─── Filtres pays ──────────────────────────────────────────────────── -->
+    @if (availablePays.length > 1) {
+      <div class="voix__pays-bar">
+        <button
+          class="voix__pays-btn"
+          [class.voix__pays-btn--active]="activePays === 'all'"
+          (click)="onPaysChange('all')"
+        >🌍 Tous les pays</button>
+        @for (pays of availablePays; track pays) {
+          <button
+            class="voix__pays-btn"
+            [class.voix__pays-btn--active]="activePays === pays"
+            (click)="onPaysChange(pays)"
+          >📍 {{ pays }}</button>
+        }
+      </div>
+    }
+
+    <!-- ─── Stats ────────────────────────────────────────────────────────── -->
+    <div class="voix__stats">
+      <div class="voix__stat">
+        <span class="voix__stat-val">{{ totalOperators }}</span>
+        <span class="voix__stat-lbl">Opérateurs</span>
+      </div>
+      <div class="voix__stat">
+        <span class="voix__stat-val">{{ totalOffres }}</span>
+        <span class="voix__stat-lbl">Offres</span>
+      </div>
+      @if (bestRatio) {
+        <div class="voix__stat voix__stat--best">
+          <span class="voix__stat-val">🏆</span>
+          <span class="voix__stat-lbl">
+            Meilleur ratio : <strong>{{ bestRatio.operator }}</strong>
+            — {{ bestRatio.ratio.toFixed(2) }} FCFA reçu/payé
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- ─── Toolbar ──────────────────────────────────────────────────────── -->
+    <div class="voix__toolbar">
+      <input
+        class="voix__search"
+        type="text"
+        placeholder="🔍 Rechercher un opérateur, forfait…"
+        [(ngModel)]="search"
+      />
+      <div class="voix__view-toggle">
+        <button
+          class="voix__view-btn"
+          [class.voix__view-btn--active]="viewMode === 'cards'"
+          (click)="viewMode = 'cards'"
+        >⊞ Cartes</button>
+        <button
+          class="voix__view-btn"
+          [class.voix__view-btn--active]="viewMode === 'compare'"
+          (click)="viewMode = 'compare'"
+        >⇄ Comparer</button>
+        <button
+          class="voix__view-btn"
+          [class.voix__view-btn--active]="viewMode === 'table'"
+          (click)="viewMode = 'table'"
+        >☰ Tableau</button>
+      </div>
+    </div>
+
+    <!-- ─── Onglets catégorie ─────────────────────────────────────────────── -->
+    <div class="voix__tabs">
+      @for (cat of categories; track cat.value) {
+        <button
+          class="voix__tab"
+          [class.voix__tab--active]="activeCategory === cat.value"
+          (click)="activeCategory = cat.value"
+        >
+          {{ cat.label }}
+          <span class="voix__tab-count">{{ countByCategory(cat.value) }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VUE CARTES                                                         -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    @if (viewMode === 'cards') {
+      @if (operatorGroups.length === 0) {
+        <div class="voix__empty">
+          <p>Aucune offre voix trouvée pour cette sélection.</p>
+        </div>
+      }
+      @for (group of operatorGroups; track group.name + group.pays) {
+        <div class="voix__group">
+          <div class="voix__group-header" [style.border-left-color]="group.color">
+            <span class="voix__group-logo">{{ group.logo }}</span>
+            <span class="voix__group-name" [style.color]="group.color">{{ group.name }}</span>
+            <span class="voix__group-pays">📍 {{ group.pays }}</span>
+            <span class="voix__group-count">{{ group.offres.length }} offre{{ group.offres.length > 1 ? 's' : '' }}</span>
+          </div>
+
+          <div class="voix__grid">
+            @for (offre of group.offres; track offre.id) {
+              <div class="voix__card" [style.--op-color]="group.color">
+
+                <!-- Catégorie + plan -->
+                <div class="voix__card-top">
+                  <span class="voix__cat-badge voix__cat-badge--{{ offre.category.toLowerCase() }}">
+                    {{ categoryLabel(offre.category) }}
+                  </span>
+                  @if (offre.plan_name) {
+                    <span class="voix__plan-name">{{ offre.plan_name }}</span>
+                  }
+                </div>
+
+                <!-- Prix payé -->
+                <div class="voix__card-price">
+                  <span class="voix__price-amount">{{ formatPrice(offre.price) }}</span>
+                  <span class="voix__price-label">payé</span>
+                </div>
+
+                <!-- Crédit reçu -->
+                @if (offre.volume_recu) {
+                  <div class="voix__card-received">
+                    <span class="voix__received-icon">💰</span>
+                    <div>
+                      <span class="voix__received-amount">{{ formatPrice(offre.volume_recu) }}</span>
+                      <span class="voix__received-label">crédit reçu</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Bonus extra -->
+                @if (offre.extra_bonus) {
+                  <div class="voix__card-bonus">
+                    <span>🎁 Bonus : <strong>{{ formatPrice(offre.extra_bonus) }}</strong></span>
+                    @if (offre.extra_validity) {
+                      <span class="voix__bonus-validity">valable {{ offre.extra_validity }}</span>
+                    }
+                  </div>
+                }
+
+                <!-- Footer : ratio + USSD + validité -->
+                <div class="voix__card-footer">
+                  <div class="voix__card-meta">
+                    <span class="voix__meta-item">⏱ {{ offre.validity }}</span>
+                    @if (offre.ussd_code) {
+                      <span class="voix__meta-item voix__ussd">{{ offre.ussd_code }}</span>
+                    }
+                  </div>
+                  @if (offre.volume_recu) {
+                    <div class="voix__ratio">
+                      <span class="voix__ratio-val">{{ ratio(offre) }}</span>
+                      <span class="voix__ratio-lbl">FCFA/FCFA</span>
+                    </div>
+                  }
+                </div>
+
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VUE COMPARAISON                                                    -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    @if (viewMode === 'compare') {
+      <div class="voix__compare-selectors">
+        <div class="voix__compare-side">
+          <label class="voix__compare-label">Opérateur gauche</label>
+          <select class="voix__select" [(ngModel)]="compareLeft">
+            @for (op of compareOperators; track op.value) {
+              <option [value]="op.value">{{ op.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="voix__compare-vs">VS</div>
+        <div class="voix__compare-side">
+          <label class="voix__compare-label">Opérateur droit</label>
+          <select class="voix__select" [(ngModel)]="compareRight">
+            @for (op of compareOperators; track op.value) {
+              <option [value]="op.value">{{ op.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (leftGroup && rightGroup) {
+        <!-- En-têtes opérateurs -->
+        <div class="voix__compare-header">
+          <div class="voix__compare-op" [style.border-bottom-color]="leftGroup.color">
+            <span>{{ leftGroup.logo }}</span>
+            <span [style.color]="leftGroup.color">{{ leftGroup.name }}</span>
+            <small>{{ leftGroup.pays }}</small>
+          </div>
+          <div class="voix__compare-mid"></div>
+          <div class="voix__compare-op" [style.border-bottom-color]="rightGroup.color">
+            <span>{{ rightGroup.logo }}</span>
+            <span [style.color]="rightGroup.color">{{ rightGroup.name }}</span>
+            <small>{{ rightGroup.pays }}</small>
+          </div>
+        </div>
+
+        @if (comparePairs.length === 0) {
+          <div class="voix__empty"><p>Aucune offre commune pour cette sélection.</p></div>
+        }
+
+        @for (pair of comparePairs; track pair.price) {
+          <div class="voix__compare-row">
+
+            <!-- Gauche -->
+            <div class="voix__compare-cell"
+              [class.voix__compare-cell--winner]="pair.betterSide === 'left'"
+              [class.voix__compare-cell--loser]="pair.betterSide === 'right'"
+              [class.voix__compare-cell--empty]="!pair.left"
+            >
+              @if (pair.left) {
+                @if (pair.betterSide === 'left') {
+                  <span class="voix__badge voix__badge--win">✅ Plus avantageux</span>
+                } @else if (pair.betterSide === 'right') {
+                  <span class="voix__badge voix__badge--lose">❌ Moins avantageux</span>
+                } @else if (pair.betterSide === 'equal') {
+                  <span class="voix__badge voix__badge--eq">➖ Identique</span>
+                }
+                <div class="voix__compare-received" [style.color]="leftGroup!.color">
+                  {{ formatPrice(pair.left.volume_recu) }}
+                  <small>crédit reçu</small>
+                </div>
+                @if (pair.left.extra_bonus) {
+                  <div class="voix__compare-bonus">🎁 +{{ formatPrice(pair.left.extra_bonus) }}</div>
+                }
+                @if (pair.left.ussd_code) {
+                  <code class="voix__compare-ussd">{{ pair.left.ussd_code }}</code>
+                }
+                <div class="voix__compare-validity">⏱ {{ pair.left.validity }}</div>
+              } @else {
+                <div class="voix__compare-absent">—<small>Non disponible</small></div>
+              }
+            </div>
+
+            <!-- Centre -->
+            <div class="voix__compare-center">
+              <span class="voix__compare-price">{{ formatPrice(pair.price) }}</span>
+              <span class="voix__compare-cat">{{ categoryLabel(pair.category) }}</span>
+            </div>
+
+            <!-- Droite -->
+            <div class="voix__compare-cell"
+              [class.voix__compare-cell--winner]="pair.betterSide === 'right'"
+              [class.voix__compare-cell--loser]="pair.betterSide === 'left'"
+              [class.voix__compare-cell--empty]="!pair.right"
+            >
+              @if (pair.right) {
+                @if (pair.betterSide === 'right') {
+                  <span class="voix__badge voix__badge--win">✅ Plus avantageux</span>
+                } @else if (pair.betterSide === 'left') {
+                  <span class="voix__badge voix__badge--lose">❌ Moins avantageux</span>
+                } @else if (pair.betterSide === 'equal') {
+                  <span class="voix__badge voix__badge--eq">➖ Identique</span>
+                }
+                <div class="voix__compare-received" [style.color]="rightGroup!.color">
+                  {{ formatPrice(pair.right.volume_recu) }}
+                  <small>crédit reçu</small>
+                </div>
+                @if (pair.right.extra_bonus) {
+                  <div class="voix__compare-bonus">🎁 +{{ formatPrice(pair.right.extra_bonus) }}</div>
+                }
+                @if (pair.right.ussd_code) {
+                  <code class="voix__compare-ussd">{{ pair.right.ussd_code }}</code>
+                }
+                <div class="voix__compare-validity">⏱ {{ pair.right.validity }}</div>
+              } @else {
+                <div class="voix__compare-absent">—<small>Non disponible</small></div>
+              }
+            </div>
+
+          </div>
+        }
+      }
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- VUE TABLEAU                                                        -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    @if (viewMode === 'table') {
+      <div class="voix__table-wrap">
+        <table class="voix__table">
+          <thead>
+            <tr>
+              <th>Opérateur</th>
+              <th>Pays</th>
+              <th>Catégorie</th>
+              <th>Forfait</th>
+              <th>Prix payé</th>
+              <th>Crédit reçu</th>
+              <th>Bonus</th>
+              <th>Code USSD</th>
+              <th>Validité</th>
+              <th>Ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (offre of filteredOffres; track offre.id) {
+              <tr>
+                <td>
+                  <span class="voix__table-op" [style.color]="getColor(offre.operator)">
+                    {{ getLogo(offre.operator) }} {{ offre.operator }}
+                  </span>
+                </td>
+                <td><span class="voix__table-pays">{{ offre.pays }}</span></td>
+                <td>
+                  <span class="voix__cat-badge voix__cat-badge--{{ offre.category.toLowerCase() }}">
+                    {{ categoryLabel(offre.category) }}
+                  </span>
+                </td>
+                <td>{{ offre.plan_name ?? '—' }}</td>
+                <td><strong>{{ formatPrice(offre.price) }}</strong></td>
+                <td>
+                  @if (offre.volume_recu) {
+                    <span class="voix__table-received">{{ formatPrice(offre.volume_recu) }}</span>
+                  } @else { — }
+                </td>
+                <td>
+                  @if (offre.extra_bonus) {
+                    <span class="voix__table-bonus">+{{ formatPrice(offre.extra_bonus) }}</span>
+                    @if (offre.extra_validity) {
+                      <small>({{ offre.extra_validity }})</small>
+                    }
+                  } @else { — }
+                </td>
+                <td>
+                  @if (offre.ussd_code) {
+                    <code class="voix__ussd">{{ offre.ussd_code }}</code>
+                  } @else { — }
+                </td>
+                <td>{{ offre.validity }}</td>
+                <td>
+                  <span class="voix__ratio-val">{{ ratio(offre) }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <p class="voix__disclaimer">
+      * Données scrapées automatiquement. Vérifiez sur les sites officiels des opérateurs.
+    </p>
+  }
+
+</div>

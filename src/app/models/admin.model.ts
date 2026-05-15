@@ -3,6 +3,7 @@
 export interface Website {
   id: string;
   operator: string;
+  pays: string | null;
   url: string;
   is_active: boolean;
   created_at: string;
@@ -10,11 +11,13 @@ export interface Website {
 
 export interface WebsiteCreate {
   operator: string;
+  pays?: string;
   url: string;
 }
 
 export interface WebsiteUpdate {
   operator?: string;
+  pays?: string;
   url?: string;
   is_active?: boolean;
 }

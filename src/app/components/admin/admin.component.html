@@ -60,9 +60,19 @@
 
       <div class="admin__panel-toolbar">
         <h2 class="admin__panel-title">Sites à scraper</h2>
-        <button class="btn btn--primary" (click)="showAddWebsite = !showAddWebsite">
-          + Ajouter un site
-        </button>
+        <div class="admin__toolbar-btns">
+          <button
+            class="btn btn--ghost"
+            [disabled]="autoFillingPays"
+            (click)="autoFillPays()"
+            title="Remplir automatiquement le pays depuis les métadonnées opérateur"
+          >
+            @if (autoFillingPays) { ⏳ } @else { 🌍 } Auto-remplir pays
+          </button>
+          <button class="btn btn--primary" (click)="showAddWebsite = !showAddWebsite">
+            + Ajouter un site
+          </button>
+        </div>
       </div>
 
       @if (websitesError) {
@@ -83,6 +93,15 @@
                 [(ngModel)]="newWebsite.operator"
               />
             </div>
+            <div class="admin__field">
+              <label class="admin__label">Pays</label>
+              <input
+                class="admin__input"
+                type="text"
+                placeholder="ex: Bénin"
+                [(ngModel)]="newWebsite.pays"
+              />
+            </div>
             <div class="admin__field admin__field--wide">
               <label class="admin__label">URL</label>
               <input
@@ -97,7 +116,7 @@
             <button class="btn btn--ghost" (click)="showAddWebsite = false">Annuler</button>
             <button
               class="btn btn--primary"
-              [disabled]="addingWebsite || !newWebsite.operator || !newWebsite.url"
+              [disabled]="addingWebsite || !newWebsite.operator || !newWebsite.pays || !newWebsite.url"
               (click)="addWebsite()"
             >
               @if (addingWebsite) { ⏳ Ajout… } @else { ✅ Ajouter }
@@ -120,6 +139,7 @@
             <thead>
               <tr>
                 <th>Opérateur</th>
+                <th>Pays</th>
                 <th>URL</th>
                 <th>Statut</th>
                 <th>Ajouté le</th>
@@ -131,6 +151,32 @@
                 <tr [class.admin__row--inactive]="!site.is_active">
                   <td>
                     <span class="admin__op-name">{{ site.operator }}</span>
+                  </td>
+                  <td>
+                    @if (editingPaysId === site.id) {
+                      <div class="admin__pays-edit">
+                        <input
+                          class="admin__input admin__input--sm"
+                          type="text"
+                          [(ngModel)]="editingPaysValue"
+                          (keyup.enter)="savePays(site)"
+                          (keyup.escape)="cancelEditPays()"
+                          placeholder="ex: Bénin"
+                          autofocus
+                        />
+                        <button class="btn btn--sm btn--primary" (click)="savePays(site)">✓</button>
+                        <button class="btn btn--sm btn--ghost" (click)="cancelEditPays()">✕</button>
+                      </div>
+                    } @else {
+                      <span
+                        class="admin__pays-badge"
+                        [class.admin__pays-badge--empty]="!site.pays"
+                        (click)="startEditPays(site)"
+                        title="Cliquer pour modifier"
+                      >
+                        {{ site.pays || '— cliquer pour définir' }}
+                      </span>
+                    }
                   </td>
                   <td>
                     <a [href]="site.url" target="_blank" class="admin__url">
@@ -209,7 +255,7 @@
               >
                 <option value="">— URL manuelle —</option>
                 @for (site of activeWebsites; track site.id) {
-                  <option [value]="site.id">{{ site.operator }} — {{ site.url }}</option>
+                  <option [value]="site.id">{{ site.operator }} ({{ site.pays }}) — {{ site.url }}</option>
                 }
               </select>
             </div>

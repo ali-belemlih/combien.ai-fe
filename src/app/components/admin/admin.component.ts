@@ -26,8 +26,13 @@ export class AdminComponent implements OnInit {
   websitesError: string | null = null;
 
   showAddWebsite = false;
-  newWebsite: WebsiteCreate = { operator: '', url: '' };
+  newWebsite: WebsiteCreate = { operator: '', pays: '', url: '' };
   addingWebsite = false;
+  autoFillingPays = false;
+
+  // Édition inline du pays
+  editingPaysId: string | null = null;
+  editingPaysValue = '';
 
   // ─── Jobs ─────────────────────────────────────────────────────────────────
   jobs: Job[] = [];
@@ -102,7 +107,7 @@ export class AdminComponent implements OnInit {
     this.svc.createWebsite(this.newWebsite).subscribe({
       next: (w) => {
         this.websites = [...this.websites, w];
-        this.newWebsite = { operator: '', url: '' };
+        this.newWebsite = { operator: '', pays: '', url: '' };
         this.showAddWebsite = false;
         this.addingWebsite = false;
       },
@@ -117,6 +122,38 @@ export class AdminComponent implements OnInit {
       },
       error: (e: Error) => { this.websitesError = e.message; },
     });
+  }
+
+  autoFillPays(): void {
+    this.autoFillingPays = true;
+    this.svc.autoFillPays().subscribe({
+      next: (updated) => {
+        this.websites = updated;
+        this.autoFillingPays = false;
+      },
+      error: (e: Error) => { this.websitesError = e.message; this.autoFillingPays = false; },
+    });
+  }
+
+  startEditPays(site: Website): void {
+    this.editingPaysId = site.id;
+    this.editingPaysValue = site.pays ?? '';
+  }
+
+  savePays(site: Website): void {
+    if (!this.editingPaysValue.trim()) { this.cancelEditPays(); return; }
+    this.svc.updateWebsite(site.id, { pays: this.editingPaysValue.trim() }).subscribe({
+      next: (updated) => {
+        this.websites = this.websites.map(x => x.id === updated.id ? updated : x);
+        this.editingPaysId = null;
+      },
+      error: (e: Error) => { this.websitesError = e.message; },
+    });
+  }
+
+  cancelEditPays(): void {
+    this.editingPaysId = null;
+    this.editingPaysValue = '';
   }
 
   deleteWebsite(id: string): void {
@@ -259,7 +296,10 @@ export class AdminComponent implements OnInit {
 
   websiteName(id: string | null): string {
     if (!id) return '—';
-    return this.websites.find(w => w.id === id)?.operator ?? id.slice(0, 8) + '…';
+    const site = this.websites.find(w => w.id === id);
+    if (!site) return id.slice(0, 8) + '…';
+    const pays = site.pays ? ` (${site.pays})` : '';
+    return `${site.operator}${pays}`;
   }
 
   onWebsiteSelect(): void {

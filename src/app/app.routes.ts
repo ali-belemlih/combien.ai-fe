@@ -12,6 +12,11 @@ export const routes: Routes = [
       import('./components/questionnaire/questionnaire.component').then(m => m.QuestionnaireComponent),
   },
   {
+    path: 'voix',
+    loadComponent: () =>
+      import('./components/voix/voix.component').then(m => m.VoixComponent),
+  },
+  {
     path: 'admin',
     loadComponent: () =>
       import('./components/admin/admin.component').then(m => m.AdminComponent),

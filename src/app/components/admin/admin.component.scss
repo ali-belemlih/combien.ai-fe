@@ -301,6 +301,47 @@ $radius:    10px;
   color: $text;
 }
 
+.admin__pays-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: $text-muted;
+  background: $surface2;
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+
+  &::before { content: '📍'; font-size: 0.7rem; }
+
+  &:hover {
+    border-color: $primary;
+    color: $text;
+  }
+
+  &--empty {
+    color: rgba($text-muted, 0.5);
+    border-style: dashed;
+    font-style: italic;
+    &::before { content: ''; }
+  }
+}
+
+.admin__pays-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.admin__input--sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  width: 120px;
+}
+
 .admin__url {
   color: $info;
   text-decoration: none;

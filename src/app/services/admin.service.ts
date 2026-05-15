@@ -32,6 +32,10 @@ export class AdminService {
     return this.http.delete<void>(`${this.base}/websites/${id}`).pipe(catchError(this._handleError));
   }
 
+  autoFillPays(): Observable<Website[]> {
+    return this.http.put<Website[]>(`${this.base}/websites/auto-pays`, {}).pipe(catchError(this._handleError));
+  }
+
   // ── Jobs ──────────────────────────────────────────────────────────────────────
 
   getJobs(): Observable<Job[]> {
