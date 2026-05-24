@@ -21,20 +21,6 @@
       />
       <span class="calc__value">{{ displayValue }}</span>
     </div>
-
-    @if (presets.length > 0) {
-      <div class="calc__presets">
-        @for (p of presets; track p.mo) {
-          <button
-            pButton
-            type="button"
-            [label]="p.label"
-            [class]="monthlyMo === p.mo ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
-            (click)="setPreset(p.mo)"
-          ></button>
-        }
-      </div>
-    }
   </div>
 
   @if (result) {

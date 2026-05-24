@@ -1,5 +1,29 @@
 <div class="comparison">
 
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SÉLECTEUR DE TYPE DE FORFAIT                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="comparison__type-selector">
+    <button
+      type="button"
+      class="comparison__type-btn"
+      [class.comparison__type-btn--active]="forfaitType === 'internet'"
+      (click)="onTypeChange('internet')"
+    >
+      <span class="comparison__type-icon">📶</span>
+      <span class="comparison__type-label">Forfaits Internet</span>
+    </button>
+    <button
+      type="button"
+      class="comparison__type-btn"
+      [class.comparison__type-btn--active]="forfaitType === 'voix'"
+      (click)="onTypeChange('voix')"
+    >
+      <span class="comparison__type-icon">📞</span>
+      <span class="comparison__type-label">Forfaits Voix</span>
+    </button>
+  </div>
+
   <!-- Chargement -->
   @if (loading) {
     <div class="comparison__loading">
@@ -31,7 +55,12 @@
       </div>
     }
 
-    <!-- Stats -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- SECTION INTERNET                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (forfaitType === 'internet') {
+
+    <!-- Stats Internet -->
     <div class="comparison__stats">
       <div class="comparison__stat">
         <span class="comparison__stat-value">{{ totalOperators }}</span>
@@ -50,10 +79,64 @@
     <!-- Bannière meilleure valeur -->
     <app-best-value-banner [bestValue]="bestValue" />
 
-    <!-- Toolbar -->
+    <!-- KPIs Internet -->
+    <div class="kpi-grid">
+      @if (kpiBestRatio) {
+        <div class="kpi-card" [style.--kpi-color]="kpiBestRatio.color">
+          <div class="kpi-card__icon">⚡</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiBestRatio.label }}</span>
+            <span class="kpi-card__value">{{ kpiBestRatio.value }}</span>
+            <span class="kpi-card__sub">{{ kpiBestRatio.sub }}</span>
+          </div>
+        </div>
+      }
+      @if (kpiAvgPricePerGo) {
+        <div class="kpi-card" [style.--kpi-color]="kpiAvgPricePerGo.color">
+          <div class="kpi-card__icon">📊</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiAvgPricePerGo.label }}</span>
+            <span class="kpi-card__value">{{ kpiAvgPricePerGo.value }}</span>
+            <span class="kpi-card__sub">{{ kpiAvgPricePerGo.sub }}</span>
+          </div>
+        </div>
+      }
+      @if (kpiCheapest) {
+        <div class="kpi-card" [style.--kpi-color]="kpiCheapest.color">
+          <div class="kpi-card__icon">💸</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiCheapest.label }}</span>
+            <span class="kpi-card__value">{{ kpiCheapest.value }}</span>
+            <span class="kpi-card__sub">{{ kpiCheapest.sub }}</span>
+          </div>
+        </div>
+      }
+      @if (kpiMaxSaving) {
+        <div class="kpi-card" [style.--kpi-color]="kpiMaxSaving.color">
+          <div class="kpi-card__icon">🏷️</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiMaxSaving.label }}</span>
+            <span class="kpi-card__value">{{ kpiMaxSaving.value }}</span>
+            <span class="kpi-card__sub">{{ kpiMaxSaving.sub }}</span>
+          </div>
+        </div>
+      }
+      @if (kpiBestOperator) {
+        <div class="kpi-card kpi-card--wide" [style.--kpi-color]="kpiBestOperator.color">
+          <div class="kpi-card__icon">🏆</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiBestOperator.label }}</span>
+            <span class="kpi-card__value">{{ kpiBestOperator.value }}</span>
+            <span class="kpi-card__sub">{{ kpiBestOperator.sub }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Toolbar Internet -->
     <div class="comparison__toolbar">
       <ui-search-input
-        placeholder="Rechercher un forfait…"
+        placeholder="Rechercher un forfait internet…"
         (search)="search = $event"
       />
       <ui-sort-select
@@ -61,82 +144,49 @@
         [active]="sortKey"
         (change)="sortKey = $any($event)"
       />
-      <!-- Sélecteur de vue -->
       <div class="comparison__view-toggle">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-th-large"
-          label="Cartes"
+        <button pButton type="button" icon="pi pi-th-large" label="Cartes"
           [class]="viewMode === 'cards' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
-          (click)="viewMode = 'cards'"
-        ></button>
-        <button
-          pButton
-          type="button"
-          icon="pi pi-arrows-h"
-          label="Comparer"
+          (click)="viewMode = 'cards'"></button>
+        <button pButton type="button" icon="pi pi-arrows-h" label="Comparer"
           [class]="viewMode === 'compare' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
-          (click)="viewMode = 'compare'"
-        ></button>
-        <button
-          pButton
-          type="button"
-          icon="pi pi-chart-bar"
-          label="Graphique"
+          (click)="viewMode = 'compare'"></button>
+        <button pButton type="button" icon="pi pi-table" label="Tableau"
+          [class]="viewMode === 'table' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="viewMode = 'table'"></button>
+        <button pButton type="button" icon="pi pi-chart-bar" label="Graphique"
           [class]="viewMode === 'chart' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
-          (click)="viewMode = 'chart'"
-        ></button>
+          (click)="viewMode = 'chart'"></button>
       </div>
     </div>
 
-    <!-- Onglets par durée -->
+    <!-- Onglets durée Internet -->
     <div class="comparison__tabs">
       @for (tab of tabs; track tab.value) {
-        <button
-          pButton
-          type="button"
+        <button pButton type="button"
           [class]="activeTab === tab.value ? 'p-button-sm comparison__tab' : 'p-button-sm p-button-outlined comparison__tab'"
-          (click)="activeTab = $any(tab.value)"
-        >
+          (click)="activeTab = $any(tab.value)">
           {{ tab.label }}
           <span class="comparison__tab-count">{{ countByTab($any(tab.value)) }}</span>
         </button>
       }
     </div>
 
-    <!-- Calculateur -->
-    <app-calculator [operators]="filteredOperators" />
-
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- VUE GRAPHIQUE                                                          -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- VUE GRAPHIQUE Internet -->
     @if (viewMode === 'chart') {
-      <ui-bar-chart
-        [bars]="chartBars"
-        title="Comparaison des prix (FCFA)"
-        unit="FCFA"
-      />
+      <ui-bar-chart [bars]="chartBars" title="Comparaison des prix (FCFA)" unit="FCFA" />
     }
 
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- VUE COMPARAISON CÔTE À CÔTE                                            -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- VUE COMPARAISON Internet -->
     @if (viewMode === 'compare') {
-
-      <!-- Sélecteurs d'opérateurs -->
       <div class="compare-selectors">
         <div class="compare-selectors__side">
           <label class="compare-selectors__label">Opérateur gauche</label>
           <div class="compare-selectors__btns">
             @for (opt of compareOptions; track opt.value) {
-              <button
-                pButton
-                type="button"
-                [label]="opt.label"
+              <button pButton type="button" [label]="opt.label"
                 [class]="compareLeft === opt.value ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
-                (click)="compareLeft = opt.value"
-              ></button>
+                (click)="compareLeft = opt.value"></button>
             }
           </div>
         </div>
@@ -145,39 +195,26 @@
           <label class="compare-selectors__label">Opérateur droit</label>
           <div class="compare-selectors__btns">
             @for (opt of compareOptions; track opt.value) {
-              <button
-                pButton
-                type="button"
-                [label]="opt.label"
+              <button pButton type="button" [label]="opt.label"
                 [class]="compareRight === opt.value ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
-                (click)="compareRight = opt.value"
-              ></button>
+                (click)="compareRight = opt.value"></button>
             }
           </div>
         </div>
       </div>
 
-      <!-- En-têtes opérateurs -->
       @if (leftOperator && rightOperator) {
         <div class="compare-header">
           <div class="compare-header__op" [style.border-bottom-color]="leftOperator.color">
             <span class="compare-header__logo">{{ leftOperator.logo }}</span>
-            <span class="compare-header__name" [style.color]="leftOperator.color">
-              {{ leftOperator.name }}
-            </span>
-            @if (leftOperator.country) {
-              <span class="compare-header__country">{{ leftOperator.country }}</span>
-            }
+            <span class="compare-header__name" [style.color]="leftOperator.color">{{ leftOperator.name }}</span>
+            @if (leftOperator.country) { <span class="compare-header__country">{{ leftOperator.country }}</span> }
           </div>
           <div class="compare-header__mid"></div>
           <div class="compare-header__op" [style.border-bottom-color]="rightOperator.color">
             <span class="compare-header__logo">{{ rightOperator.logo }}</span>
-            <span class="compare-header__name" [style.color]="rightOperator.color">
-              {{ rightOperator.name }}
-            </span>
-            @if (rightOperator.country) {
-              <span class="compare-header__country">{{ rightOperator.country }}</span>
-            }
+            <span class="compare-header__name" [style.color]="rightOperator.color">{{ rightOperator.name }}</span>
+            @if (rightOperator.country) { <span class="compare-header__country">{{ rightOperator.country }}</span> }
           </div>
         </div>
 
@@ -190,203 +227,496 @@
 
         @for (pair of planPairs; track pair.data + pair.duration) {
           <div class="compare-row" [class.compare-row--highlight]="pair.cheaperSide !== null">
-
-            <!-- Côté gauche -->
             <div class="compare-row__cell compare-row__cell--left"
               [class.compare-row__cell--winner]="pair.cheaperSide === 'left'"
               [class.compare-row__cell--loser]="pair.cheaperSide === 'right'"
-              [class.compare-row__cell--empty]="!pair.left"
-            >
+              [class.compare-row__cell--empty]="!pair.left">
               @if (pair.left) {
                 <div class="compare-card" [style.--op-color]="pair.left.operatorColor">
-                  @if (pair.cheaperSide === 'left') {
-                    <p-tag value="✅ Moins cher" severity="success" />
-                  } @else if (pair.cheaperSide === 'right') {
-                    <p-tag value="❌ Plus cher" severity="danger" />
-                  } @else if (pair.cheaperSide === 'equal') {
-                    <p-tag value="➖ Même prix" severity="warn" />
-                  }
+                  @if (pair.cheaperSide === 'left') { <p-tag value="✅ Moins cher" severity="success" /> }
+                  @else if (pair.cheaperSide === 'right') { <p-tag value="❌ Plus cher" severity="danger" /> }
+                  @else if (pair.cheaperSide === 'equal') { <p-tag value="➖ Même prix" severity="warn" /> }
                   <div class="compare-card__data">
-                    <span class="compare-card__data-val">
-                      {{ pair.left.data >= 1000 ? (pair.left.data / 1000) : pair.left.data }}
-                    </span>
-                    <span class="compare-card__data-unit">
-                      {{ pair.left.data >= 1000 ? 'Go' : 'Mo' }}
-                    </span>
+                    <span class="compare-card__data-val">{{ pair.left.data >= 1000 ? (pair.left.data / 1000) : pair.left.data }}</span>
+                    <span class="compare-card__data-unit">{{ pair.left.data >= 1000 ? 'Go' : 'Mo' }}</span>
                   </div>
                   <div class="compare-card__price" [style.color]="pair.left.operatorColor">
-                    {{ pair.left.price | number:'1.0-0' }}
-                    <span class="compare-card__currency">FCFA</span>
+                    {{ pair.left.price | number:'1.0-0' }} <span class="compare-card__currency">FCFA</span>
                   </div>
-                  <div class="compare-card__ratio">
-                    {{ (pair.left.data / pair.left.price).toFixed(2) }} Mo/FCFA
-                  </div>
+                  <div class="compare-card__ratio">{{ (pair.left.data / pair.left.price).toFixed(2) }} Mo/FCFA</div>
                   @if (pair.left.features.length > 0) {
                     <ul class="compare-card__features">
-                      @for (f of pair.left.features; track f) {
-                        <li><i class="pi pi-check"></i> {{ f }}</li>
-                      }
+                      @for (f of pair.left.features; track f) { <li><i class="pi pi-check"></i> {{ f }}</li> }
                     </ul>
                   }
                 </div>
               } @else {
-                <div class="compare-card compare-card--absent">
-                  <span>—</span>
-                  <small>Non disponible</small>
-                </div>
+                <div class="compare-card compare-card--absent"><span>—</span><small>Non disponible</small></div>
               }
             </div>
-
-            <!-- Colonne centrale -->
             <div class="compare-row__mid">
               <span class="compare-row__vol">{{ formatData(pair.data) }}</span>
               <span class="compare-row__dur"
                 [class.compare-row__dur--daily]="pair.duration === 'daily'"
                 [class.compare-row__dur--weekly]="pair.duration === 'weekly'"
-                [class.compare-row__dur--monthly]="pair.duration === 'monthly'"
-              >{{ durationLabel(pair.duration) }}</span>
-              @if (pair.left && pair.right) {
-                <span class="compare-row__diff">{{ priceDiff(pair) }}</span>
-              }
+                [class.compare-row__dur--monthly]="pair.duration === 'monthly'">{{ durationLabel(pair.duration) }}</span>
+              @if (pair.left && pair.right) { <span class="compare-row__diff">{{ priceDiff(pair) }}</span> }
             </div>
-
-            <!-- Côté droit -->
             <div class="compare-row__cell compare-row__cell--right"
               [class.compare-row__cell--winner]="pair.cheaperSide === 'right'"
               [class.compare-row__cell--loser]="pair.cheaperSide === 'left'"
-              [class.compare-row__cell--empty]="!pair.right"
-            >
+              [class.compare-row__cell--empty]="!pair.right">
               @if (pair.right) {
                 <div class="compare-card" [style.--op-color]="pair.right.operatorColor">
-                  @if (pair.cheaperSide === 'right') {
-                    <p-tag value="✅ Moins cher" severity="success" />
-                  } @else if (pair.cheaperSide === 'left') {
-                    <p-tag value="❌ Plus cher" severity="danger" />
-                  } @else if (pair.cheaperSide === 'equal') {
-                    <p-tag value="➖ Même prix" severity="warn" />
-                  }
+                  @if (pair.cheaperSide === 'right') { <p-tag value="✅ Moins cher" severity="success" /> }
+                  @else if (pair.cheaperSide === 'left') { <p-tag value="❌ Plus cher" severity="danger" /> }
+                  @else if (pair.cheaperSide === 'equal') { <p-tag value="➖ Même prix" severity="warn" /> }
                   <div class="compare-card__data">
-                    <span class="compare-card__data-val">
-                      {{ pair.right.data >= 1000 ? (pair.right.data / 1000) : pair.right.data }}
-                    </span>
-                    <span class="compare-card__data-unit">
-                      {{ pair.right.data >= 1000 ? 'Go' : 'Mo' }}
-                    </span>
+                    <span class="compare-card__data-val">{{ pair.right.data >= 1000 ? (pair.right.data / 1000) : pair.right.data }}</span>
+                    <span class="compare-card__data-unit">{{ pair.right.data >= 1000 ? 'Go' : 'Mo' }}</span>
                   </div>
                   <div class="compare-card__price" [style.color]="pair.right.operatorColor">
-                    {{ pair.right.price | number:'1.0-0' }}
-                    <span class="compare-card__currency">FCFA</span>
+                    {{ pair.right.price | number:'1.0-0' }} <span class="compare-card__currency">FCFA</span>
                   </div>
-                  <div class="compare-card__ratio">
-                    {{ (pair.right.data / pair.right.price).toFixed(2) }} Mo/FCFA
-                  </div>
+                  <div class="compare-card__ratio">{{ (pair.right.data / pair.right.price).toFixed(2) }} Mo/FCFA</div>
                   @if (pair.right.features.length > 0) {
                     <ul class="compare-card__features">
-                      @for (f of pair.right.features; track f) {
-                        <li><i class="pi pi-check"></i> {{ f }}</li>
-                      }
+                      @for (f of pair.right.features; track f) { <li><i class="pi pi-check"></i> {{ f }}</li> }
                     </ul>
                   }
                 </div>
               } @else {
-                <div class="compare-card compare-card--absent">
-                  <span>—</span>
-                  <small>Non disponible</small>
-                </div>
+                <div class="compare-card compare-card--absent"><span>—</span><small>Non disponible</small></div>
               }
             </div>
-
           </div>
         }
       }
     }
 
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- VUE CARTES                                                             -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    @if (viewMode === 'cards') {
+    <!-- VUE TABLEAU Internet -->
+    @if (viewMode === 'table') {
+      <div class="comparison__table-wrap">
+        <table class="comparison__table">
+          <thead>
+            <tr>
+              <th>Opérateur</th>
+              <th>Pays</th>
+              <th>Durée</th>
+              <th>Forfait</th>
+              <th>Data</th>
+              <th>Prix</th>
+              <th>Ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (plan of filteredPlans; track plan.id) {
+              <tr>
+                <td>
+                  <span class="comparison__table-op" [style.color]="plan.operatorColor">
+                    {{ getOpLogo(plan.operatorName) }} {{ plan.operatorName }}
+                  </span>
+                </td>
+                <td>
+                  <span class="comparison__table-pays">
+                    {{ getOperatorCountry(plan.operatorId) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="voix__cat-badge voix__cat-badge--{{ plan.duration }}">
+                    {{ durationLabel(plan.duration) }}
+                  </span>
+                </td>
+                <td>{{ plan.name || '—' }}</td>
+                <td>
+                  <strong>{{ plan.data >= 1000 ? (plan.data % 1000 === 0 ? (plan.data / 1000) + ' Go' : (plan.data / 1000).toFixed(1) + ' Go') : plan.data + ' Mo' }}</strong>
+                </td>
+                <td><strong>{{ plan.price | number:'1.0-0' }} FCFA</strong></td>
+                <td>
+                  <span class="comparison__ratio-val">{{ (plan.data / plan.price).toFixed(2) }} Mo/FCFA</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
 
+    <!-- VUE CARTES Internet -->
+    @if (viewMode === 'cards') {
       @if (filteredPlans.length === 0) {
         <div class="comparison__empty">
           <i class="pi pi-search"></i>
           <p>Aucun forfait ne correspond à votre recherche.</p>
         </div>
       }
-
       @for (group of groupedByOperator; track group.op.id) {
         <div class="comparison__group">
-
-          <!-- En-tête opérateur -->
           <div class="comparison__group-header" [style.border-left-color]="group.op.color">
             <span class="comparison__group-logo">{{ group.op.logo }}</span>
-            <span class="comparison__group-name" [style.color]="group.op.color">
-              {{ group.op.name }}
-            </span>
-            @if (group.op.country) {
-              <span class="comparison__group-country">{{ group.op.country }}</span>
-            }
+            <span class="comparison__group-name" [style.color]="group.op.color">{{ group.op.name }}</span>
+            @if (group.op.country) { <span class="comparison__group-country">{{ group.op.country }}</span> }
             <p-tag [value]="group.plans.length + ' forfaits'" severity="info" styleClass="comparison__group-count" />
           </div>
-
-          <!-- Grille de cartes -->
           <div class="comparison__grid">
             @for (plan of group.plans; track plan.id) {
               <p-card styleClass="plan-card" [style]="{'--op-color': plan.operatorColor, 'border-top': '3px solid ' + plan.operatorColor}">
-
-                <!-- Durée badge -->
                 <ng-template pTemplate="header">
                   <div class="plan-card__header-row">
-                    <p-tag
-                      [value]="durationLabel(plan.duration)"
-                      [severity]="plan.duration === 'daily' ? 'warn' : plan.duration === 'weekly' ? 'info' : 'success'"
-                    />
-                    @if (plan.promo) {
-                      <p-tag value="Promo" severity="danger" />
-                    }
+                    <p-tag [value]="durationLabel(plan.duration)"
+                      [severity]="plan.duration === 'daily' ? 'warn' : plan.duration === 'weekly' ? 'info' : 'success'" />
+                    @if (plan.promo) { <p-tag value="Promo" severity="danger" /> }
                   </div>
                 </ng-template>
-
-                <!-- Volume data -->
                 <div class="plan-card__data">
                   <span class="plan-card__data-value">
                     {{ plan.data >= 1000 ? (plan.data % 1000 === 0 ? plan.data/1000 : (plan.data/1000).toFixed(1)) : plan.data }}
                   </span>
-                  <span class="plan-card__data-unit">
-                    {{ plan.data >= 1000 ? 'Go' : 'Mo' }}
-                  </span>
+                  <span class="plan-card__data-unit">{{ plan.data >= 1000 ? 'Go' : 'Mo' }}</span>
                 </div>
-
-                <!-- Prix -->
                 <div class="plan-card__price">
                   <span class="plan-card__price-amount">{{ plan.price | number:'1.0-0' }}</span>
                   <span class="plan-card__price-currency">FCFA</span>
                 </div>
-
-                <!-- Features -->
                 @if (plan.features.length > 0) {
                   <ul class="plan-card__features">
-                    @for (f of plan.features; track f) {
-                      <li><i class="pi pi-check"></i> {{ f }}</li>
-                    }
+                    @for (f of plan.features; track f) { <li><i class="pi pi-check"></i> {{ f }}</li> }
                   </ul>
                 }
-
-                <!-- Ratio valeur -->
                 <ng-template pTemplate="footer">
                   <div class="plan-card__ratio">
                     <i class="pi pi-chart-line"></i>
                     {{ (plan.data / plan.price).toFixed(2) }} Mo/FCFA
                   </div>
                 </ng-template>
-
               </p-card>
             }
           </div>
-
         </div>
       }
-
     }
+
+    } <!-- fin @if forfaitType === 'internet' -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- SECTION VOIX                                                           -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (forfaitType === 'voix') {
+
+    <!-- Stats Voix -->
+    <div class="comparison__stats">
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ voixTotalOperators }}</span>
+        <span class="comparison__stat-label">Opérateurs</span>
+      </div>
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ voixTotalOffres }}</span>
+        <span class="comparison__stat-label">Offres</span>
+      </div>
+      @if (bestVoixRatio) {
+        <div class="comparison__stat comparison__stat--best">
+          <span class="comparison__stat-value">🏆</span>
+          <span class="comparison__stat-label">
+            Meilleur ratio : <strong>{{ bestVoixRatio.operator }}</strong>
+            — {{ bestVoixRatio.ratio.toFixed(2) }} FCFA reçu/payé
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- KPIs Voix -->
+    <div class="kpi-grid">
+      @if (kpiVoixBestRatio) {
+        <div class="kpi-card" [style.--kpi-color]="kpiVoixBestRatio.color">
+          <div class="kpi-card__icon">⚡</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiVoixBestRatio.label }}</span>
+            <span class="kpi-card__value">{{ kpiVoixBestRatio.value }}</span>
+            <span class="kpi-card__sub">{{ kpiVoixBestRatio.sub }}</span>
+          </div>
+        </div>
+      }
+      @if (kpiVoixMostCredit) {
+        <div class="kpi-card" [style.--kpi-color]="kpiVoixMostCredit.color">
+          <div class="kpi-card__icon">💰</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiVoixMostCredit.label }}</span>
+            <span class="kpi-card__value">{{ kpiVoixMostCredit.value }}</span>
+            <span class="kpi-card__sub">{{ kpiVoixMostCredit.sub }}</span>
+          </div>
+        </div>
+      }
+      @if (kpiVoixTotalBonus) {
+        <div class="kpi-card" [style.--kpi-color]="kpiVoixTotalBonus.color">
+          <div class="kpi-card__icon">🎁</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiVoixTotalBonus.label }}</span>
+            <span class="kpi-card__value">{{ kpiVoixTotalBonus.value }}</span>
+            <span class="kpi-card__sub">{{ kpiVoixTotalBonus.sub }}</span>
+          </div>
+        </div>
+      }
+      @if (kpiVoixBestOperator) {
+        <div class="kpi-card kpi-card--wide" [style.--kpi-color]="kpiVoixBestOperator.color">
+          <div class="kpi-card__icon">🏆</div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__label">{{ kpiVoixBestOperator.label }}</span>
+            <span class="kpi-card__value">{{ kpiVoixBestOperator.value }}</span>
+            <span class="kpi-card__sub">{{ kpiVoixBestOperator.sub }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Toolbar Voix -->
+    <div class="comparison__toolbar">
+      <ui-search-input placeholder="Rechercher un forfait voix…" (search)="search = $event" />
+      <div class="comparison__view-toggle">
+        <button pButton type="button" icon="pi pi-th-large" label="Cartes"
+          [class]="viewMode === 'cards' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="viewMode = 'cards'"></button>
+        <button pButton type="button" icon="pi pi-arrows-h" label="Comparer"
+          [class]="viewMode === 'compare' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="viewMode = 'compare'"></button>
+        <button pButton type="button" icon="pi pi-table" label="Tableau"
+          [class]="viewMode === 'table' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="viewMode = 'table'"></button>
+        <button pButton type="button" icon="pi pi-chart-bar" label="Graphique"
+          [class]="viewMode === 'chart' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="viewMode = 'chart'"></button>
+      </div>
+    </div>
+
+    <!-- Onglets catégorie Voix -->
+    <div class="comparison__tabs">
+      @for (cat of voixCategories; track cat.value) {
+        <button pButton type="button"
+          [class]="activeCategory === cat.value ? 'p-button-sm comparison__tab' : 'p-button-sm p-button-outlined comparison__tab'"
+          (click)="onCategoryChange(cat.value)">
+          {{ cat.label }}
+          <span class="comparison__tab-count">{{ countByCategory(cat.value) }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- VUE GRAPHIQUE Voix -->
+    @if (viewMode === 'chart') {
+      <ui-bar-chart [bars]="voixChartBars" title="Crédit reçu par offre (FCFA)" unit="FCFA" />
+    }
+
+    <!-- VUE COMPARAISON Voix -->
+    @if (viewMode === 'compare') {
+      <div class="compare-selectors">
+        <div class="compare-selectors__side">
+          <label class="compare-selectors__label">Opérateur gauche</label>
+          <select class="comparison__select" [(ngModel)]="compareVoixLeft">
+            @for (op of voixCompareOptions; track op.value) {
+              <option [value]="op.value">{{ op.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="compare-selectors__vs">VS</div>
+        <div class="compare-selectors__side">
+          <label class="compare-selectors__label">Opérateur droit</label>
+          <select class="comparison__select" [(ngModel)]="compareVoixRight">
+            @for (op of voixCompareOptions; track op.value) {
+              <option [value]="op.value">{{ op.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (leftVoixGroup && rightVoixGroup) {
+        <div class="compare-header">
+          <div class="compare-header__op" [style.border-bottom-color]="leftVoixGroup.color">
+            <span class="compare-header__logo">{{ leftVoixGroup.logo }}</span>
+            <span class="compare-header__name" [style.color]="leftVoixGroup.color">{{ leftVoixGroup.name }}</span>
+            <span class="compare-header__country">{{ leftVoixGroup.pays }}</span>
+          </div>
+          <div class="compare-header__mid"></div>
+          <div class="compare-header__op" [style.border-bottom-color]="rightVoixGroup.color">
+            <span class="compare-header__logo">{{ rightVoixGroup.logo }}</span>
+            <span class="compare-header__name" [style.color]="rightVoixGroup.color">{{ rightVoixGroup.name }}</span>
+            <span class="compare-header__country">{{ rightVoixGroup.pays }}</span>
+          </div>
+        </div>
+
+        @if (voixComparePairs.length === 0) {
+          <div class="comparison__empty">
+            <i class="pi pi-search"></i>
+            <p>Aucune offre commune pour cette sélection.</p>
+          </div>
+        }
+
+        @for (pair of voixComparePairs; track pair.price) {
+          <div class="compare-row" [class.compare-row--highlight]="pair.betterSide !== null">
+            <div class="compare-row__cell"
+              [class.compare-row__cell--winner]="pair.betterSide === 'left'"
+              [class.compare-row__cell--loser]="pair.betterSide === 'right'"
+              [class.compare-row__cell--empty]="!pair.left">
+              @if (pair.left) {
+                <div class="voix-compare-card">
+                  @if (pair.betterSide === 'left') { <span class="voix__badge voix__badge--win">✅ Plus avantageux</span> }
+                  @else if (pair.betterSide === 'right') { <span class="voix__badge voix__badge--lose">❌ Moins avantageux</span> }
+                  @else if (pair.betterSide === 'equal') { <span class="voix__badge voix__badge--eq">➖ Identique</span> }
+                  <div class="voix-compare-card__received" [style.color]="leftVoixGroup!.color">
+                    {{ formatPrice(pair.left.volume_recu) }}<small>crédit reçu</small>
+                  </div>
+                  @if (pair.left.extra_bonus) {
+                    <div class="voix-compare-card__bonus">🎁 +{{ formatPrice(pair.left.extra_bonus) }}</div>
+                  }
+                  @if (pair.left.ussd_code) { <code class="voix-compare-card__ussd">{{ pair.left.ussd_code }}</code> }
+                  <div class="voix-compare-card__validity">⏱ {{ pair.left.validity }}</div>
+                </div>
+              } @else {
+                <div class="compare-card compare-card--absent"><span>—</span><small>Non disponible</small></div>
+              }
+            </div>
+            <div class="compare-row__mid">
+              <span class="compare-row__vol">{{ formatPrice(pair.price) }}</span>
+              <span class="compare-row__dur compare-row__dur--{{ pair.category.toLowerCase() }}">{{ categoryLabel(pair.category) }}</span>
+            </div>
+            <div class="compare-row__cell"
+              [class.compare-row__cell--winner]="pair.betterSide === 'right'"
+              [class.compare-row__cell--loser]="pair.betterSide === 'left'"
+              [class.compare-row__cell--empty]="!pair.right">
+              @if (pair.right) {
+                <div class="voix-compare-card">
+                  @if (pair.betterSide === 'right') { <span class="voix__badge voix__badge--win">✅ Plus avantageux</span> }
+                  @else if (pair.betterSide === 'left') { <span class="voix__badge voix__badge--lose">❌ Moins avantageux</span> }
+                  @else if (pair.betterSide === 'equal') { <span class="voix__badge voix__badge--eq">➖ Identique</span> }
+                  <div class="voix-compare-card__received" [style.color]="rightVoixGroup!.color">
+                    {{ formatPrice(pair.right.volume_recu) }}<small>crédit reçu</small>
+                  </div>
+                  @if (pair.right.extra_bonus) {
+                    <div class="voix-compare-card__bonus">🎁 +{{ formatPrice(pair.right.extra_bonus) }}</div>
+                  }
+                  @if (pair.right.ussd_code) { <code class="voix-compare-card__ussd">{{ pair.right.ussd_code }}</code> }
+                  <div class="voix-compare-card__validity">⏱ {{ pair.right.validity }}</div>
+                </div>
+              } @else {
+                <div class="compare-card compare-card--absent"><span>—</span><small>Non disponible</small></div>
+              }
+            </div>
+          </div>
+        }
+      }
+    }
+
+    <!-- VUE TABLEAU Voix -->
+    @if (viewMode === 'table') {
+      <div class="comparison__table-wrap">
+        <table class="comparison__table">
+          <thead>
+            <tr>
+              <th>Opérateur</th><th>Pays</th><th>Catégorie</th><th>Forfait</th>
+              <th>Prix payé</th><th>Crédit reçu</th><th>Bonus</th>
+              <th>Code USSD</th><th>Validité</th><th>Ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (offre of filteredOffres; track offre.id) {
+              <tr>
+                <td>
+                  <span class="comparison__table-op" [style.color]="getOpColor(offre.operator)">
+                    {{ getOpLogo(offre.operator) }} {{ offre.operator }}
+                  </span>
+                </td>
+                <td><span class="comparison__table-pays">{{ offre.pays }}</span></td>
+                <td>
+                  <span class="voix__cat-badge voix__cat-badge--{{ offre.category.toLowerCase() }}">
+                    {{ categoryLabel(offre.category) }}
+                  </span>
+                </td>
+                <td>{{ offre.plan_name ?? '—' }}</td>
+                <td><strong>{{ formatPrice(offre.price) }}</strong></td>
+                <td>
+                  @if (offre.volume_recu) { <span class="comparison__table-received">{{ formatPrice(offre.volume_recu) }}</span> }
+                  @else { — }
+                </td>
+                <td>
+                  @if (offre.extra_bonus) {
+                    <span class="comparison__table-bonus">+{{ formatPrice(offre.extra_bonus) }}</span>
+                    @if (offre.extra_validity) { <small>({{ offre.extra_validity }})</small> }
+                  } @else { — }
+                </td>
+                <td>
+                  @if (offre.ussd_code) { <code class="voix__ussd">{{ offre.ussd_code }}</code> }
+                  @else { — }
+                </td>
+                <td>{{ offre.validity }}</td>
+                <td><span class="comparison__ratio-val">{{ voixRatio(offre) }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- VUE CARTES Voix -->
+    @if (viewMode === 'cards') {
+      @if (voixOperatorGroups.length === 0) {
+        <div class="comparison__empty">
+          <i class="pi pi-search"></i>
+          <p>Aucune offre voix trouvée pour cette sélection.</p>
+        </div>
+      }
+      @for (group of voixOperatorGroups; track group.name + group.pays) {
+        <div class="comparison__group">
+          <div class="comparison__group-header" [style.border-left-color]="group.color">
+            <span class="comparison__group-logo">{{ group.logo }}</span>
+            <span class="comparison__group-name" [style.color]="group.color">{{ group.name }}</span>
+            <span class="comparison__group-country">📍 {{ group.pays }}</span>
+            <p-tag [value]="group.offres.length + ' offre' + (group.offres.length > 1 ? 's' : '')" severity="info" styleClass="comparison__group-count" />
+          </div>
+          <div class="comparison__grid comparison__grid--voix">
+            @for (offre of group.offres; track offre.id) {
+              <div class="voix__card" [style.--op-color]="group.color">
+                <div class="voix__card-top">
+                  <span class="voix__cat-badge voix__cat-badge--{{ offre.category.toLowerCase() }}">
+                    {{ categoryLabel(offre.category) }}
+                  </span>
+                  @if (offre.plan_name) { <span class="voix__plan-name">{{ offre.plan_name }}</span> }
+                </div>
+                <div class="voix__card-price">
+                  <span class="voix__price-amount">{{ formatPrice(offre.price) }}</span>
+                  <span class="voix__price-label">payé</span>
+                </div>
+                @if (offre.volume_recu) {
+                  <div class="voix__card-received">
+                    <span class="voix__received-icon">💰</span>
+                    <div>
+                      <span class="voix__received-amount">{{ formatPrice(offre.volume_recu) }}</span>
+                      <span class="voix__received-label">crédit reçu</span>
+                    </div>
+                  </div>
+                }
+                @if (offre.extra_bonus) {
+                  <div class="voix__card-bonus">
+                    <span>🎁 Bonus : <strong>{{ formatPrice(offre.extra_bonus) }}</strong></span>
+                    @if (offre.extra_validity) { <span class="voix__bonus-validity">valable {{ offre.extra_validity }}</span> }
+                  </div>
+                }
+                <div class="voix__card-footer">
+                  <div class="voix__card-meta">
+                    <span class="voix__meta-item">⏱ {{ offre.validity }}</span>
+                    @if (offre.ussd_code) { <span class="voix__meta-item voix__ussd">{{ offre.ussd_code }}</span> }
+                  </div>
+                  @if (offre.volume_recu) {
+                    <div class="voix__ratio">
+                      <span class="voix__ratio-val">{{ voixRatio(offre) }}</span>
+                      <span class="voix__ratio-lbl">FCFA/FCFA</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    } <!-- fin @if forfaitType === 'voix' -->
 
     <p class="comparison__disclaimer">
       * Données scrapées automatiquement. Vérifiez sur les sites officiels des opérateurs.

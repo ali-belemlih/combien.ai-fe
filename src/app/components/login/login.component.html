@@ -1,0 +1,32 @@
+<div class="login">
+  <div class="login__card">
+
+    <!-- Logo -->
+    <div class="login__logo">
+      <span class="login__logo-icon">📶</span>
+      <span class="login__logo-text">combien<span class="login__logo-dot">.ai</span></span>
+    </div>
+
+    <!-- Titre -->
+    <h1 class="login__title">Espace Administration</h1>
+    <p class="login__subtitle">
+      Connectez-vous avec votre compte Keycloak pour accéder à l'interface d'administration.
+    </p>
+
+    <!-- Bouton login -->
+    <button class="login__btn" (click)="login()" type="button">
+      <svg class="login__btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Se connecter avec Keycloak
+    </button>
+
+    <!-- Retour accueil -->
+    <a class="login__back" routerLink="/">
+      ← Retour à la comparaison
+    </a>
+
+  </div>
+</div>

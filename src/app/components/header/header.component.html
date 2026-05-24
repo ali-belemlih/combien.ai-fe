@@ -18,28 +18,56 @@
       </a>
       <a
         pButton
-        class="p-button-text header__nav-btn"
-        routerLink="/voix"
-        routerLinkActive="header__nav-btn--active"
-      >
-        <i class="pi pi-phone"></i> Voix
-      </a>
-      <a
-        pButton
         class="p-button-rounded header__nav-btn header__nav-btn--cta"
         routerLink="/questionnaire"
         routerLinkActive="header__nav-btn--active"
       >
         <i class="pi pi-compass"></i> Trouver mon forfait
       </a>
-      <a
-        pButton
-        class="p-button-text header__nav-btn header__nav-btn--admin"
-        routerLink="/admin"
-        routerLinkActive="header__nav-btn--active"
-      >
-        <i class="pi pi-cog"></i> Admin
-      </a>
+
+      <!-- Lien Admin : visible seulement pour les admins connectés -->
+      @if (auth.isAdmin()) {
+        <a
+          pButton
+          class="p-button-text header__nav-btn header__nav-btn--admin"
+          routerLink="/admin"
+          routerLinkActive="header__nav-btn--active"
+        >
+          <i class="pi pi-cog"></i> Admin
+        </a>
+      }
+
+      <!-- Zone utilisateur -->
+      @if (auth.isAuthenticated()) {
+        <div class="header__user">
+          <div class="header__user-info">
+            <span class="header__user-avatar">
+              {{ auth.user()?.username?.charAt(0)?.toUpperCase() ?? '?' }}
+            </span>
+            <span class="header__user-name">{{ auth.user()?.username }}</span>
+            @if (auth.isAdmin()) {
+              <span class="header__user-badge">Admin</span>
+            }
+          </div>
+          <button
+            pButton
+            class="p-button-text header__nav-btn header__nav-btn--logout"
+            (click)="logout()"
+            type="button"
+          >
+            <i class="pi pi-sign-out"></i> Déconnexion
+          </button>
+        </div>
+      } @else {
+        <button
+          pButton
+          class="p-button-text header__nav-btn header__nav-btn--login"
+          (click)="login()"
+          type="button"
+        >
+          <i class="pi pi-sign-in"></i> Connexion
+        </button>
+      }
     </nav>
   </div>
 </header>
