@@ -1,0 +1,18 @@
+@if (visibleItems.length > 0) {
+  <div class="kpi-grid">
+    @for (item of visibleItems; track item.label) {
+      <div
+        class="kpi-card"
+        [class.kpi-card--wide]="item.wide"
+        [style.--kpi-color]="item.color"
+      >
+        <div class="kpi-card__icon">{{ item.icon }}</div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__label">{{ item.label }}</span>
+          <span class="kpi-card__value">{{ item.value }}</span>
+          <span class="kpi-card__sub">{{ item.sub }}</span>
+        </div>
+      </div>
+    }
+  </div>
+}

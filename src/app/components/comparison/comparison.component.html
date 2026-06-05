@@ -80,58 +80,8 @@
     <app-best-value-banner [bestValue]="bestValue" />
 
     <!-- KPIs Internet -->
-    <div class="kpi-grid">
-      @if (kpiBestRatio) {
-        <div class="kpi-card" [style.--kpi-color]="kpiBestRatio.color">
-          <div class="kpi-card__icon">⚡</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiBestRatio.label }}</span>
-            <span class="kpi-card__value">{{ kpiBestRatio.value }}</span>
-            <span class="kpi-card__sub">{{ kpiBestRatio.sub }}</span>
-          </div>
-        </div>
-      }
-      @if (kpiAvgPricePerGo) {
-        <div class="kpi-card" [style.--kpi-color]="kpiAvgPricePerGo.color">
-          <div class="kpi-card__icon">📊</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiAvgPricePerGo.label }}</span>
-            <span class="kpi-card__value">{{ kpiAvgPricePerGo.value }}</span>
-            <span class="kpi-card__sub">{{ kpiAvgPricePerGo.sub }}</span>
-          </div>
-        </div>
-      }
-      @if (kpiCheapest) {
-        <div class="kpi-card" [style.--kpi-color]="kpiCheapest.color">
-          <div class="kpi-card__icon">💸</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiCheapest.label }}</span>
-            <span class="kpi-card__value">{{ kpiCheapest.value }}</span>
-            <span class="kpi-card__sub">{{ kpiCheapest.sub }}</span>
-          </div>
-        </div>
-      }
-      @if (kpiMaxSaving) {
-        <div class="kpi-card" [style.--kpi-color]="kpiMaxSaving.color">
-          <div class="kpi-card__icon">🏷️</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiMaxSaving.label }}</span>
-            <span class="kpi-card__value">{{ kpiMaxSaving.value }}</span>
-            <span class="kpi-card__sub">{{ kpiMaxSaving.sub }}</span>
-          </div>
-        </div>
-      }
-      @if (kpiBestOperator) {
-        <div class="kpi-card kpi-card--wide" [style.--kpi-color]="kpiBestOperator.color">
-          <div class="kpi-card__icon">🏆</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiBestOperator.label }}</span>
-            <span class="kpi-card__value">{{ kpiBestOperator.value }}</span>
-            <span class="kpi-card__sub">{{ kpiBestOperator.sub }}</span>
-          </div>
-        </div>
-      }
-    </div>
+    <!-- KPIs Internet -->
+    <ui-kpi-grid [items]="kpiInternetItems" />
 
     <!-- Toolbar Internet -->
     <div class="comparison__toolbar">
@@ -296,17 +246,184 @@
 
     <!-- VUE TABLEAU Internet -->
     @if (viewMode === 'table') {
-      <div class="comparison__table-wrap">
+      @if (activeTableFiltersCount > 0) {
+        <div class="comparison__filter-info">
+          <span class="comparison__filter-badge">{{ activeTableFiltersCount }} filtre(s) actif(s)</span>
+          <button class="comparison__filter-clear" (click)="clearTableFilters()">✕ Effacer tout</button>
+        </div>
+      }
+      <div class="comparison__table-wrap" (click)="closeTablePopovers()">
         <table class="comparison__table">
           <thead>
             <tr>
-              <th>Opérateur</th>
-              <th>Pays</th>
-              <th>Durée</th>
-              <th>Forfait</th>
-              <th>Data</th>
-              <th>Prix</th>
-              <th>Ratio</th>
+              <!-- Opérateur -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Opérateur</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="tableFilters['operatorName'].value"
+                      (click)="toggleTablePopover('operatorName', $event)">▽</button>
+                    @if (openTablePopover === 'operatorName') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="tableFilters['operatorName'].mode">
+                          @for (m of filterModes; track m.value) {
+                            <option [value]="m.value">{{ m.label }}</option>
+                          }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="tableFilters['operatorName'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="tableFilters['operatorName']={value:'',mode:'contains'}; openTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Pays -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Pays</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="tableFilters['pays'].value"
+                      (click)="toggleTablePopover('pays', $event)">▽</button>
+                    @if (openTablePopover === 'pays') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="tableFilters['pays'].mode">
+                          @for (m of filterModes; track m.value) {
+                            <option [value]="m.value">{{ m.label }}</option>
+                          }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="tableFilters['pays'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="tableFilters['pays']={value:'',mode:'contains'}; openTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Durée -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Durée</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="tableFilters['duration'].value"
+                      (click)="toggleTablePopover('duration', $event)">▽</button>
+                    @if (openTablePopover === 'duration') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="tableFilters['duration'].mode">
+                          @for (m of filterModes; track m.value) {
+                            <option [value]="m.value">{{ m.label }}</option>
+                          }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="tableFilters['duration'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="tableFilters['duration']={value:'',mode:'contains'}; openTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Forfait -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Forfait</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="tableFilters['name'].value"
+                      (click)="toggleTablePopover('name', $event)">▽</button>
+                    @if (openTablePopover === 'name') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="tableFilters['name'].mode">
+                          @for (m of filterModes; track m.value) {
+                            <option [value]="m.value">{{ m.label }}</option>
+                          }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="tableFilters['name'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="tableFilters['name']={value:'',mode:'contains'}; openTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Data -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Data</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="tableFilters['data'].value"
+                      (click)="toggleTablePopover('data', $event)">▽</button>
+                    @if (openTablePopover === 'data') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="tableFilters['data'].mode">
+                          @for (m of filterModes; track m.value) {
+                            <option [value]="m.value">{{ m.label }}</option>
+                          }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="ex: 1 Go, 500 Mo…" [(ngModel)]="tableFilters['data'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="tableFilters['data']={value:'',mode:'contains'}; openTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Prix -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Prix</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="tableFilters['price'].value"
+                      (click)="toggleTablePopover('price', $event)">▽</button>
+                    @if (openTablePopover === 'price') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="tableFilters['price'].mode">
+                          @for (m of filterModes; track m.value) {
+                            <option [value]="m.value">{{ m.label }}</option>
+                          }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="ex: 100, 5000…" [(ngModel)]="tableFilters['price'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="tableFilters['price']={value:'',mode:'contains'}; openTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Ratio -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Ratio</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="tableFilters['ratio'].value"
+                      (click)="toggleTablePopover('ratio', $event)">▽</button>
+                    @if (openTablePopover === 'ratio') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="tableFilters['ratio'].mode">
+                          @for (m of filterModes; track m.value) {
+                            <option [value]="m.value">{{ m.label }}</option>
+                          }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="ex: 0.75…" [(ngModel)]="tableFilters['ratio'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="tableFilters['ratio']={value:'',mode:'contains'}; openTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -425,48 +542,7 @@
     </div>
 
     <!-- KPIs Voix -->
-    <div class="kpi-grid">
-      @if (kpiVoixBestRatio) {
-        <div class="kpi-card" [style.--kpi-color]="kpiVoixBestRatio.color">
-          <div class="kpi-card__icon">⚡</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiVoixBestRatio.label }}</span>
-            <span class="kpi-card__value">{{ kpiVoixBestRatio.value }}</span>
-            <span class="kpi-card__sub">{{ kpiVoixBestRatio.sub }}</span>
-          </div>
-        </div>
-      }
-      @if (kpiVoixMostCredit) {
-        <div class="kpi-card" [style.--kpi-color]="kpiVoixMostCredit.color">
-          <div class="kpi-card__icon">💰</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiVoixMostCredit.label }}</span>
-            <span class="kpi-card__value">{{ kpiVoixMostCredit.value }}</span>
-            <span class="kpi-card__sub">{{ kpiVoixMostCredit.sub }}</span>
-          </div>
-        </div>
-      }
-      @if (kpiVoixTotalBonus) {
-        <div class="kpi-card" [style.--kpi-color]="kpiVoixTotalBonus.color">
-          <div class="kpi-card__icon">🎁</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiVoixTotalBonus.label }}</span>
-            <span class="kpi-card__value">{{ kpiVoixTotalBonus.value }}</span>
-            <span class="kpi-card__sub">{{ kpiVoixTotalBonus.sub }}</span>
-          </div>
-        </div>
-      }
-      @if (kpiVoixBestOperator) {
-        <div class="kpi-card kpi-card--wide" [style.--kpi-color]="kpiVoixBestOperator.color">
-          <div class="kpi-card__icon">🏆</div>
-          <div class="kpi-card__body">
-            <span class="kpi-card__label">{{ kpiVoixBestOperator.label }}</span>
-            <span class="kpi-card__value">{{ kpiVoixBestOperator.value }}</span>
-            <span class="kpi-card__sub">{{ kpiVoixBestOperator.sub }}</span>
-          </div>
-        </div>
-      }
-    </div>
+    <ui-kpi-grid [items]="kpiVoixItems" />
 
     <!-- Toolbar Voix -->
     <div class="comparison__toolbar">
@@ -605,13 +681,194 @@
 
     <!-- VUE TABLEAU Voix -->
     @if (viewMode === 'table') {
-      <div class="comparison__table-wrap">
+      @if (activeVoixTableFiltersCount > 0) {
+        <div class="comparison__filter-info">
+          <span class="comparison__filter-badge">{{ activeVoixTableFiltersCount }} filtre(s) actif(s)</span>
+          <button class="comparison__filter-clear" (click)="clearVoixTableFilters()">✕ Effacer tout</button>
+        </div>
+      }
+      <div class="comparison__table-wrap" (click)="closeVoixTablePopovers()">
         <table class="comparison__table">
           <thead>
             <tr>
-              <th>Opérateur</th><th>Pays</th><th>Catégorie</th><th>Forfait</th>
-              <th>Prix payé</th><th>Crédit reçu</th><th>Bonus</th>
-              <th>Code USSD</th><th>Validité</th><th>Ratio</th>
+              <!-- Opérateur -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Opérateur</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['operator'].value"
+                      (click)="toggleVoixTablePopover('operator', $event)">▽</button>
+                    @if (openVoixTablePopover === 'operator') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['operator'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="voixTableFilters['operator'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['operator']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Pays -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Pays</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['pays'].value"
+                      (click)="toggleVoixTablePopover('pays', $event)">▽</button>
+                    @if (openVoixTablePopover === 'pays') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['pays'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="voixTableFilters['pays'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['pays']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Catégorie -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Catégorie</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['category'].value"
+                      (click)="toggleVoixTablePopover('category', $event)">▽</button>
+                    @if (openVoixTablePopover === 'category') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['category'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="voixTableFilters['category'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['category']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Forfait -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Forfait</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['plan_name'].value"
+                      (click)="toggleVoixTablePopover('plan_name', $event)">▽</button>
+                    @if (openVoixTablePopover === 'plan_name') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['plan_name'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="voixTableFilters['plan_name'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['plan_name']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Prix payé -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Prix payé</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['price'].value"
+                      (click)="toggleVoixTablePopover('price', $event)">▽</button>
+                    @if (openVoixTablePopover === 'price') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['price'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="ex: 100, 500…" [(ngModel)]="voixTableFilters['price'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['price']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Crédit reçu -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Crédit reçu</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['volume_recu'].value"
+                      (click)="toggleVoixTablePopover('volume_recu', $event)">▽</button>
+                    @if (openVoixTablePopover === 'volume_recu') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['volume_recu'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="voixTableFilters['volume_recu'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['volume_recu']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <!-- Bonus -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Bonus</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['extra_bonus'].value"
+                      (click)="toggleVoixTablePopover('extra_bonus', $event)">▽</button>
+                    @if (openVoixTablePopover === 'extra_bonus') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['extra_bonus'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="voixTableFilters['extra_bonus'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['extra_bonus']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <th>Code USSD</th>
+              <!-- Validité -->
+              <th>
+                <div class="cmp__th-filter">
+                  <span>Validité</span>
+                  <div class="cmp__filter-wrap">
+                    <button class="cmp__filter-btn" [class.cmp__filter-btn--active]="voixTableFilters['validity'].value"
+                      (click)="toggleVoixTablePopover('validity', $event)">▽</button>
+                    @if (openVoixTablePopover === 'validity') {
+                      <div class="cmp__filter-popover" (click)="$event.stopPropagation()">
+                        <select class="cmp__filter-mode" [(ngModel)]="voixTableFilters['validity'].mode">
+                          @for (m of filterModes; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+                        </select>
+                        <input class="cmp__filter-search" type="text" placeholder="Rechercher…" [(ngModel)]="voixTableFilters['validity'].value" autofocus />
+                        <div class="cmp__filter-actions">
+                          <button class="cmp__filter-btn-clear" (click)="voixTableFilters['validity']={value:'',mode:'contains'}; openVoixTablePopover=null">Effacer</button>
+                          <button class="cmp__filter-btn-apply" (click)="openVoixTablePopover=null">Appliquer</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </th>
+              <th>Ratio</th>
             </tr>
           </thead>
           <tbody>

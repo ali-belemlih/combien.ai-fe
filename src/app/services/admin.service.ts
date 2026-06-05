@@ -7,6 +7,9 @@ import {
   Website, WebsiteCreate, WebsiteUpdate,
   Job, JobCreate,
   OffreInternet,
+  Pays, PaysCreate, PaysUpdate,
+  Currency, CurrencyCreate, CurrencyUpdate,
+  Operateur, OperateurCreate, OperateurUpdate,
 } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -72,6 +75,61 @@ export class AdminService {
     return this.http
       .get<OffreInternet[]>(`${this.base}/offres-internet/by-operator/${encodeURIComponent(operator)}`)
       .pipe(catchError(this._handleError));
+  }
+
+  // ── Pays ──────────────────────────────────────────────────────────────────────
+
+  getPays(): Observable<Pays[]> {
+    return this.http.get<Pays[]>(`${this.base}/pays/`).pipe(catchError(this._handleError));
+  }
+
+  createPays(data: PaysCreate): Observable<Pays> {
+    return this.http.post<Pays>(`${this.base}/pays/`, data).pipe(catchError(this._handleError));
+  }
+
+  updatePays(id: number, data: PaysUpdate): Observable<Pays> {
+    return this.http.put<Pays>(`${this.base}/pays/${id}`, data).pipe(catchError(this._handleError));
+  }
+
+  deletePays(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/pays/${id}`).pipe(catchError(this._handleError));
+  }
+
+  // ── Currencies ────────────────────────────────────────────────────────────────
+
+  getCurrencies(): Observable<Currency[]> {
+    return this.http.get<Currency[]>(`${this.base}/currencies/`).pipe(catchError(this._handleError));
+  }
+
+  createCurrency(data: CurrencyCreate): Observable<Currency> {
+    return this.http.post<Currency>(`${this.base}/currencies/`, data).pipe(catchError(this._handleError));
+  }
+
+  updateCurrency(id: number, data: CurrencyUpdate): Observable<Currency> {
+    return this.http.put<Currency>(`${this.base}/currencies/${id}`, data).pipe(catchError(this._handleError));
+  }
+
+  deleteCurrency(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/currencies/${id}`).pipe(catchError(this._handleError));
+  }
+
+  // ── Opérateurs ────────────────────────────────────────────────────────────────
+  // Endpoint backend : /operators (pas /operateurs)
+
+  getOperateurs(): Observable<Operateur[]> {
+    return this.http.get<Operateur[]>(`${this.base}/operators/`).pipe(catchError(this._handleError));
+  }
+
+  createOperateur(data: OperateurCreate): Observable<Operateur> {
+    return this.http.post<Operateur>(`${this.base}/operators/`, data).pipe(catchError(this._handleError));
+  }
+
+  updateOperateur(id: number, data: OperateurUpdate): Observable<Operateur> {
+    return this.http.put<Operateur>(`${this.base}/operators/${id}`, data).pipe(catchError(this._handleError));
+  }
+
+  deleteOperateur(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/operators/${id}`).pipe(catchError(this._handleError));
   }
 
   // ── Gestion d'erreur ─────────────────────────────────────────────────────────

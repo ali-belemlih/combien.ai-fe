@@ -1,4 +1,6 @@
-<app-header />
-<main>
+@if (showHeader()) {
+  <app-header />
+}
+<main [class.main--fullscreen]="!showHeader()">
   <router-outlet />
 </main>

@@ -6,21 +6,21 @@ import { OperatorService, SortKey } from '../../services/operator.service';
 import { OffreVoix, OperatorVoix, VoixCategory, VoixComparePair } from '../../models/voix.model';
 import { VoixService } from '../../services/voix.service';
 import { BestValueBannerComponent } from '../best-value-banner/best-value-banner.component';
-import { CalculatorComponent } from '../calculator/calculator.component';
 import { SearchInputComponent } from '../../ui/search-input/search-input.component';
 import { SortSelectComponent } from '../../ui/sort-select/sort-select.component';
 import { BarChartComponent } from '../../ui/bar-chart/bar-chart.component';
 import { FilterBarComponent } from '../../ui/filter-bar/filter-bar.component';
+import { KpiGridComponent } from '../../ui/kpi-grid/kpi-grid.component';
+import { KpiItem } from '../../ui/kpi-grid/kpi-grid.model';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { forkJoin } from 'rxjs';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export type ForfaitType = 'internet' | 'voix';
 export type TabKey = 'all' | 'daily' | 'weekly' | 'monthly';
 export type ViewMode = 'cards' | 'compare' | 'chart' | 'table';
+export type FilterMode = 'contains' | 'startsWith' | 'notContains' | 'endsWith' | 'equals';
 
 export interface PlanWithOp extends Plan {
   operatorName: string;
@@ -36,7 +36,6 @@ export interface PlanPair {
   cheaperSide: 'left' | 'right' | 'equal' | null;
 }
 
-// ─── Métadonnées opérateurs voix ─────────────────────────────────────────────
 const OP_META: Record<string, { color: string; logo: string }> = {
   'moov':        { color: '#0066cc', logo: '🔵' },
   'moov africa': { color: '#0066cc', logo: '🔵' },
@@ -58,30 +57,23 @@ function getOpMeta(name: string): { color: string; logo: string } {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    BestValueBannerComponent, CalculatorComponent,
+    BestValueBannerComponent,
     SearchInputComponent, SortSelectComponent, BarChartComponent,
     FilterBarComponent, ButtonModule, TagModule, CardModule,
+    KpiGridComponent,
   ],
   templateUrl: './comparison.component.html',
   styleUrl: './comparison.component.scss',
 })
 export class ComparisonComponent implements OnInit {
-
-  // ─── Type de forfait actif ────────────────────────────────────────────────
   forfaitType: ForfaitType = 'internet';
-
-  // ─── État global ─────────────────────────────────────────────────────────
   loading = true;
   error: string | null = null;
 
-  // ─── Filtres communs ──────────────────────────────────────────────────────
   activeCountry = 'all';
   search = '';
   viewMode: ViewMode = 'cards';
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // INTERNET (data)
-  // ══════════════════════════════════════════════════════════════════════════
   operators: Operator[] = [];
   activeTab: TabKey = 'all';
   sortKey: SortKey = 'data_asc';
@@ -103,9 +95,6 @@ export class ComparisonComponent implements OnInit {
     { label: 'Meilleure valeur', value: 'value_desc', direction: 'desc' },
   ];
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // VOIX
-  // ══════════════════════════════════════════════════════════════════════════
   allOffres: OffreVoix[] = [];
   activeCategory: VoixCategory | 'all' = 'all';
   compareVoixLeft = '';
@@ -118,7 +107,36 @@ export class ComparisonComponent implements OnInit {
     { label: '🗓 Mensuel', value: 'MOIS' },
   ];
 
-  // ─────────────────────────────────────────────────────────────────────────
+  tableFilters: Record<string, { value: string; mode: FilterMode }> = {
+    operatorName: { value: '', mode: 'contains' },
+    pays:         { value: '', mode: 'contains' },
+    duration:     { value: '', mode: 'contains' },
+    name:         { value: '', mode: 'contains' },
+    data:         { value: '', mode: 'contains' },
+    price:        { value: '', mode: 'contains' },
+    ratio:        { value: '', mode: 'contains' },
+  };
+  openTablePopover: string | null = null;
+
+  voixTableFilters: Record<string, { value: string; mode: FilterMode }> = {
+    operator:    { value: '', mode: 'contains' },
+    pays:        { value: '', mode: 'contains' },
+    category:    { value: '', mode: 'contains' },
+    plan_name:   { value: '', mode: 'contains' },
+    price:       { value: '', mode: 'contains' },
+    volume_recu: { value: '', mode: 'contains' },
+    extra_bonus: { value: '', mode: 'contains' },
+    validity:    { value: '', mode: 'contains' },
+  };
+  openVoixTablePopover: string | null = null;
+
+  readonly filterModes: { label: string; value: FilterMode }[] = [
+    { label: 'Contient',        value: 'contains'    },
+    { label: 'Commence par',    value: 'startsWith'  },
+    { label: 'Ne contient pas', value: 'notContains' },
+    { label: 'Finit par',       value: 'endsWith'    },
+    { label: 'Égal à',          value: 'equals'      },
+  ];
 
   constructor(
     private svc: OperatorService,
@@ -151,7 +169,6 @@ export class ComparisonComponent implements OnInit {
     });
   }
 
-  // ─── Sélecteur de type ───────────────────────────────────────────────────
   onTypeChange(type: ForfaitType): void {
     this.forfaitType = type;
     this.activeCountry = 'all';
@@ -161,21 +178,11 @@ export class ComparisonComponent implements OnInit {
     else this._initVoixCompare();
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // PAYS (commun aux deux types)
-  // ══════════════════════════════════════════════════════════════════════════
-
   get countryOptions(): FilterOption[] {
-    let countries: string[];
-    if (this.forfaitType === 'internet') {
-      countries = [...new Set(this.operators.map(op => op.country).filter(Boolean))].sort();
-    } else {
-      countries = [...new Set(this.allOffres.map(o => o.pays).filter(Boolean))].sort();
-    }
-    return [
-      { label: '🌍 Tous les pays', value: 'all' },
-      ...countries.map(c => ({ label: c, value: c })),
-    ];
+    const countries = this.forfaitType === 'internet'
+      ? [...new Set(this.operators.map(op => op.country).filter(Boolean))].sort()
+      : [...new Set(this.allOffres.map(o => o.pays).filter(Boolean))].sort();
+    return [{ label: '🌍 Tous les pays', value: 'all' }, ...countries.map(c => ({ label: c, value: c }))];
   }
 
   onCountryChange(country: string): void {
@@ -184,9 +191,48 @@ export class ComparisonComponent implements OnInit {
     else this._initVoixCompare();
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // INTERNET — logique
-  // ══════════════════════════════════════════════════════════════════════════
+  matchFilter(val: string | number | null | undefined, filter: { value: string; mode: FilterMode }): boolean {
+    if (!filter.value) return true;
+    const s = String(val ?? '').toLowerCase();
+    const f = filter.value.toLowerCase();
+    switch (filter.mode) {
+      case 'contains':    return s.includes(f);
+      case 'startsWith':  return s.startsWith(f);
+      case 'notContains': return !s.includes(f);
+      case 'endsWith':    return s.endsWith(f);
+      case 'equals':      return s === f;
+    }
+  }
+
+  toggleTablePopover(col: string, event: Event): void {
+    event.stopPropagation();
+    this.openTablePopover = this.openTablePopover === col ? null : col;
+  }
+  closeTablePopovers(): void { this.openTablePopover = null; }
+  clearTableFilters(): void {
+    Object.keys(this.tableFilters).forEach(k => {
+      this.tableFilters[k] = { value: '', mode: 'contains' };
+    });
+    this.openTablePopover = null;
+  }
+  get activeTableFiltersCount(): number {
+    return Object.values(this.tableFilters).filter(f => !!f.value).length;
+  }
+
+  toggleVoixTablePopover(col: string, event: Event): void {
+    event.stopPropagation();
+    this.openVoixTablePopover = this.openVoixTablePopover === col ? null : col;
+  }
+  closeVoixTablePopovers(): void { this.openVoixTablePopover = null; }
+  clearVoixTableFilters(): void {
+    Object.keys(this.voixTableFilters).forEach(k => {
+      this.voixTableFilters[k] = { value: '', mode: 'contains' };
+    });
+    this.openVoixTablePopover = null;
+  }
+  get activeVoixTableFiltersCount(): number {
+    return Object.values(this.voixTableFilters).filter(f => !!f.value).length;
+  }
 
   get filteredOperators(): Operator[] {
     if (this.activeCountry === 'all') return this.operators;
@@ -205,13 +251,11 @@ export class ComparisonComponent implements OnInit {
 
   get filteredPlans(): PlanWithOp[] {
     const all: PlanWithOp[] = this.filteredOperators.flatMap(op =>
-      op.plans.map(p => ({
-        ...p,
-        operatorName: op.name,
-        operatorColor: op.color,
-        operatorId: op.id,
-      }))
+      op.plans.map(p => ({ ...p, operatorName: op.name, operatorColor: op.color, operatorId: op.id }))
     );
+
+    const match = (val: string | number | null | undefined, filter: { value: string; mode: FilterMode }) =>
+      this.matchFilter(val, filter);
 
     const filtered = all.filter(p => {
       const matchTab    = this.activeTab === 'all' || p.duration === this.activeTab;
@@ -219,7 +263,16 @@ export class ComparisonComponent implements OnInit {
         || p.name.toLowerCase().includes(this.search.toLowerCase())
         || p.features.some(f => f.toLowerCase().includes(this.search.toLowerCase()))
         || p.operatorName.toLowerCase().includes(this.search.toLowerCase());
-      return matchTab && matchSearch;
+
+      const f = this.tableFilters;
+      return matchTab && matchSearch
+        && match(p.operatorName, f['operatorName'])
+        && match(this.getOperatorCountry(p.operatorId), f['pays'])
+        && match(this.durationLabel(p.duration), f['duration'])
+        && match(p.name, f['name'])
+        && match(p.data >= 1000 ? (p.data % 1000 === 0 ? `${p.data / 1000} Go` : `${(p.data / 1000).toFixed(1)} Go`) : `${p.data} Mo`, f['data'])
+        && match(p.price, f['price'])
+        && match((p.data / p.price).toFixed(2), f['ratio']);
     });
 
     return this._sortPlans(filtered);
@@ -227,10 +280,7 @@ export class ComparisonComponent implements OnInit {
 
   get groupedByOperator(): { op: Operator; plans: PlanWithOp[] }[] {
     return this.filteredOperators
-      .map(op => ({
-        op,
-        plans: this.filteredPlans.filter(p => p.operatorId === op.id),
-      }))
+      .map(op => ({ op, plans: this.filteredPlans.filter(p => p.operatorId === op.id) }))
       .filter(g => g.plans.length > 0);
   }
 
@@ -284,16 +334,11 @@ export class ComparisonComponent implements OnInit {
     });
   }
 
-  get totalPlans(): number {
-    return this.filteredOperators.reduce((s, op) => s + op.plans.length, 0);
-  }
+  get totalPlans(): number     { return this.filteredOperators.reduce((s, op) => s + op.plans.length, 0); }
   get totalOperators(): number { return this.filteredOperators.length; }
   get totalFiltered(): number  { return this.filteredPlans.length; }
   get bestValue(): BestValue | null { return this.svc.getBestValue(this.filteredOperators); }
 
-  // ─── KPIs Internet ───────────────────────────────────────────────────────
-
-  /** Meilleur ratio Mo/FCFA : offre + opérateur */
   get kpiBestRatio(): { label: string; value: string; sub: string; color: string } | null {
     const all = this.filteredOperators.flatMap(op =>
       op.plans.map(p => ({ ...p, opName: op.name, opColor: op.color }))
@@ -308,12 +353,10 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
-  /** Prix moyen par Go sur le marché (plans filtrés) */
   get kpiAvgPricePerGo(): { label: string; value: string; sub: string; color: string } | null {
     const plans = this.filteredOperators.flatMap(op => op.plans).filter(p => Number(p.price) > 0 && Number(p.data) > 0);
     if (!plans.length) return null;
-    const avgFcfaPerMo = plans.reduce((s, p) => s + Number(p.price) / Number(p.data), 0) / plans.length;
-    const avgFcfaPerGo = avgFcfaPerMo * 1000;
+    const avgFcfaPerGo = (plans.reduce((s, p) => s + Number(p.price) / Number(p.data), 0) / plans.length) * 1000;
     return {
       label: 'Prix moyen / Go',
       value: `${Math.round(avgFcfaPerGo).toLocaleString('fr-FR')} FCFA`,
@@ -322,7 +365,6 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
-  /** Offre la moins chère (tous types confondus) */
   get kpiCheapest(): { label: string; value: string; sub: string; color: string } | null {
     const all = this.filteredOperators.flatMap(op =>
       op.plans.map(p => ({ ...p, opName: op.name, opColor: op.color }))
@@ -337,7 +379,6 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
-  /** Économie max : écart entre la plus chère et la moins chère pour un même volume */
   get kpiMaxSaving(): { label: string; value: string; sub: string; color: string } | null {
     const all = this.filteredOperators.flatMap(op =>
       op.plans.map(p => ({ ...p, opName: op.name }))
@@ -346,9 +387,9 @@ export class ComparisonComponent implements OnInit {
 
     const byData = new Map<number, typeof all>();
     for (const p of all) {
-      const dataKey = Number(p.data);
-      if (!byData.has(dataKey)) byData.set(dataKey, []);
-      byData.get(dataKey)!.push(p);
+      const key = Number(p.data);
+      if (!byData.has(key)) byData.set(key, []);
+      byData.get(key)!.push(p);
     }
 
     let maxSaving = 0;
@@ -357,10 +398,7 @@ export class ComparisonComponent implements OnInit {
       if (plans.length < 2) return;
       const prices = plans.map(p => Number(p.price));
       const diff = Math.max(...prices) - Math.min(...prices);
-      if (diff > maxSaving) {
-        maxSaving = diff;
-        savingLabel = this.formatData(data);
-      }
+      if (diff > maxSaving) { maxSaving = diff; savingLabel = this.formatData(data); }
     });
 
     if (maxSaving === 0) return null;
@@ -372,18 +410,18 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
-  /** Opérateur le plus compétitif (meilleur ratio moyen) */
   get kpiBestOperator(): { label: string; value: string; sub: string; color: string } | null {
     const ops = this.filteredOperators.filter(op => op.plans.length > 0);
     if (!ops.length) return null;
-    const scored = ops.map(op => {
-      const plans = op.plans.filter(p => Number(p.price) > 0);
-      const avgRatio = plans.length
-        ? plans.reduce((s, p) => s + Number(p.data) / Number(p.price), 0) / plans.length
-        : 0;
-      return { op, avgRatio };
-    });
-    const best = scored.reduce((a, b) => b.avgRatio > a.avgRatio ? b : a);
+    const best = ops
+      .map(op => {
+        const plans = op.plans.filter(p => Number(p.price) > 0);
+        const avgRatio = plans.length
+          ? plans.reduce((s, p) => s + Number(p.data) / Number(p.price), 0) / plans.length
+          : 0;
+        return { op, avgRatio };
+      })
+      .reduce((a, b) => b.avgRatio > a.avgRatio ? b : a);
     return {
       label: 'Opérateur le plus compétitif',
       value: `${best.op.logo} ${best.op.name}`,
@@ -392,18 +430,34 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
+  get kpiInternetItems(): KpiItem[] {
+    const items: (KpiItem | null)[] = [
+      this.kpiBestRatio    ? { ...this.kpiBestRatio,    icon: '⚡' }           : null,
+      this.kpiAvgPricePerGo? { ...this.kpiAvgPricePerGo,icon: '📊' }           : null,
+      this.kpiCheapest     ? { ...this.kpiCheapest,     icon: '💸' }           : null,
+      this.kpiMaxSaving    ? { ...this.kpiMaxSaving,    icon: '🏷️' }           : null,
+      this.kpiBestOperator ? { ...this.kpiBestOperator, icon: '🏆', wide: true }: null,
+    ];
+    return items.filter((i): i is KpiItem => i !== null);
+  }
+
+  get kpiVoixItems(): KpiItem[] {
+    const items: (KpiItem | null)[] = [
+      this.kpiVoixBestRatio   ? { ...this.kpiVoixBestRatio,   icon: '⚡' }           : null,
+      this.kpiVoixMostCredit  ? { ...this.kpiVoixMostCredit,  icon: '💰' }           : null,
+      this.kpiVoixTotalBonus  ? { ...this.kpiVoixTotalBonus,  icon: '🎁' }           : null,
+      this.kpiVoixBestOperator? { ...this.kpiVoixBestOperator, icon: '🏆', wide: true }: null,
+    ];
+    return items.filter((i): i is KpiItem => i !== null);
+  }
+
   get chartBars(): ChartBar[] {
-    return this.filteredPlans.map(p => {
-      const dataLabel = p.data >= 1000
-        ? `${p.data % 1000 === 0 ? p.data / 1000 : (p.data / 1000).toFixed(1)} Go`
-        : `${p.data} Mo`;
-      return {
-        label: `${p.operatorName} · ${dataLabel}`,
-        value: p.price,
-        color: p.operatorColor,
-        sublabel: p.duration === 'daily' ? '24h' : p.duration === 'weekly' ? '7j' : '30j',
-      };
-    });
+    return this.filteredPlans.map(p => ({
+      label: `${p.operatorName} · ${this.formatData(p.data)}`,
+      value: p.price,
+      color: p.operatorColor,
+      sublabel: p.duration === 'daily' ? '24h' : p.duration === 'weekly' ? '7j' : '30j',
+    }));
   }
 
   countByTab(tab: TabKey): number {
@@ -431,11 +485,10 @@ export class ComparisonComponent implements OnInit {
     });
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // VOIX — logique
-  // ══════════════════════════════════════════════════════════════════════════
-
   get filteredOffres(): OffreVoix[] {
+    const match = (val: string | number | null | undefined, filter: { value: string; mode: FilterMode }) =>
+      this.matchFilter(val, filter);
+
     return this.allOffres.filter(o => {
       const matchPays   = this.activeCountry === 'all' || o.pays === this.activeCountry;
       const matchCat    = this.activeCategory === 'all' || o.category === this.activeCategory;
@@ -443,7 +496,17 @@ export class ComparisonComponent implements OnInit {
         || o.operator.toLowerCase().includes(this.search.toLowerCase())
         || (o.plan_name ?? '').toLowerCase().includes(this.search.toLowerCase())
         || o.pays.toLowerCase().includes(this.search.toLowerCase());
-      return matchPays && matchCat && matchSearch;
+
+      const f = this.voixTableFilters;
+      return matchPays && matchCat && matchSearch
+        && match(o.operator,   f['operator'])
+        && match(o.pays,       f['pays'])
+        && match(this.categoryLabel(o.category), f['category'])
+        && match(o.plan_name,  f['plan_name'])
+        && match(o.price,      f['price'])
+        && match(o.volume_recu, f['volume_recu'])
+        && match(o.extra_bonus, f['extra_bonus'])
+        && match(o.validity,   f['validity']);
     });
   }
 
@@ -469,16 +532,11 @@ export class ComparisonComponent implements OnInit {
     for (const o of this.filteredOffres) {
       if (!o.volume_recu || o.price === 0) continue;
       const ratio = Number(o.volume_recu) / Number(o.price);
-      if (!best || ratio > best.ratio) {
-        best = { offre: o, operator: o.operator, ratio };
-      }
+      if (!best || ratio > best.ratio) best = { offre: o, operator: o.operator, ratio };
     }
     return best;
   }
 
-  // ─── KPIs Voix ───────────────────────────────────────────────────────────
-
-  /** Meilleur ratio crédit reçu / prix payé */
   get kpiVoixBestRatio(): { label: string; value: string; sub: string; color: string } | null {
     const best = this.bestVoixRatio;
     if (!best) return null;
@@ -490,13 +548,10 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
-  /** Offre avec le plus de crédit reçu */
   get kpiVoixMostCredit(): { label: string; value: string; sub: string; color: string } | null {
     const offres = this.filteredOffres.filter(o => o.volume_recu);
     if (!offres.length) return null;
-    const best = offres.reduce((a, b) =>
-      Number(b.volume_recu) > Number(a.volume_recu) ? b : a
-    );
+    const best = offres.reduce((a, b) => Number(b.volume_recu) > Number(a.volume_recu) ? b : a);
     return {
       label: 'Plus de crédit reçu',
       value: this.formatPrice(best.volume_recu),
@@ -505,7 +560,6 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
-  /** Bonus extra total disponible sur le marché */
   get kpiVoixTotalBonus(): { label: string; value: string; sub: string; color: string } | null {
     const offresWithBonus = this.filteredOffres.filter(o => o.extra_bonus);
     if (!offresWithBonus.length) return null;
@@ -518,18 +572,18 @@ export class ComparisonComponent implements OnInit {
     };
   }
 
-  /** Opérateur le plus généreux (ratio moyen le plus élevé) */
   get kpiVoixBestOperator(): { label: string; value: string; sub: string; color: string } | null {
     const groups = this.voixOperatorGroups.filter(g => g.offres.some(o => o.volume_recu));
     if (!groups.length) return null;
-    const scored = groups.map(g => {
-      const valid = g.offres.filter(o => o.volume_recu && Number(o.price) > 0);
-      const avgRatio = valid.length
-        ? valid.reduce((s, o) => s + Number(o.volume_recu) / Number(o.price), 0) / valid.length
-        : 0;
-      return { g, avgRatio };
-    });
-    const best = scored.reduce((a, b) => b.avgRatio > a.avgRatio ? b : a);
+    const best = groups
+      .map(g => {
+        const valid = g.offres.filter(o => o.volume_recu && Number(o.price) > 0);
+        const avgRatio = valid.length
+          ? valid.reduce((s, o) => s + Number(o.volume_recu) / Number(o.price), 0) / valid.length
+          : 0;
+        return { g, avgRatio };
+      })
+      .reduce((a, b) => b.avgRatio > a.avgRatio ? b : a);
     return {
       label: 'Opérateur le plus généreux',
       value: `${best.g.logo} ${best.g.name}`,
@@ -571,8 +625,7 @@ export class ComparisonComponent implements OnInit {
       ...right.offres.map(o => Number(o.price)),
     ]);
 
-    const pairs: VoixComparePair[] = [];
-    for (const price of [...prices].sort((a, b) => a - b)) {
+    return [...prices].sort((a, b) => a - b).map(price => {
       const lOffre = left.offres.find(o => Number(o.price) === price) ?? null;
       const rOffre = right.offres.find(o => Number(o.price) === price) ?? null;
 
@@ -580,20 +633,11 @@ export class ComparisonComponent implements OnInit {
       if (lOffre && rOffre) {
         const lVal = Number(lOffre.volume_recu ?? 0);
         const rVal = Number(rOffre.volume_recu ?? 0);
-        if (lVal > rVal) betterSide = 'left';
-        else if (rVal > lVal) betterSide = 'right';
-        else betterSide = 'equal';
+        betterSide = lVal > rVal ? 'left' : rVal > lVal ? 'right' : 'equal';
       }
 
-      pairs.push({
-        category: (lOffre ?? rOffre)!.category,
-        price,
-        left: lOffre,
-        right: rOffre,
-        betterSide,
-      });
-    }
-    return pairs;
+      return { category: (lOffre ?? rOffre)!.category, price, left: lOffre, right: rOffre, betterSide };
+    });
   }
 
   get voixChartBars(): ChartBar[] {
@@ -616,14 +660,9 @@ export class ComparisonComponent implements OnInit {
     this.activeCategory = cat as VoixCategory | 'all';
   }
 
-  // ─── Helpers communs ─────────────────────────────────────────────────────
-
   formatData(mo: number): string {
-    if (mo >= 1000) {
-      const go = mo / 1000;
-      return `${go % 1 === 0 ? go : go.toFixed(1)} Go`;
-    }
-    return `${mo} Mo`;
+    const go = mo / 1000;
+    return mo >= 1000 ? `${go % 1 === 0 ? go : go.toFixed(1)} Go` : `${mo} Mo`;
   }
 
   durationLabel(d: string): string {

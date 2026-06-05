@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
@@ -13,7 +13,8 @@ import { AuthService } from '../../services/auth.service';
 })
 export class HeaderComponent {
   readonly auth = inject(AuthService);
+  private router = inject(Router);
 
-  login(): void  { this.auth.login(); }
+  login(): void  { this.router.navigate(['/login']); }
   logout(): void { this.auth.logout(); }
 }

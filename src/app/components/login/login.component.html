@@ -1,32 +1,142 @@
 <div class="login">
-  <div class="login__card">
 
-    <!-- Logo -->
-    <div class="login__logo">
-      <span class="login__logo-icon">📶</span>
-      <span class="login__logo-text">combien<span class="login__logo-dot">.ai</span></span>
+  <!-- Panneau gauche : branding -->
+  <div class="login__brand" aria-hidden="true">
+    <div class="login__brand-content">
+      <div class="login__brand-logo">
+        <i class="pi pi-wifi login__brand-icon"></i>
+        <span class="login__brand-name">combien<span class="login__brand-dot">.ai</span></span>
+      </div>
+      <p class="login__brand-tagline">Comparez les forfaits mobiles<br>en un coup d'œil</p>
+
+      <ul class="login__features">
+        <li class="login__feature">
+          <span class="login__feature-icon">
+            <i class="pi pi-chart-bar"></i>
+          </span>
+          <span>Comparaison en temps réel</span>
+        </li>
+        <li class="login__feature">
+          <span class="login__feature-icon">
+            <i class="pi pi-compass"></i>
+          </span>
+          <span>Recommandations personnalisées</span>
+        </li>
+        <li class="login__feature">
+          <span class="login__feature-icon">
+            <i class="pi pi-shield"></i>
+          </span>
+          <span>Données sécurisées</span>
+        </li>
+      </ul>
     </div>
 
-    <!-- Titre -->
-    <h1 class="login__title">Espace Administration</h1>
-    <p class="login__subtitle">
-      Connectez-vous avec votre compte Keycloak pour accéder à l'interface d'administration.
-    </p>
-
-    <!-- Bouton login -->
-    <button class="login__btn" (click)="login()" type="button">
-      <svg class="login__btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-        <polyline points="10 17 15 12 10 7"/>
-        <line x1="15" y1="12" x2="3" y2="12"/>
-      </svg>
-      Se connecter avec Keycloak
-    </button>
-
-    <!-- Retour accueil -->
-    <a class="login__back" routerLink="/">
-      ← Retour à la comparaison
-    </a>
-
+    <!-- Cercles décoratifs -->
+    <div class="login__deco login__deco--1"></div>
+    <div class="login__deco login__deco--2"></div>
+    <div class="login__deco login__deco--3"></div>
   </div>
+
+  <!-- Panneau droit : formulaire -->
+  <div class="login__panel">
+    <div class="login__card">
+
+      <!-- Logo mobile (visible seulement sur petit écran) -->
+      <div class="login__mobile-logo">
+        <i class="pi pi-wifi"></i>
+        <span>combien<span class="login__brand-dot">.ai</span></span>
+      </div>
+
+      <h1 class="login__title">Bon retour 👋</h1>
+      <p class="login__subtitle">Connectez-vous pour accéder à votre espace.</p>
+
+      <!-- Message d'erreur -->
+      @if (errorMessage()) {
+        <div class="login__error" role="alert">
+          <i class="pi pi-exclamation-circle"></i>
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- Formulaire -->
+      <form class="login__form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Identifiant -->
+        <div class="login__field">
+          <label class="login__label" for="username">Identifiant</label>
+          <div class="login__input-wrap">
+            <i class="pi pi-user login__input-icon"></i>
+            <input
+              id="username"
+              class="login__input"
+              type="text"
+              formControlName="username"
+              placeholder="Votre identifiant"
+              autocomplete="username"
+              [class.login__input--error]="form.get('username')?.invalid && form.get('username')?.touched"
+            />
+          </div>
+          @if (form.get('username')?.invalid && form.get('username')?.touched) {
+            <span class="login__field-error">
+              <i class="pi pi-times-circle"></i> L'identifiant est requis.
+            </span>
+          }
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="login__field">
+          <label class="login__label" for="password">Mot de passe</label>
+          <div class="login__input-wrap">
+            <i class="pi pi-lock login__input-icon"></i>
+            <input
+              id="password"
+              class="login__input login__input--password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Votre mot de passe"
+              autocomplete="current-password"
+              [class.login__input--error]="form.get('password')?.invalid && form.get('password')?.touched"
+            />
+            <button
+              type="button"
+              class="login__toggle-pw"
+              (click)="togglePassword()"
+              [attr.aria-label]="showPassword() ? 'Masquer' : 'Afficher'"
+            >
+              <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+            </button>
+          </div>
+          @if (form.get('password')?.invalid && form.get('password')?.touched) {
+            <span class="login__field-error">
+              <i class="pi pi-times-circle"></i> Le mot de passe est requis.
+            </span>
+          }
+        </div>
+
+        <!-- Bouton submit -->
+        <button
+          class="login__btn"
+          type="submit"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <i class="pi pi-spin pi-spinner"></i>
+            Connexion en cours…
+          } @else {
+            <i class="pi pi-sign-in"></i>
+            Se connecter
+          }
+        </button>
+
+      </form>
+
+      <!-- Footer -->
+      <p class="login__powered">
+        <i class="pi pi-shield"></i>
+        Authentification sécurisée via Keycloak
+      </p>
+
+    </div>
+  </div>
+
 </div>

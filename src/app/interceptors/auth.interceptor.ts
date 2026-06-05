@@ -4,12 +4,7 @@ import { from, switchMap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 
-/**
- * Intercepteur HTTP qui injecte automatiquement le Bearer token Keycloak
- * sur toutes les requêtes vers l'API backend.
- */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // N'intercepte que les requêtes vers notre API
   if (!req.url.startsWith(environment.apiUrl)) {
     return next(req);
   }
@@ -19,11 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return from(auth.getToken()).pipe(
     switchMap(token => {
       if (!token) return next(req);
-
-      const authReq = req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` },
-      });
-      return next(authReq);
+      return next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));
     }),
   );
 };

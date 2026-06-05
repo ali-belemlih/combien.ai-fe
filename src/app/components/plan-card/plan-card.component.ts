@@ -29,7 +29,6 @@ export class PlanCardComponent {
     return 'badge--equal';
   }
 
-  /** Ratio Mo par FCFA, arrondi à 2 décimales */
   get ratio(): string {
     if (!this.plan || this.plan.price === 0) return '—';
     return (this.plan.data / this.plan.price).toFixed(2);

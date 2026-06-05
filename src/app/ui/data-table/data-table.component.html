@@ -1,0 +1,97 @@
+<div class="dt">
+
+  @if (loading) {
+    <div class="dt__loading">⏳ Chargement…</div>
+  } @else if (rows.length === 0) {
+    <div class="dt__empty">{{ emptyMessage }}</div>
+  } @else {
+
+    @if (activeFiltersCount > 0) {
+      <div class="dt__filter-bar">
+        <span class="dt__filter-badge">{{ activeFiltersCount }} filtre(s) actif(s)</span>
+        <button class="dt__clear-btn" (click)="clearAllFilters()">✕ Effacer tout</button>
+      </div>
+    }
+
+    <div class="dt__wrap" (click)="onDocumentClick()">
+      <table class="dt__table">
+        <thead>
+          <tr>
+            @for (col of columns; track col.key) {
+              <th [class]="col.class ?? ''">
+                @if (col.filterable) {
+                  <div class="dt__th">
+                    <span>{{ col.label }}</span>
+                    <div class="dt__filter-wrap" (click)="$event.stopPropagation()">
+                      <button
+                        class="dt__filter-btn"
+                        [class.dt__filter-btn--active]="isFilterActive(col.key)"
+                        (click)="togglePopover(col.key, $event)"
+                        title="Filtrer"
+                      >▽</button>
+
+                      @if (openPopover === col.key) {
+                        <div class="dt__popover">
+
+                          @if (filterType === 'advanced') {
+                            <select
+                              class="dt__filter-mode"
+                              [(ngModel)]="advancedFilters[col.key].mode"
+                            >
+                              @for (m of filterModes; track m.value) {
+                                <option [value]="m.value">{{ m.label }}</option>
+                              }
+                            </select>
+                          }
+
+                          @if (filterType === 'simple') {
+                            <input
+                              class="dt__filter-input"
+                              type="text"
+                              placeholder="Rechercher…"
+                              [(ngModel)]="simpleFilters[col.key]"
+                              (keyup.enter)="applyFilter()"
+                              autofocus
+                            />
+                          } @else {
+                            <input
+                              class="dt__filter-input"
+                              type="text"
+                              placeholder="Rechercher…"
+                              [(ngModel)]="advancedFilters[col.key].value"
+                              (keyup.enter)="applyFilter()"
+                              autofocus
+                            />
+                          }
+
+                          <div class="dt__popover-actions">
+                            <button class="dt__btn-clear" (click)="clearFilter(col.key)">Effacer</button>
+                            <button class="dt__btn-apply" (click)="applyFilter()">Appliquer</button>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                } @else {
+                  {{ col.label }}
+                }
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of filteredRows; track trackRow($index, row)) {
+            <ng-container
+              *ngTemplateOutlet="rowTemplate; context: { $implicit: row }"
+            ></ng-container>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="dt__footer">
+      {{ filteredRows.length }} / {{ rows.length }} ligne{{ rows.length > 1 ? 's' : '' }}
+    </div>
+  }
+
+</div>

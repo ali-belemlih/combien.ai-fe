@@ -23,7 +23,6 @@ export class CalculatorComponent implements OnChanges {
   sliderMax = 10000;
   sliderStep = 50;
   presets: { label: string; mo: number }[] = [];
-
   result: { plan: any; operatorName: string; operatorColor: string } | null = null;
 
   constructor(private svc: OperatorService) {}
@@ -48,23 +47,19 @@ export class CalculatorComponent implements OnChanges {
     this.result = this.svc.recommend(this.monthlyMo, this.operators);
   }
 
-  /** Construit les presets à partir des vraies données mensuelles disponibles */
   private _buildPresetsFromData(): void {
     const monthlyPlans = this.operators
       .flatMap(op => op.plans.filter(p => p.duration === 'monthly'))
       .map(p => p.data)
       .sort((a, b) => a - b);
 
-    // Valeurs uniques
     const unique = [...new Set(monthlyPlans)];
 
-    // Slider max = plus grand forfait mensuel
     if (unique.length > 0) {
       this.sliderMax = unique[unique.length - 1];
       this.sliderMin = unique[0];
     }
 
-    // Presets = jusqu'à 6 valeurs représentatives
     const step = Math.max(1, Math.floor(unique.length / 6));
     const selected = unique.filter((_, i) => i % step === 0).slice(0, 6);
 
@@ -75,7 +70,6 @@ export class CalculatorComponent implements OnChanges {
         : `${mo} Mo`,
     }));
 
-    // S'assurer que monthlyMo est dans la plage
     if (this.monthlyMo < this.sliderMin) this.monthlyMo = this.sliderMin;
     if (this.monthlyMo > this.sliderMax) this.monthlyMo = this.sliderMax;
   }

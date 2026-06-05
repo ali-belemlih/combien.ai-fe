@@ -1,3 +1,51 @@
+// ─── Pays ─────────────────────────────────────────────────────────────────────
+// Le backend retourne { id: number, label: string }
+
+export interface Pays {
+  id: number;
+  label: string;
+}
+
+export interface PaysCreate {
+  label: string;
+}
+
+export interface PaysUpdate {
+  label?: string;
+}
+
+// ─── Currency ─────────────────────────────────────────────────────────────────
+// Le backend retourne { id: number, label: string }
+
+export interface Currency {
+  id: number;
+  label: string;
+}
+
+export interface CurrencyCreate {
+  label: string;
+}
+
+export interface CurrencyUpdate {
+  label?: string;
+}
+
+// ─── Operateur ────────────────────────────────────────────────────────────────
+// Le backend retourne { id: number, label: string } via /operators
+
+export interface Operateur {
+  id: number;
+  label: string;
+}
+
+export interface OperateurCreate {
+  label: string;
+}
+
+export interface OperateurUpdate {
+  label?: string;
+}
+
 // ─── Website ──────────────────────────────────────────────────────────────────
 
 export interface Website {

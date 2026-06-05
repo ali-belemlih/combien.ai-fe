@@ -492,7 +492,35 @@ $radius:    10px;
   to { transform: rotate(360deg); }
 }
 
-// ─── Responsive ───────────────────────────────────────────────────────────────
+// ─── Select filtre ────────────────────────────────────────────────────────────
+.admin__select--filter {
+  width: auto;
+  min-width: 160px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+// ─── Compteur offres dans jobs ────────────────────────────────────────────────
+.admin__offres-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 0.15rem 0.5rem;
+  background: rgba($primary, 0.15);
+  color: #a78bfa;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &--loading {
+    background: rgba($text-muted, 0.1);
+    color: $text-muted;
+    animation: pulse 1.5s infinite;
+  }
+}
+
+
 @media (max-width: 768px) {
   .admin {
     padding: 1rem;
@@ -513,5 +541,198 @@ $radius:    10px;
 
   .admin__form-row {
     flex-direction: column;
+  }
+}
+
+// ─── Formulaire édition ───────────────────────────────────────────────────────
+.admin__form-card--edit {
+  border-color: rgba($warning, 0.4);
+  background: rgba($warning, 0.04);
+}
+
+// ─── Couleur picker ───────────────────────────────────────────────────────────
+.admin__color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin__input--color {
+  width: 48px;
+  height: 38px;
+  padding: 2px 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.admin__color-preview {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: $text;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid $border;
+}
+
+// ─── Opérateur row ────────────────────────────────────────────────────────────
+.admin__op-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin__op-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+// ─── Couleur cellule ──────────────────────────────────────────────────────────
+.admin__color-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin__color-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+// ─── Logo thumbnail ───────────────────────────────────────────────────────────
+.admin__logo-thumb {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: $surface2;
+  border: 1px solid $border;
+}
+
+// ─── Symbole devise ───────────────────────────────────────────────────────────
+.admin__currency-symbol {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  background: rgba($info, 0.12);
+  color: #93c5fd;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+
+// ─── Filtres colonne tableau offres ───────────────────────────────────────────
+.admin {
+
+  &__th-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  &__filter-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  &__filter-btn {
+    background: transparent;
+    border: 1px solid $border;
+    border-radius: 4px;
+    color: $text-muted;
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    line-height: 1.4;
+    transition: all 0.15s;
+
+    &:hover {
+      border-color: $primary;
+      color: $primary;
+    }
+
+    &--active {
+      border-color: $primary;
+      color: $primary;
+      background: rgba($primary, 0.12);
+    }
+  }
+
+  &__filter-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: $surface2;
+    border: 1px solid $border;
+    border-radius: $radius;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    padding: 0.75rem;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 6px solid $border;
+    }
+  }
+
+  &__filter-search {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: 6px;
+    color: $text;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: $primary;
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  &__filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  &__filter-badge {
+    display: inline-block;
+    background: rgba($primary, 0.15);
+    color: $primary;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    padding: 1px 8px;
+    margin-left: 0.5rem;
+  }
+
+  &__clear-filters {
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
   }
 }

@@ -11,11 +11,14 @@ export interface AuthUser {
   roles: string[];
 }
 
+export interface LoginResult {
+  success: boolean;
+  error?: 'invalid_credentials' | 'network_error' | 'unknown';
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private _kc: Keycloak;
-
-  // Signals réactifs
   private _initialized = signal(false);
   private _user = signal<AuthUser | null>(null);
 
@@ -32,62 +35,111 @@ export class AuthService {
     });
   }
 
-  /**
-   * Initialise Keycloak. Appelé au démarrage de l'app via APP_INITIALIZER.
-   * check-sso : vérifie silencieusement si une session existe déjà.
-   */
   async init(): Promise<void> {
     try {
+      const storedToken = localStorage.getItem('kc_token');
+      const storedRefreshToken = localStorage.getItem('kc_refresh_token');
+
       const authenticated = await this._kc.init({
         onLoad: 'check-sso',
         pkceMethod: 'S256',
         checkLoginIframe: false,
-        // Pas de silentCheckSsoRedirectUri pour éviter les problèmes CSP iframe
+        token: storedToken ?? undefined,
+        refreshToken: storedRefreshToken ?? undefined,
       });
 
       if (authenticated) {
+        this._persistTokens();
         this._syncUser();
         this._scheduleTokenRefresh();
+      } else {
+        this._clearStoredTokens();
       }
     } catch (err) {
       console.error('[AuthService] Keycloak init failed:', err);
+      this._clearStoredTokens();
     } finally {
       this._initialized.set(true);
     }
   }
 
-  /** Redirige vers la page de login Keycloak. */
-  login(): void {
-    this._kc.login({ redirectUri: window.location.href });
+  async loginWithCredentials(username: string, password: string): Promise<LoginResult> {
+    const tokenUrl = `${environment.keycloak.url}/realms/${environment.keycloak.realm}/protocol/openid-connect/token`;
+
+    const body = new URLSearchParams({
+      grant_type: 'password',
+      client_id: environment.keycloak.clientId,
+      username,
+      password,
+      scope: 'openid profile email',
+    });
+
+    try {
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 401 || data['error'] === 'invalid_grant') {
+          return { success: false, error: 'invalid_credentials' };
+        }
+        return { success: false, error: 'unknown' };
+      }
+
+      const tokens = await response.json();
+
+      (this._kc as any).token = tokens['access_token'];
+      (this._kc as any).refreshToken = tokens['refresh_token'];
+      (this._kc as any).idToken = tokens['id_token'];
+      (this._kc as any).tokenParsed = this._parseJwt(tokens['access_token']);
+      (this._kc as any).refreshTokenParsed = this._parseJwt(tokens['refresh_token']);
+      (this._kc as any).authenticated = true;
+
+      this._persistTokens();
+      this._syncUser();
+      this._scheduleTokenRefresh();
+
+      return { success: true };
+    } catch {
+      return { success: false, error: 'network_error' };
+    }
   }
 
-  /** Déconnecte l'utilisateur et redirige vers l'accueil. */
   logout(): void {
-    this._kc.logout({ redirectUri: window.location.origin });
+    this._clearStoredTokens();
+    this._user.set(null);
+    this._kc.logout({ redirectUri: window.location.origin + '/login' });
   }
 
-  /** Retourne le token Bearer courant (rafraîchi si nécessaire). */
   async getToken(): Promise<string | null> {
     try {
-      // Rafraîchit le token s'il expire dans moins de 30s
-      await this._kc.updateToken(30);
+      const refreshed = await this._kc.updateToken(30);
+      if (refreshed) this._persistTokens();
       return this._kc.token ?? null;
     } catch {
       return null;
     }
   }
 
-  /** Retourne le token de manière synchrone (peut être expiré). */
   getTokenSync(): string | null {
     return this._kc.token ?? null;
   }
 
-  /** Vérifie si l'utilisateur a un rôle donné. */
   hasRole(role: string): boolean {
     return this._user()?.roles.includes(role) ?? false;
   }
 
-  // ── Privé ──────────────────────────────────────────────────────────────────
+  private _parseJwt(token: string): Record<string, unknown> | undefined {
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64));
+    } catch {
+      return undefined;
+    }
+  }
 
   private _syncUser(): void {
     const profile = this._kc.tokenParsed;
@@ -95,7 +147,6 @@ export class AuthService {
 
     const realmRoles: string[] = profile['realm_access']?.roles ?? [];
     const clientRoles: string[] = profile['resource_access']?.[environment.keycloak.clientId]?.roles ?? [];
-    // Rôles du client API backend aussi
     const apiRoles: string[] = profile['resource_access']?.['combien-ai-api']?.roles ?? [];
     const frontendRoles: string[] = profile['resource_access']?.['combien-ai-frontend']?.roles ?? [];
     const allRoles = [...new Set([...realmRoles, ...clientRoles, ...apiRoles, ...frontendRoles])];
@@ -110,14 +161,26 @@ export class AuthService {
     });
   }
 
+  private _persistTokens(): void {
+    if (this._kc.token) localStorage.setItem('kc_token', this._kc.token);
+    if (this._kc.refreshToken) localStorage.setItem('kc_refresh_token', this._kc.refreshToken);
+  }
+
+  private _clearStoredTokens(): void {
+    localStorage.removeItem('kc_token');
+    localStorage.removeItem('kc_refresh_token');
+  }
+
   private _scheduleTokenRefresh(): void {
-    // Rafraîchit le token toutes les 60s
     setInterval(async () => {
       try {
         const refreshed = await this._kc.updateToken(60);
-        if (refreshed) this._syncUser();
+        if (refreshed) {
+          this._persistTokens();
+          this._syncUser();
+        }
       } catch {
-        // Token expiré et non rafraîchissable → déconnexion
+        this._clearStoredTokens();
         this._user.set(null);
       }
     }, 60_000);

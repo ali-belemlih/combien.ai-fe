@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { VoixService } from '../../services/voix.service';
 import { OffreVoix, OperatorVoix, VoixCategory, VoixComparePair } from '../../models/voix.model';
 
-// Métadonnées opérateurs (couleurs/logos)
 const OP_META: Record<string, { color: string; logo: string }> = {
   'moov':        { color: '#0066cc', logo: '🔵' },
   'moov africa': { color: '#0066cc', logo: '🔵' },
@@ -34,18 +33,15 @@ export class VoixComponent implements OnInit {
   private readonly svc = inject(VoixService);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  // ─── État ─────────────────────────────────────────────────────────────────
   allOffres: OffreVoix[] = [];
   loading = true;
   error: string | null = null;
 
-  // ─── Filtres ──────────────────────────────────────────────────────────────
   activeCategory: VoixCategory | 'all' = 'all';
   activePays = 'all';
   search = '';
   viewMode: VoixView = 'cards';
 
-  // ─── Comparaison ──────────────────────────────────────────────────────────
   compareLeft = '';
   compareRight = '';
 
@@ -56,7 +52,6 @@ export class VoixComponent implements OnInit {
     { label: '🗓 Mensuel', value: 'MOIS' },
   ];
 
-  // ─── Init ─────────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.svc.getAll().subscribe({
       next: (data) => {
@@ -72,16 +67,14 @@ export class VoixComponent implements OnInit {
     });
   }
 
-  // ─── Pays disponibles ─────────────────────────────────────────────────────
   get availablePays(): string[] {
     return [...new Set(this.allOffres.map(o => o.pays).filter(Boolean))].sort();
   }
 
-  // ─── Offres filtrées ──────────────────────────────────────────────────────
   get filteredOffres(): OffreVoix[] {
     return this.allOffres.filter(o => {
-      const matchPays = this.activePays === 'all' || o.pays === this.activePays;
-      const matchCat  = this.activeCategory === 'all' || o.category === this.activeCategory;
+      const matchPays   = this.activePays === 'all' || o.pays === this.activePays;
+      const matchCat    = this.activeCategory === 'all' || o.category === this.activeCategory;
       const matchSearch = !this.search
         || o.operator.toLowerCase().includes(this.search.toLowerCase())
         || (o.plan_name ?? '').toLowerCase().includes(this.search.toLowerCase())
@@ -90,7 +83,6 @@ export class VoixComponent implements OnInit {
     });
   }
 
-  // ─── Groupement par opérateur ─────────────────────────────────────────────
   get operatorGroups(): OperatorVoix[] {
     const map = new Map<string, OffreVoix[]>();
     for (const o of this.filteredOffres) {
@@ -105,7 +97,6 @@ export class VoixComponent implements OnInit {
     });
   }
 
-  // ─── Stats ────────────────────────────────────────────────────────────────
   get totalOperators(): number { return this.operatorGroups.length; }
   get totalOffres(): number    { return this.filteredOffres.length; }
 
@@ -121,18 +112,11 @@ export class VoixComponent implements OnInit {
     return best;
   }
 
-  // ─── Comparaison côte à côte ──────────────────────────────────────────────
   get compareOperators(): { label: string; value: string }[] {
     return this.operatorGroups.map(g => ({
       label: `${g.logo} ${g.name} (${g.pays})`,
       value: `${g.name}|${g.pays}`,
     }));
-  }
-
-  private _initCompare(): void {
-    const ops = this.operatorGroups;
-    this.compareLeft  = ops[0] ? `${ops[0].name}|${ops[0].pays}` : '';
-    this.compareRight = ops[1] ? `${ops[1].name}|${ops[1].pays}` : '';
   }
 
   get leftGroup(): OperatorVoix | undefined {
@@ -150,14 +134,12 @@ export class VoixComponent implements OnInit {
     const right = this.rightGroup;
     if (!left || !right) return [];
 
-    // Regrouper par prix (clé de comparaison)
     const prices = new Set<number>([
       ...left.offres.map(o => Number(o.price)),
       ...right.offres.map(o => Number(o.price)),
     ]);
 
-    const pairs: VoixComparePair[] = [];
-    for (const price of [...prices].sort((a, b) => a - b)) {
+    return [...prices].sort((a, b) => a - b).map(price => {
       const lOffre = left.offres.find(o => Number(o.price) === price) ?? null;
       const rOffre = right.offres.find(o => Number(o.price) === price) ?? null;
 
@@ -165,23 +147,13 @@ export class VoixComponent implements OnInit {
       if (lOffre && rOffre) {
         const lVal = Number(lOffre.volume_recu ?? 0);
         const rVal = Number(rOffre.volume_recu ?? 0);
-        if (lVal > rVal) betterSide = 'left';
-        else if (rVal > lVal) betterSide = 'right';
-        else betterSide = 'equal';
+        betterSide = lVal > rVal ? 'left' : rVal > lVal ? 'right' : 'equal';
       }
 
-      pairs.push({
-        category: (lOffre ?? rOffre)!.category,
-        price,
-        left: lOffre,
-        right: rOffre,
-        betterSide,
-      });
-    }
-    return pairs;
+      return { category: (lOffre ?? rOffre)!.category, price, left: lOffre, right: rOffre, betterSide };
+    });
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
   categoryLabel(cat: string): string {
     return cat === 'JOUR' ? '24h' : cat === 'HEBDO' ? '7 jours' : '30 jours';
   }
@@ -196,13 +168,8 @@ export class VoixComponent implements OnInit {
     return (Number(offre.volume_recu) / Number(offre.price)).toFixed(2);
   }
 
-  getColor(name: string): string {
-    return getMeta(name).color;
-  }
-
-  getLogo(name: string): string {
-    return getMeta(name).logo;
-  }
+  getColor(name: string): string { return getMeta(name).color; }
+  getLogo(name: string): string  { return getMeta(name).logo; }
 
   countByCategory(cat: VoixCategory | 'all'): number {
     if (cat === 'all') return this.filteredOffres.length;
@@ -212,5 +179,11 @@ export class VoixComponent implements OnInit {
   onPaysChange(pays: string): void {
     this.activePays = pays;
     this._initCompare();
+  }
+
+  private _initCompare(): void {
+    const ops = this.operatorGroups;
+    this.compareLeft  = ops[0] ? `${ops[0].name}|${ops[0].pays}` : '';
+    this.compareRight = ops[1] ? `${ops[1].name}|${ops[1].pays}` : '';
   }
 }

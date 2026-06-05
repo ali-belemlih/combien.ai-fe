@@ -17,10 +17,9 @@ export class BestValueBannerComponent {
   get dataLabel(): string {
     if (!this.bestValue) return '';
     const mo = this.bestValue.plan.data;
-    if (mo >= 1000) {
-      const go = mo / 1000;
-      return `${go % 1 === 0 ? go : go.toFixed(1)} Go`;
-    }
-    return `${mo} Mo`;
+    const go = mo / 1000;
+    return mo >= 1000
+      ? `${go % 1 === 0 ? go : go.toFixed(1)} Go`
+      : `${mo} Mo`;
   }
 }
