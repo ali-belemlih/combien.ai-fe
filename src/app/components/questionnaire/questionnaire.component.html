@@ -4,7 +4,7 @@
   @if (loading) {
     <div class="quiz__loading">
       <i class="pi pi-spin pi-spinner quiz__spinner"></i>
-      <p>Chargement des forfaits…</p>
+      <p>Chargement…</p>
     </div>
   }
 
@@ -13,412 +13,232 @@
     <div class="quiz__error">
       <i class="pi pi-exclamation-triangle quiz__error-icon"></i>
       <p>{{ error }}</p>
-      <button pButton label="Réessayer" icon="pi pi-refresh" (click)="ngOnInit()"></button>
+      <button pButton label="Réessayer" icon="pi pi-refresh" (click)="startQuestionnaire()"></button>
     </div>
   }
 
   @if (!loading && !error) {
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- ÉTAPE 0 : SÉLECTION DU TYPE DE FORFAIT                                -->
+    <!-- ÉTAPE 0 : ACCUEIL                                                     -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     @if (currentStep === 0) {
       <div class="quiz__type-select">
-        <h2 class="quiz__type-title">Quel type de forfait cherchez-vous ?</h2>
-        <p class="quiz__type-subtitle">Je vais vous recommander les meilleures offres selon vos besoins</p>
-        <div class="quiz__type-cards">
-          <button class="quiz__type-card" (click)="selectType('internet')">
-            <span class="quiz__type-card-icon">📶</span>
-            <span class="quiz__type-card-label">Forfait Internet</span>
-            <span class="quiz__type-card-desc">Data mobile, navigation, streaming</span>
+        <h2 class="quiz__type-title">Trouvez le forfait parfait pour vous</h2>
+        <p class="quiz__type-subtitle">
+          Je vais vous poser quelques questions pour vous recommander les meilleures offres selon vos besoins et votre budget.
+        </p>
+        <div class="quiz__start-actions">
+          <button pButton class="quiz__start-btn" (click)="startQuestionnaire()">
+            <span class="quiz__type-card-icon">🎯</span>
+            <span class="quiz__type-card-label">Commencer le questionnaire</span>
+            <span class="quiz__type-card-desc">Questions adaptées à votre profil</span>
           </button>
-          <button class="quiz__type-card" (click)="selectType('voix')">
-            <span class="quiz__type-card-icon">📞</span>
-            <span class="quiz__type-card-label">Forfait Voix</span>
-            <span class="quiz__type-card-desc">Appels, crédit, SMS</span>
-          </button>
+        </div>
+        <div class="quiz__features">
+          <div class="quiz__feature">
+            <span class="quiz__feature-icon">🤖</span>
+            <span>Questionnaire intelligent adaptatif</span>
+          </div>
+          <div class="quiz__feature">
+            <span class="quiz__feature-icon">⚡</span>
+            <span>Scoring multi-critères (budget, volume, durée, opérateur)</span>
+          </div>
+          <div class="quiz__feature">
+            <span class="quiz__feature-icon">🏆</span>
+            <span>Top 5 des meilleures offres avec explication</span>
+          </div>
         </div>
       </div>
     }
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- QUIZ (étapes 1 à 5)                                                   -->
+    <!-- QUIZ : QUESTIONS ADAPTATIVES                                          -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    @if (currentStep >= 1) {
+    @if (currentStep >= 1 && !finished && currentQuestion) {
       <p-card styleClass="quiz__card">
 
         <!-- En-tête avec progression -->
         <ng-template pTemplate="header">
           <div class="quiz__header">
-            <!-- Badge type de forfait -->
-            <div class="quiz__type-badge">
-              @if (forfaitType === 'internet') {
-                <span class="quiz__type-badge--internet">📶 Forfait Internet</span>
-              } @else {
-                <span class="quiz__type-badge--voix">📞 Forfait Voix</span>
-              }
-            </div>
             <p-progressBar [value]="progress" [showValue]="false" styleClass="quiz__progress" />
             <div class="quiz__step-info">
-              <span class="quiz__step-count">Étape {{ currentStep }} / {{ totalSteps }}</span>
-              <span class="quiz__step-icon">{{ currentStepData.icon }}</span>
+              <span class="quiz__step-count">Question {{ currentStep }}</span>
+              <span class="quiz__step-progress">{{ progress }}%</span>
             </div>
-            <h2 class="quiz__title">{{ currentStepData.title }}</h2>
-            <p class="quiz__subtitle">{{ currentStepData.subtitle }}</p>
+            <h2 class="quiz__title">{{ currentQuestion.text }}</h2>
           </div>
         </ng-template>
 
-        <!-- ─── Étape 1 : Pays ─────────────────────────────────────────────── -->
-        @if (currentStep === 1) {
-          <div class="quiz__body">
-            <div class="quiz__options quiz__options--grid">
+        <!-- ─── Options de la question ─────────────────────────────────────── -->
+        <div class="quiz__body">
+          <div class="quiz__options quiz__options--grid">
+            @for (opt of currentQuestion.options; track opt.id) {
               <button pButton type="button"
-                [class]="isCountrySelected('all') ? 'quiz__option-btn' : 'quiz__option-btn p-button-outlined'"
-                (click)="selectCountry('all')">
-                <span class="quiz__option-icon">🌍</span>
-                <span>Tous les pays</span>
+                [class]="isSelected(opt.value) ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
+                (click)="selectOption(opt.value)">
+                <span class="quiz__option-label">{{ opt.label }}</span>
+                @if (isSelected(opt.value)) {
+                  <i class="pi pi-check quiz__option-badge"></i>
+                }
               </button>
-              @for (country of availableCountries; track country) {
-                <button pButton type="button"
-                  [class]="isCountrySelected(country) ? 'quiz__option-btn' : 'quiz__option-btn p-button-outlined'"
-                  (click)="selectCountry(country)">
-                  <span class="quiz__option-icon">📍</span>
-                  <span>{{ country }}</span>
-                </button>
+            }
+          </div>
+
+          <!-- Résumé des réponses précédentes -->
+          @if (answersSummary.length > 0) {
+            <div class="quiz__answers-trail">
+              @for (a of answersSummary; track a.key) {
+                <span class="quiz__answer-chip">
+                  <strong>{{ a.key }}</strong> : {{ a.value }}
+                </span>
               }
             </div>
-          </div>
-        }
-
-        <!-- ─── Étape 2 : Durée ────────────────────────────────────────────── -->
-        @if (currentStep === 2) {
-          <div class="quiz__body">
-            <div class="quiz__options quiz__options--grid">
-
-              <!-- Internet -->
-              @if (forfaitType === 'internet') {
-                @for (opt of durationOptions; track opt.value) {
-                  <button pButton type="button"
-                    [class]="answers.duration === opt.value ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
-                    (click)="selectDuration(opt.value)">
-                    <span class="quiz__option-icon">{{ opt.icon }}</span>
-                    <span class="quiz__option-label">{{ opt.label }}</span>
-                    <span class="quiz__option-desc">{{ opt.desc }}</span>
-                  </button>
-                }
-              }
-
-              <!-- Voix -->
-              @if (forfaitType === 'voix') {
-                @for (opt of voixDurationOptions; track opt.value) {
-                  <button pButton type="button"
-                    [class]="voixAnswers.duration === opt.value ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
-                    (click)="selectVoixDuration(opt.value)">
-                    <span class="quiz__option-icon">{{ opt.icon }}</span>
-                    <span class="quiz__option-label">{{ opt.label }}</span>
-                    <span class="quiz__option-desc">{{ opt.desc }}</span>
-                  </button>
-                }
-              }
-
-            </div>
-          </div>
-        }
-
-        <!-- ─── Étape 3 : Budget ───────────────────────────────────────────── -->
-        @if (currentStep === 3) {
-          <div class="quiz__body">
-            <div class="quiz__options quiz__options--list">
-              @for (opt of budgetOptions; track opt.label) {
-                <button pButton type="button"
-                  [class]="isBudgetSelected(opt.value) ? 'quiz__option-btn quiz__option-btn--row' : 'quiz__option-btn quiz__option-btn--row p-button-outlined'"
-                  (click)="selectBudget(opt.value)">
-                  <div class="quiz__option-content">
-                    <span class="quiz__option-label">{{ opt.label }}</span>
-                    <span class="quiz__option-desc">{{ opt.description }}</span>
-                  </div>
-                  @if (isBudgetSelected(opt.value)) {
-                    <i class="pi pi-check quiz__option-check"></i>
-                  }
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- ─── Étape 4 : Usages ───────────────────────────────────────────── -->
-        @if (currentStep === 4) {
-          <div class="quiz__body">
-
-            <!-- Internet -->
-            @if (forfaitType === 'internet') {
-              <p class="quiz__hint">Sélectionnez un ou plusieurs usages</p>
-              <div class="quiz__options quiz__options--grid">
-                @for (opt of usageOptions; track opt.value) {
-                  <button pButton type="button"
-                    [class]="isUsageSelected(opt.value) ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
-                    (click)="toggleUsage(opt.value)">
-                    <span class="quiz__option-icon">{{ opt.icon }}</span>
-                    <span class="quiz__option-label">{{ opt.label }}</span>
-                    <span class="quiz__option-desc">~{{ opt.dataPerDay }} Mo/jour</span>
-                    @if (isUsageSelected(opt.value)) {
-                      <i class="pi pi-check quiz__option-badge"></i>
-                    }
-                  </button>
-                }
-              </div>
-            }
-
-            <!-- Voix -->
-            @if (forfaitType === 'voix') {
-              <p class="quiz__hint">Sélectionnez un ou plusieurs besoins</p>
-              <div class="quiz__options quiz__options--grid">
-                @for (opt of voixUsageOptions; track opt.value) {
-                  <button pButton type="button"
-                    [class]="isVoixUsageSelected(opt.value) ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
-                    (click)="toggleVoixUsage(opt.value)">
-                    <span class="quiz__option-icon">{{ opt.icon }}</span>
-                    <span class="quiz__option-label">{{ opt.label }}</span>
-                    <span class="quiz__option-desc">{{ opt.description }}</span>
-                    @if (isVoixUsageSelected(opt.value)) {
-                      <i class="pi pi-check quiz__option-badge"></i>
-                    }
-                  </button>
-                }
-              </div>
-            }
-
-          </div>
-        }
-
-        <!-- ─── Étape 5 : Résultats ────────────────────────────────────────── -->
-        @if (currentStep === 5) {
-          <div class="quiz__body quiz__body--results">
-
-            <!-- ── Résultats Internet ── -->
-            @if (forfaitType === 'internet') {
-
-              <!-- Résumé -->
-              <div class="quiz__summary">
-                <div class="quiz__summary-item">
-                  <i class="pi pi-globe"></i>
-                  <span>{{ answers.country === 'all' ? 'Tous les pays' : answers.country }}</span>
-                </div>
-                <div class="quiz__summary-item">
-                  <i class="pi pi-calendar"></i>
-                  <span>{{ answers.duration === 'any' ? 'Toutes durées' : answers.duration }}</span>
-                </div>
-                <div class="quiz__summary-item">
-                  <i class="pi pi-wallet"></i>
-                  <span>{{ selectedBudgetLabel }}</span>
-                </div>
-                <div class="quiz__summary-item">
-                  <i class="pi pi-chart-bar"></i>
-                  <span>~{{ estimatedDataLabel }} estimés</span>
-                </div>
-              </div>
-
-              <p-divider />
-
-              @if (recommendations.length === 0) {
-                <div class="quiz__no-results">
-                  <i class="pi pi-face-smile quiz__no-results-icon"></i>
-                  <h3>Aucun forfait trouvé</h3>
-                  <p>Essayez d'élargir votre budget ou de changer vos critères.</p>
-                  <button pButton label="Recommencer" icon="pi pi-refresh" class="p-button-outlined" (click)="restart()"></button>
-                </div>
-              } @else {
-                <div class="quiz__results-header">
-                  <h3 class="quiz__results-title">
-                    <i class="pi pi-compass"></i>
-                    {{ recommendations.length }} forfait{{ recommendations.length > 1 ? 's' : '' }} recommandé{{ recommendations.length > 1 ? 's' : '' }}
-                  </h3>
-                </div>
-                <div class="quiz__results-grid">
-                  @for (rec of recommendations; track rec.plan.id; let i = $index) {
-                    <p-card styleClass="result-card" [style]="{'--op-color': rec.operator.color}">
-                      @if (i === 0) {
-                        <ng-template pTemplate="header">
-                          <div class="result-card__best">
-                            <p-tag value="⭐ Meilleur choix" severity="warn" />
-                          </div>
-                        </ng-template>
-                      }
-                      <div class="result-card__header">
-                        <span class="result-card__logo">{{ rec.operator.logo }}</span>
-                        <div>
-                          <p class="result-card__op-name" [style.color]="rec.operator.color">{{ rec.operator.name }}</p>
-                          <p class="result-card__plan-name">{{ rec.plan.name }}</p>
-                        </div>
-                        <p-tag [value]="getScoreLabel(rec.score)"
-                          [severity]="rec.score >= 70 ? 'success' : rec.score >= 50 ? 'info' : 'warn'"
-                          styleClass="result-card__score" />
-                      </div>
-                      <div class="result-card__stats">
-                        <div class="result-card__stat">
-                          <span class="result-card__stat-value">{{ formatData(rec.plan.data) }}</span>
-                          <span class="result-card__stat-label">Data</span>
-                        </div>
-                        <div class="result-card__stat result-card__stat--price">
-                          <span class="result-card__stat-value">{{ formatPrice(rec.plan.price) }}</span>
-                          @if (rec.plan.originalPrice) {
-                            <span class="result-card__original-price">{{ formatPrice(rec.plan.originalPrice) }}</span>
-                          }
-                          <span class="result-card__stat-label">Prix</span>
-                        </div>
-                        <div class="result-card__stat">
-                          <span class="result-card__stat-value">{{ rec.plan.network }}</span>
-                          <span class="result-card__stat-label">Réseau</span>
-                        </div>
-                      </div>
-                      <ul class="result-card__reasons">
-                        @for (reason of rec.matchReasons; track reason) { <li>{{ reason }}</li> }
-                      </ul>
-                      <ng-template pTemplate="footer">
-                        <div class="result-card__tags">
-                          @if (rec.plan.promo) { <p-tag value="Promo" severity="danger" /> }
-                          <p-tag [value]="rec.plan.duration" severity="info" />
-                          @if (rec.plan.calls !== 'Non inclus') { <p-tag value="📞 Appels" severity="success" /> }
-                        </div>
-                      </ng-template>
-                    </p-card>
-                  }
-                </div>
-              }
-            }
-
-            <!-- ── Résultats Voix ── -->
-            @if (forfaitType === 'voix') {
-
-              <!-- Résumé -->
-              <div class="quiz__summary">
-                <div class="quiz__summary-item">
-                  <i class="pi pi-globe"></i>
-                  <span>{{ voixAnswers.country === 'all' ? 'Tous les pays' : voixAnswers.country }}</span>
-                </div>
-                <div class="quiz__summary-item">
-                  <i class="pi pi-calendar"></i>
-                  <span>{{ voixDurationLabel }}</span>
-                </div>
-                <div class="quiz__summary-item">
-                  <i class="pi pi-wallet"></i>
-                  <span>{{ voixBudgetLabel }}</span>
-                </div>
-                <div class="quiz__summary-item">
-                  <i class="pi pi-phone"></i>
-                  <span>{{ voixUsagesLabel }}</span>
-                </div>
-              </div>
-
-              <p-divider />
-
-              @if (recommendationsVoix.length === 0) {
-                <div class="quiz__no-results">
-                  <i class="pi pi-face-smile quiz__no-results-icon"></i>
-                  <h3>Aucune offre trouvée</h3>
-                  <p>Essayez d'élargir votre budget ou de changer vos critères.</p>
-                  <button pButton label="Recommencer" icon="pi pi-refresh" class="p-button-outlined" (click)="restart()"></button>
-                </div>
-              } @else {
-                <div class="quiz__results-header">
-                  <h3 class="quiz__results-title">
-                    <i class="pi pi-compass"></i>
-                    {{ recommendationsVoix.length }} offre{{ recommendationsVoix.length > 1 ? 's' : '' }} recommandée{{ recommendationsVoix.length > 1 ? 's' : '' }}
-                  </h3>
-                </div>
-                <div class="quiz__results-grid">
-                  @for (rec of recommendationsVoix; track rec.offre.id; let i = $index) {
-                    <p-card styleClass="result-card result-card--voix">
-                      @if (i === 0) {
-                        <ng-template pTemplate="header">
-                          <div class="result-card__best">
-                            <p-tag value="⭐ Meilleur choix" severity="warn" />
-                          </div>
-                        </ng-template>
-                      }
-
-                      <!-- En-tête opérateur -->
-                      <div class="result-card__header">
-                        <span class="result-card__logo">📞</span>
-                        <div>
-                          <p class="result-card__op-name">{{ rec.offre.operator }}</p>
-                          @if (rec.offre.plan_name) {
-                            <p class="result-card__plan-name">{{ rec.offre.plan_name }}</p>
-                          }
-                          <p class="result-card__plan-name">{{ rec.offre.pays }}</p>
-                        </div>
-                        <p-tag [value]="getScoreLabel(rec.score)"
-                          [severity]="rec.score >= 70 ? 'success' : rec.score >= 50 ? 'info' : 'warn'"
-                          styleClass="result-card__score" />
-                      </div>
-
-                      <!-- Stats principales -->
-                      <div class="result-card__stats">
-                        <div class="result-card__stat result-card__stat--price">
-                          <span class="result-card__stat-value">{{ formatPrice(rec.offre.price) }}</span>
-                          <span class="result-card__stat-label">Prix payé</span>
-                        </div>
-                        @if (rec.offre.volume_recu) {
-                          <div class="result-card__stat result-card__stat--credit">
-                            <span class="result-card__stat-value">{{ formatPrice(rec.offre.volume_recu) }}</span>
-                            <span class="result-card__stat-label">Crédit reçu</span>
-                          </div>
-                        }
-                        @if (rec.offre.extra_bonus) {
-                          <div class="result-card__stat result-card__stat--bonus">
-                            <span class="result-card__stat-value">+{{ formatPrice(rec.offre.extra_bonus) }}</span>
-                            <span class="result-card__stat-label">Bonus</span>
-                          </div>
-                        }
-                      </div>
-
-                      <!-- Ratio -->
-                      @if (rec.offre.volume_recu) {
-                        <div class="result-card__ratio-voix">
-                          <span class="result-card__ratio-label">Ratio</span>
-                          <span class="result-card__ratio-value">{{ voixRatio(rec.offre) }}</span>
-                        </div>
-                      }
-
-                      <!-- Raisons -->
-                      <ul class="result-card__reasons">
-                        @for (reason of rec.matchReasons; track reason) { <li>{{ reason }}</li> }
-                      </ul>
-
-                      <ng-template pTemplate="footer">
-                        <div class="result-card__tags">
-                          <p-tag [value]="rec.offre.category" severity="info" />
-                          <p-tag [value]="'⏱ ' + rec.offre.validity" severity="secondary" />
-                          @if (rec.offre.ussd_code) {
-                            <p-tag [value]="rec.offre.ussd_code" severity="success" />
-                          }
-                        </div>
-                      </ng-template>
-                    </p-card>
-                  }
-                </div>
-              }
-            }
-
-          </div>
-        }
+          }
+        </div>
 
         <!-- ─── Navigation ─────────────────────────────────────────────────── -->
         <ng-template pTemplate="footer">
           <div class="quiz__footer">
-            @if (currentStep >= 1 && currentStep < 5) {
-              <button pButton label="← Retour" class="p-button-outlined" (click)="prev()"></button>
+            <button pButton label="← Retour" class="p-button-outlined" (click)="prev()"></button>
+            <button pButton
+              label="Suivant →"
+              [disabled]="!canSubmit"
+              (click)="submitAnswer()">
+            </button>
+          </div>
+        </ng-template>
+
+      </p-card>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- RÉSULTATS                                                             -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (currentStep === -1 && finished) {
+      <p-card styleClass="quiz__card">
+
+        <ng-template pTemplate="header">
+          <div class="quiz__header quiz__header--results">
+            <p-progressBar [value]="100" [showValue]="false" styleClass="quiz__progress" />
+            <h2 class="quiz__title">🎯 Vos recommandations personnalisées</h2>
+            @if (explanation) {
+              <p class="quiz__explanation">{{ explanation }}</p>
             }
-            @if (currentStep === 5) {
-              <button pButton label="🔄 Recommencer" class="p-button-outlined" (click)="restart()"></button>
-              <button pButton label="📊 Voir tous les forfaits" class="p-button-secondary" (click)="goToComparison()"></button>
-            } @else {
-              <button pButton
-                [label]="currentStep === 4 ? 'Voir mes résultats 🎯' : 'Suivant →'"
-                [disabled]="!canGoNext"
-                (click)="next()">
-              </button>
-            }
+          </div>
+        </ng-template>
+
+        <div class="quiz__body quiz__body--results">
+
+          <!-- Résumé des réponses -->
+          @if (answersSummary.length > 0) {
+            <div class="quiz__summary">
+              @for (a of answersSummary; track a.key) {
+                <div class="quiz__summary-item">
+                  <span class="quiz__summary-key">{{ a.key }}</span>
+                  <span class="quiz__summary-val">{{ a.value }}</span>
+                </div>
+              }
+            </div>
+            <p-divider />
+          }
+
+          <!-- Résultats vides -->
+          @if (recommendations.length === 0) {
+            <div class="quiz__no-results">
+              <i class="pi pi-face-smile quiz__no-results-icon"></i>
+              <h3>Aucune offre trouvée</h3>
+              <p>Essayez d'élargir votre budget ou de changer vos critères.</p>
+              <button pButton label="Recommencer" icon="pi pi-refresh" class="p-button-outlined" (click)="restart()"></button>
+            </div>
+          } @else {
+
+            <div class="quiz__results-header">
+              <h3 class="quiz__results-title">
+                <i class="pi pi-compass"></i>
+                {{ recommendations.length }} offre{{ recommendations.length > 1 ? 's' : '' }} recommandée{{ recommendations.length > 1 ? 's' : '' }}
+              </h3>
+            </div>
+
+            <div class="quiz__results-grid">
+              @for (rec of recommendations; track rec.source_id; let i = $index) {
+                <p-card styleClass="result-card">
+                  @if (i === 0) {
+                    <ng-template pTemplate="header">
+                      <div class="result-card__best">
+                        <p-tag value="⭐ Meilleur choix" severity="warn" />
+                      </div>
+                    </ng-template>
+                  }
+
+                  <!-- Score + Rang -->
+                  <div class="result-card__header">
+                    <span class="result-card__rank">#{{ rec.rank }}</span>
+                    <div class="result-card__title-group">
+                      @if (rec.plan_name) {
+                        <p class="result-card__plan-name">{{ rec.plan_name }}</p>
+                      }
+                      @if (rec.categorie) {
+                        <p class="result-card__category">{{ getCategorieLabel(rec.categorie) }}</p>
+                      }
+                    </div>
+                    <p-tag
+                      [value]="getScoreLabel(rec.score) + ' · ' + rec.score + '%'"
+                      [severity]="getScoreSeverity(rec.score)"
+                      styleClass="result-card__score" />
+                  </div>
+
+                  <!-- Stats principales -->
+                  <div class="result-card__stats">
+                    @if (rec.tarif !== null) {
+                      <div class="result-card__stat result-card__stat--price">
+                        <span class="result-card__stat-value">{{ formatPrice(rec.tarif) }}</span>
+                        <span class="result-card__stat-label">Prix</span>
+                      </div>
+                    }
+                    @if (rec.data_mo !== null && rec.data_mo > 0) {
+                      <div class="result-card__stat">
+                        <span class="result-card__stat-value">{{ formatData(rec.data_mo) }}</span>
+                        <span class="result-card__stat-label">Data</span>
+                      </div>
+                    }
+                    @if (rec.credit_recu !== null && rec.credit_recu > 0) {
+                      <div class="result-card__stat result-card__stat--credit">
+                        <span class="result-card__stat-value">{{ formatPrice(rec.credit_recu) }}</span>
+                        <span class="result-card__stat-label">Crédit reçu</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Raison de la recommandation -->
+                  <div class="result-card__reason">
+                    <i class="pi pi-info-circle"></i>
+                    <span>{{ rec.reason }}</span>
+                  </div>
+
+                  <ng-template pTemplate="footer">
+                    <div class="result-card__tags">
+                      @if (rec.categorie) {
+                        <p-tag [value]="getCategorieLabel(rec.categorie)" severity="info" />
+                      }
+                      @if (rec.validite) {
+                        <p-tag [value]="'⏱ ' + rec.validite" severity="secondary" />
+                      }
+                      @if (rec.ussd_code) {
+                        <p-tag [value]="rec.ussd_code" severity="success" />
+                      }
+                    </div>
+                  </ng-template>
+                </p-card>
+              }
+            </div>
+          }
+        </div>
+
+        <ng-template pTemplate="footer">
+          <div class="quiz__footer">
+            <button pButton label="🔄 Recommencer" class="p-button-outlined" (click)="restart()"></button>
+            <button pButton label="📊 Voir tous les forfaits" class="p-button-secondary" (click)="goToComparison()"></button>
           </div>
         </ng-template>
 

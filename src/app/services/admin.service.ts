@@ -132,6 +132,22 @@ export class AdminService {
     return this.http.delete<void>(`${this.base}/operators/${id}`).pipe(catchError(this._handleError));
   }
 
+  // ── Voix ──────────────────────────────────────────────────────────────────────
+
+  createVoixJob(data: { website_id?: string; target_url: string; js_enabled: boolean; pays: string; extraction_rules: Record<string, unknown> }): Observable<Job> {
+    return this.http.post<Job>(`${this.base}/offres-voix/jobs`, data).pipe(catchError(this._handleError));
+  }
+
+  getAllVoixOffres(): Observable<import('../models/voix.model').OffreVoix[]> {
+    return this.http.get<import('../models/voix.model').OffreVoix[]>(`${this.base}/offres-voix/`).pipe(catchError(this._handleError));
+  }
+
+  // ── Roaming ───────────────────────────────────────────────────────────────────
+
+  migrateRoamingTypes(): Observable<{ updated: number; total: number }> {
+    return this.http.post<{ updated: number; total: number }>(`${this.base}/roaming/migrate-types`, {}).pipe(catchError(this._handleError));
+  }
+
   // ── Gestion d'erreur ─────────────────────────────────────────────────────────
 
   private _handleError(error: HttpErrorResponse): Observable<never> {

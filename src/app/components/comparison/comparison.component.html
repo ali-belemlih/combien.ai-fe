@@ -1,4 +1,4 @@
-<div class="comparison">
+﻿<div class="comparison">
 
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <!-- SÉLECTEUR DE TYPE DE FORFAIT                                           -->
@@ -21,6 +21,15 @@
     >
       <span class="comparison__type-icon">📞</span>
       <span class="comparison__type-label">Forfaits Voix</span>
+    </button>
+    <button
+      type="button"
+      class="comparison__type-btn"
+      [class.comparison__type-btn--active]="forfaitType === 'roaming'"
+      (click)="onTypeChange('roaming')"
+    >
+      <span class="comparison__type-icon">✈️</span>
+      <span class="comparison__type-label">Forfaits Roaming</span>
     </button>
   </div>
 
@@ -974,6 +983,146 @@
     }
 
     } <!-- fin @if forfaitType === 'voix' -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- SECTION ROAMING                                                        -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (forfaitType === 'roaming') {
+
+    <!-- Stats Roaming -->
+    <div class="comparison__stats">
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ roamingTotalOperateurs }}</span>
+        <span class="comparison__stat-label">Opérateurs</span>
+      </div>
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ roamingTotalPays }}</span>
+        <span class="comparison__stat-label">Destinations</span>
+      </div>
+      <div class="comparison__stat">
+        <span class="comparison__stat-value">{{ roamingTotalOffres }}</span>
+        <span class="comparison__stat-label">Offres totales</span>
+      </div>
+    </div>
+
+    <!-- Toolbar Roaming -->
+    <div class="comparison__toolbar">
+      <ui-search-input
+        placeholder="Rechercher pays, opérateur, zone…"
+        (search)="roamingSearch = $event"
+      />
+      <div class="comparison__view-toggle">
+        <button pButton type="button" icon="pi pi-th-large" label="Cartes"
+          [class]="roamingViewMode === 'cards' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="roamingViewMode = 'cards'"></button>
+        <button pButton type="button" icon="pi pi-table" label="Tableau"
+          [class]="roamingViewMode === 'table' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="roamingViewMode = 'table'"></button>
+      </div>
+    </div>
+
+    <!-- VUE CARTES Roaming -->
+    @if (roamingViewMode === 'cards') {
+      @if (roamingGroupedByOperator.length === 0) {
+        <div class="comparison__empty">
+          <i class="pi pi-search"></i>
+          <p>Aucune offre roaming. Lancez un scraping depuis l'admin (onglet ✈️ Roaming).</p>
+        </div>
+      }
+      @for (group of roamingGroupedByOperator; track group.operator) {
+        <div class="comparison__group">
+          <div class="comparison__group-header" [style.border-left-color]="getOpColor(group.operator)">
+            <span class="comparison__group-logo">{{ getOpLogo(group.operator) }}</span>
+            <span class="comparison__group-name" [style.color]="getOpColor(group.operator)">{{ group.operator }}</span>
+            <p-tag [value]="group.offres.length + ' offres'" severity="info" styleClass="comparison__group-count" />
+          </div>
+          <div class="roaming__table-wrap">
+            <table class="roaming__table">
+              <thead>
+                <tr>
+                  <th>Pays / Zone</th>
+                  <th>Zone</th>
+                  <th>Appel (FCFA/min)</th>
+                  <th>SMS (FCFA)</th>
+                  <th>Data</th>
+                  <th>Validité</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (o of group.offres; track o.id) {
+                  <tr>
+                    <td><strong>{{ o.pays_destination }}</strong></td>
+                    <td>{{ o.zone_operateur ?? '—' }}</td>
+                    <td>
+                      @if (o.tarif_appel) { <strong [style.color]="getOpColor(o.operator)">{{ formatTarif(o.tarif_appel) }}</strong> }
+                      @else { <span class="roaming__na">—</span> }
+                    </td>
+                    <td>
+                      @if (o.tarif_sms) { {{ formatTarif(o.tarif_sms) }} }
+                      @else { <span class="roaming__na">—</span> }
+                    </td>
+                    <td>
+                      @if (o.tarif_data) { {{ formatTarif(o.tarif_data) }}@if(o.unite_data){<small>/{{o.unite_data}}</small>} }
+                      @else { <span class="roaming__na">—</span> }
+                    </td>
+                    <td>{{ o.validite ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- VUE TABLEAU Roaming -->
+    @if (roamingViewMode === 'table') {
+      @if (allFilteredRoaming.length === 0) {
+        <div class="comparison__empty">
+          <i class="pi pi-search"></i>
+          <p>Aucune offre roaming. Lancez un scraping depuis l'admin.</p>
+        </div>
+      } @else {
+        <div class="roaming__table-wrap">
+          <table class="roaming__table">
+            <thead>
+              <tr>
+                <th>Opérateur</th>
+                <th>Pays / Zone</th>
+                <th>Zone opérateur</th>
+                <th>Appel (FCFA/min)</th>
+                <th>SMS (FCFA)</th>
+                <th>Data</th>
+                <th>Validité</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of allFilteredRoaming; track o.id) {
+                <tr>
+                  <td>
+                    <span [style.color]="getOpColor(o.operator)">{{ getOpLogo(o.operator) }} {{ o.operator }}</span>
+                  </td>
+                  <td><strong>{{ o.pays_destination }}</strong></td>
+                  <td>{{ o.zone_operateur ?? '—' }}</td>
+                  <td>
+                    @if (o.tarif_appel) { <strong>{{ formatTarif(o.tarif_appel) }}</strong> }
+                    @else { — }
+                  </td>
+                  <td>{{ o.tarif_sms ? formatTarif(o.tarif_sms) : '—' }}</td>
+                  <td>
+                    @if (o.tarif_data) { {{ formatTarif(o.tarif_data) }} }
+                    @else { — }
+                  </td>
+                  <td>{{ o.validite ?? '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    } <!-- fin @if forfaitType === 'roaming' -->
 
     <p class="comparison__disclaimer">
       * Données scrapées automatiquement. Vérifiez sur les sites officiels des opérateurs.

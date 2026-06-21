@@ -1,147 +1,293 @@
-// ─── Variables ────────────────────────────────────────────────────────────────
-$bg:        #0f1117;
-$surface:   #1a1d27;
-$surface2:  #22263a;
-$border:    #2e3250;
+// ─── Variables (Light mode) ───────────────────────────────────────────────────
+$bg:        #f4f6fb;
+$surface:   #ffffff;
+$surface2:  #f0f2f8;
+$border:    #dde1ef;
 $primary:   #6c63ff;
 $primary-h: #5a52e0;
-$success:   #22c55e;
-$danger:    #ef4444;
-$warning:   #f59e0b;
-$info:      #3b82f6;
-$text:      #e2e8f0;
-$text-muted:#94a3b8;
+$success:   #16a34a;
+$danger:    #dc2626;
+$warning:   #d97706;
+$info:      #2563eb;
+$text:      #1e2340;
+$text-muted:#64748b;
 $radius:    10px;
+$sidebar-w: 260px;
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
+// ─── Layout principal ─────────────────────────────────────────────────────────
 .admin {
+  display: flex;
   min-height: 100vh;
   background: $bg;
   color: $text;
-  padding: 2rem;
   font-family: 'Inter', system-ui, sans-serif;
+}
 
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid $border;
-  }
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+.admin__sidebar {
+  width: $sidebar-w;
+  min-height: 100vh;
+  background: $surface;
+  border-right: 1px solid $border;
+  box-shadow: 2px 0 8px rgba(0,0,0,.06);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 
-  &__header-left {
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $border; border-radius: 2px; }
+}
+
+.admin__sidebar-header {
+  padding: 1.5rem 1.25rem 1rem;
+  border-bottom: 1px solid $border;
+
+  .admin__back {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-  }
-
-  &__back {
+    gap: .4rem;
     color: $text-muted;
     text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.2s;
-    white-space: nowrap;
+    font-size: .8rem;
+    margin-bottom: 1rem;
+    transition: color .2s;
     &:hover { color: $primary; }
   }
+}
 
-  &__title {
-    font-size: 1.8rem;
+.admin__logo {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.admin__logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, $primary, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.admin__logo-text {
+  .admin__title {
+    font-size: 1rem;
     font-weight: 700;
     margin: 0;
     background: linear-gradient(135deg, $primary, #a78bfa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-
-  &__subtitle {
+  .admin__subtitle {
+    font-size: .72rem;
     color: $text-muted;
-    font-size: 0.9rem;
-    margin: 0.25rem 0 0;
-  }
-
-  &__header-stats {
-    display: flex;
-    gap: 1.5rem;
-  }
-
-  &__stat {
-    text-align: center;
-    padding: 0.75rem 1.25rem;
-    background: $surface;
-    border-radius: $radius;
-    border: 1px solid $border;
-
-    &--running {
-      border-color: $warning;
-      background: rgba($warning, 0.1);
-    }
-  }
-
-  &__stat-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: $primary;
-  }
-
-  &__stat-label {
-    font-size: 0.75rem;
-    color: $text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    margin: 0;
   }
 }
 
-// ─── Onglets ──────────────────────────────────────────────────────────────────
-.admin__tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+// ─── Stats sidebar ────────────────────────────────────────────────────────────
+.admin__sidebar-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid $border;
-  padding-bottom: 0;
 }
 
-.admin__tab {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
-  border: none;
-  border-bottom: 3px solid transparent;
+.admin__stat {
+  text-align: center;
+  padding: .6rem .5rem;
+  background: $surface2;
+  border-radius: 8px;
+  border: 1px solid $border;
+
+  &--running {
+    border-color: $warning;
+    background: rgba($warning, .08);
+  }
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.admin__stat-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: $primary;
+  line-height: 1.2;
+}
+
+.admin__stat-label {
+  font-size: .68rem;
   color: $text-muted;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+// ─── Navigation sidebar ───────────────────────────────────────────────────────
+.admin__nav {
+  flex: 1;
+  padding: .75rem .75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+}
+
+.admin__nav-group {
+  margin-bottom: .5rem;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.admin__nav-group-label {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: $text-muted;
+  padding: .6rem .5rem .3rem;
+  opacity: .7;
+}
+
+.admin__nav-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: -1px;
+  gap: .6rem;
+  padding: .6rem .75rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: $text-muted;
+  font-size: .875rem;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all .15s;
 
-  &:hover { color: $text; }
+  &:hover {
+    background: rgba($primary, .08);
+    color: $text;
+  }
 
   &--active {
+    background: rgba($primary, .15);
     color: $primary;
-    border-bottom-color: $primary;
-  }
+    font-weight: 600;
 
-  &-count {
-    background: $surface2;
-    color: $text-muted;
-    font-size: 0.75rem;
-    padding: 0.1rem 0.5rem;
-    border-radius: 999px;
+    .admin__nav-icon { opacity: 1; }
   }
+}
+
+.admin__nav-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  opacity: .7;
+  width: 1.25rem;
+  text-align: center;
+}
+
+.admin__nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin__nav-count {
+  background: $surface2;
+  color: $text-muted;
+  font-size: .7rem;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+
+  .admin__nav-item--active & {
+    background: rgba($primary, .2);
+    color: $primary;
+  }
+}
+
+.admin__nav-badge {
+  font-size: .65rem;
+  padding: .1rem .4rem;
+  border-radius: 999px;
+  background: rgba($warning, .2);
+  color: $warning;
+  animation: pulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+// ─── Contenu principal ────────────────────────────────────────────────────────
+.admin__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.admin__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid $border;
+  background: $surface;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  gap: 1rem;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin__topbar-title {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+
+  .admin__topbar-icon { font-size: 1.2rem; }
+  .admin__topbar-badge {
+    font-size: .7rem;
+    background: rgba($primary, .15);
+    color: $primary;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+}
+
+.admin__topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.admin__content {
+  padding: 2rem;
+  flex: 1;
+
+  @media (max-width: 768px) { padding: 1rem; }
 }
 
 // ─── Panel ────────────────────────────────────────────────────────────────────
 .admin__panel {
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: $radius;
-  padding: 1.5rem;
-
   &-toolbar {
     display: flex;
     align-items: center;
@@ -152,16 +298,16 @@ $radius:    10px;
   }
 
   &-title {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: .5rem;
   }
 
   &-subtitle {
-    font-size: 0.9rem;
+    font-size: .875rem;
     color: $text-muted;
     font-weight: 400;
   }
@@ -169,7 +315,9 @@ $radius:    10px;
 
 .admin__toolbar-btns {
   display: flex;
-  gap: 0.75rem;
+  gap: .6rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 // ─── Formulaire ───────────────────────────────────────────────────────────────
@@ -181,13 +329,18 @@ $radius:    10px;
   margin-bottom: 1.5rem;
 
   &--scrape {
-    border-color: rgba($primary, 0.4);
-    background: rgba($primary, 0.05);
+    border-color: rgba($primary, .4);
+    background: rgba($primary, .04);
+  }
+
+  &--edit {
+    border-color: rgba($warning, .4);
+    background: rgba($warning, .04);
   }
 }
 
 .admin__form-title {
-  font-size: 1rem;
+  font-size: .95rem;
   font-weight: 600;
   margin: 0 0 1.25rem;
 }
@@ -202,18 +355,19 @@ $radius:    10px;
 .admin__field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: .4rem;
   flex: 1;
-  min-width: 200px;
+  min-width: 180px;
 
   &--wide { flex: 2; }
+  &--sm { flex: 0 0 120px; }
 }
 
 .admin__label {
-  font-size: 0.8rem;
+  font-size: .75rem;
   color: $text-muted;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: .05em;
 }
 
 .admin__input,
@@ -222,24 +376,43 @@ $radius:    10px;
   border: 1px solid $border;
   border-radius: 6px;
   color: $text;
-  padding: 0.6rem 0.9rem;
-  font-size: 0.9rem;
+  padding: .6rem .9rem;
+  font-size: .875rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color .2s;
   width: 100%;
 
   &:focus { border-color: $primary; }
   &::placeholder { color: $text-muted; }
-
   option { background: $surface; }
+}
+
+.admin__input--sm {
+  padding: .3rem .6rem;
+  font-size: .8rem;
+  width: 120px;
+}
+
+.admin__input--search {
+  padding: .5rem .9rem;
+  border-radius: $radius;
+  border: 1px solid $border;
+  background: $surface2;
+  color: $text;
+  font-size: .875rem;
+  min-width: 200px;
+  outline: none;
+
+  &:focus { border-color: $primary; }
+  &::placeholder { color: $text-muted; }
 }
 
 .admin__checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: .75rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: .875rem;
   color: $text-muted;
 
   input[type="checkbox"] {
@@ -253,7 +426,7 @@ $radius:    10px;
 .admin__form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: .75rem;
   margin-top: 1.25rem;
 }
 
@@ -267,63 +440,54 @@ $radius:    10px;
 .admin__table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: .875rem;
 
   th {
     background: $surface2;
     color: $text-muted;
-    font-size: 0.75rem;
+    font-size: .72rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.75rem 1rem;
+    letter-spacing: .05em;
+    padding: .75rem 1rem;
     text-align: left;
     border-bottom: 1px solid $border;
     white-space: nowrap;
   }
 
   td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba($border, 0.5);
+    padding: .7rem 1rem;
+    border-bottom: 1px solid rgba($border, .5);
     vertical-align: middle;
   }
 
   tr:last-child td { border-bottom: none; }
-
-  tr:hover td { background: rgba($primary, 0.04); }
+  tr:hover td { background: rgba($primary, .04); }
 }
 
-.admin__row--inactive td {
-  opacity: 0.5;
-}
+.admin__row--inactive td { opacity: .5; }
 
-.admin__op-name {
-  font-weight: 600;
-  color: $text;
-}
+// ─── Éléments de table ────────────────────────────────────────────────────────
+.admin__op-name { font-weight: 600; color: $text; }
 
 .admin__pays-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8rem;
+  gap: .3rem;
+  font-size: .8rem;
   color: $text-muted;
   background: $surface2;
   border: 1px solid $border;
   border-radius: 999px;
-  padding: 0.15rem 0.6rem;
+  padding: .15rem .6rem;
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
+  transition: border-color .2s, color .2s;
 
-  &::before { content: '📍'; font-size: 0.7rem; }
-
-  &:hover {
-    border-color: $primary;
-    color: $text;
-  }
+  &::before { content: '📍'; font-size: .7rem; }
+  &:hover { border-color: $primary; color: $text; }
 
   &--empty {
-    color: rgba($text-muted, 0.5);
+    color: rgba($text-muted, .5);
     border-style: dashed;
     font-style: italic;
     &::before { content: ''; }
@@ -333,47 +497,60 @@ $radius:    10px;
 .admin__pays-edit {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-}
-
-.admin__input--sm {
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
-  width: 120px;
+  gap: .4rem;
 }
 
 .admin__url {
   color: $info;
   text-decoration: none;
-  font-size: 0.8rem;
+  font-size: .8rem;
   word-break: break-all;
   &:hover { text-decoration: underline; }
 }
 
 .admin__id {
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: .78rem;
   color: $text-muted;
   background: $surface2;
-  padding: 0.2rem 0.4rem;
+  padding: .2rem .4rem;
   border-radius: 4px;
 }
 
 .admin__date {
-  font-size: 0.8rem;
+  font-size: .78rem;
   color: $text-muted;
   white-space: nowrap;
 }
 
 .admin__actions {
   display: flex;
-  gap: 0.4rem;
+  gap: .35rem;
 }
 
-.admin__count {
-  font-size: 0.85rem;
-  color: $text-muted;
-  margin: 0 0 1rem;
+.admin__pays-flag {
+  font-size: 1.4rem;
+  width: 2rem;
+  text-align: center;
+}
+
+.admin__offres-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: .15rem .5rem;
+  background: rgba($primary, .12);
+  color: $primary;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+
+  &--loading {
+    background: rgba($text-muted, .1);
+    color: $text-muted;
+    animation: pulse 1.5s infinite;
+  }
 }
 
 // ─── États ────────────────────────────────────────────────────────────────────
@@ -382,69 +559,81 @@ $radius:    10px;
   text-align: center;
   padding: 3rem;
   color: $text-muted;
-  font-size: 0.95rem;
-
-  p { margin: 0.25rem 0; }
+  font-size: .9rem;
+  p { margin: .25rem 0; }
 }
 
 .admin__error {
-  background: rgba($danger, 0.1);
-  border: 1px solid rgba($danger, 0.3);
+  background: rgba($danger, .08);
+  border: 1px solid rgba($danger, .25);
   border-radius: 6px;
-  color: #fca5a5;
-  padding: 0.75rem 1rem;
+  color: #b91c1c;
+  padding: .75rem 1rem;
   margin-bottom: 1rem;
-  font-size: 0.875rem;
+  font-size: .875rem;
 }
 
 .admin__success {
-  background: rgba($success, 0.1);
-  border: 1px solid rgba($success, 0.3);
+  background: rgba($success, .08);
+  border: 1px solid rgba($success, .25);
   border-radius: 6px;
-  color: #86efac;
-  padding: 0.75rem 1rem;
+  color: #15803d;
+  padding: .75rem 1rem;
   margin-bottom: 1rem;
-  font-size: 0.875rem;
+  font-size: .875rem;
+}
+
+.admin__warning {
+  background: rgba($warning, .08);
+  border: 1px solid rgba($warning, .3);
+  border-radius: 6px;
+  color: #b45309;
+  padding: .5rem .75rem;
+  margin-top: .5rem;
+  font-size: .8rem;
+}
+
+.admin__empty-row {
+  text-align: center;
+  color: $text-muted;
+  padding: 2rem !important;
+  font-style: italic;
 }
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.6rem;
+  gap: .25rem;
+  padding: .2rem .55rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: .72rem;
   font-weight: 600;
   white-space: nowrap;
 
-  &--success  { background: rgba($success, 0.15); color: #86efac; }
-  &--failed   { background: rgba($danger, 0.15);  color: #fca5a5; }
-  &--running  { background: rgba($warning, 0.15); color: #fde68a; animation: pulse 1.5s infinite; }
-  &--pending  { background: rgba($text-muted, 0.15); color: $text-muted; }
-  &--info     { background: rgba($info, 0.15);    color: #93c5fd; }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
+  &--success { background: rgba($success, .12); color: #15803d; }
+  &--failed  { background: rgba($danger,  .12); color: #b91c1c; }
+  &--running { background: rgba($warning, .15); color: #b45309; animation: pulse 1.5s infinite; }
+  &--pending { background: rgba($text-muted, .12); color: $text-muted; }
+  &--info    { background: rgba($info, .12);    color: #1d4ed8; }
 }
 
 // ─── Boutons ──────────────────────────────────────────────────────────────────
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1.2rem;
+  gap: .4rem;
+  padding: .55rem 1.1rem;
   border-radius: 6px;
   border: none;
-  font-size: 0.875rem;
+  font-size: .85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all .18s;
   text-decoration: none;
+  white-space: nowrap;
 
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
 
   &--primary {
     background: $primary;
@@ -462,18 +651,18 @@ $radius:    10px;
   &--danger {
     background: transparent;
     color: #fca5a5;
-    border: 1px solid rgba($danger, 0.3);
-    &:hover:not(:disabled) { background: rgba($danger, 0.1); }
+    border: 1px solid rgba($danger, .3);
+    &:hover:not(:disabled) { background: rgba($danger, .1); }
   }
 
   &--sm {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.8rem;
+    padding: .3rem .65rem;
+    font-size: .78rem;
   }
 
   &--launch {
-    padding: 0.75rem 1.75rem;
-    font-size: 1rem;
+    padding: .7rem 1.6rem;
+    font-size: .95rem;
   }
 }
 
@@ -482,167 +671,92 @@ $radius:    10px;
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  border: 2px solid rgba($primary, .3);
+  border-top-color: $primary;
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: spin .7s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
 
 // ─── Select filtre ────────────────────────────────────────────────────────────
 .admin__select--filter {
   width: auto;
-  min-width: 160px;
-  padding: 0.5rem 0.8rem;
-  font-size: 0.85rem;
+  min-width: 150px;
+  padding: .45rem .8rem;
+  font-size: .82rem;
 }
 
-// ─── Compteur offres dans jobs ────────────────────────────────────────────────
-.admin__offres-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  padding: 0.15rem 0.5rem;
-  background: rgba($primary, 0.15);
-  color: #a78bfa;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 600;
+// ─── Users ────────────────────────────────────────────────────────────────────
+.admin__users-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 
-  &--loading {
-    background: rgba($text-muted, 0.1);
-    color: $text-muted;
-    animation: pulse 1.5s infinite;
+  .admin__stat {
+    background: $surface2;
+    border: 1px solid $border;
+    border-radius: $radius;
+    padding: .75rem 1.5rem;
+    text-align: center;
+    min-width: 90px;
   }
 }
 
-
-@media (max-width: 768px) {
-  .admin {
-    padding: 1rem;
-  }
-
-  .admin__header {
-    flex-direction: column;
-  }
-
-  .admin__header-stats {
-    width: 100%;
-    justify-content: space-around;
-  }
-
-  .admin__tabs {
-    overflow-x: auto;
-  }
-
-  .admin__form-row {
-    flex-direction: column;
-  }
-}
-
-// ─── Formulaire édition ───────────────────────────────────────────────────────
-.admin__form-card--edit {
-  border-color: rgba($warning, 0.4);
-  background: rgba($warning, 0.04);
-}
-
-// ─── Couleur picker ───────────────────────────────────────────────────────────
-.admin__color-row {
+.admin__user-cell {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: .6rem;
 }
 
-.admin__input--color {
-  width: 48px;
-  height: 38px;
-  padding: 2px 4px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.admin__color-preview {
-  font-size: 0.75rem;
-  font-family: monospace;
-  color: $text;
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  border: 1px solid $border;
-}
-
-// ─── Opérateur row ────────────────────────────────────────────────────────────
-.admin__op-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.admin__op-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  display: inline-block;
-}
-
-// ─── Couleur cellule ──────────────────────────────────────────────────────────
-.admin__color-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.admin__color-swatch {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid rgba(255,255,255,0.15);
-  flex-shrink: 0;
-  display: inline-block;
-}
-
-// ─── Logo thumbnail ───────────────────────────────────────────────────────────
-.admin__logo-thumb {
+.admin__user-avatar {
   width: 32px;
   height: 32px;
-  object-fit: contain;
-  border-radius: 4px;
-  background: $surface2;
-  border: 1px solid $border;
+  border-radius: 50%;
+  background: rgba($primary, .15);
+  color: $primary;
+  font-weight: 800;
+  font-size: .9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-// ─── Symbole devise ───────────────────────────────────────────────────────────
-.admin__currency-symbol {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem 0.6rem;
-  background: rgba($info, 0.12);
-  color: #93c5fd;
+.admin__user-name  { font-weight: 600; font-size: .875rem; }
+.admin__user-id    { font-size: .7rem; color: $text-muted; font-family: monospace; }
+
+.admin__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+}
+
+// ─── Divers ───────────────────────────────────────────────────────────────────
+.admin__badge {
+  display: inline-block;
+  padding: .15rem .5rem;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: .72rem;
   font-weight: 600;
   font-family: monospace;
+
+  &--iso {
+    background: rgba($primary, .1);
+    color: $primary;
+    border: 1px solid rgba($primary, .25);
+  }
 }
 
+.admin__muted    { color: #4b5563; font-size: .85rem; }
+.admin__required { color: $danger; margin-left: 2px; }
 
-// ─── Filtres colonne tableau offres ───────────────────────────────────────────
+// ─── Filtres colonne ──────────────────────────────────────────────────────────
 .admin {
-
-  &__th-filter {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-
-  &__filter-wrap {
-    position: relative;
-    display: inline-flex;
-  }
+  &__th-filter    { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  &__filter-wrap  { position: relative; display: inline-flex; }
 
   &__filter-btn {
     background: transparent;
@@ -650,21 +764,13 @@ $radius:    10px;
     border-radius: 4px;
     color: $text-muted;
     cursor: pointer;
-    font-size: 0.7rem;
+    font-size: .7rem;
     padding: 1px 5px;
     line-height: 1.4;
-    transition: all 0.15s;
+    transition: all .15s;
 
-    &:hover {
-      border-color: $primary;
-      color: $primary;
-    }
-
-    &--active {
-      border-color: $primary;
-      color: $primary;
-      background: rgba($primary, 0.12);
-    }
+    &:hover                { border-color: $primary; color: $primary; }
+    &--active              { border-color: $primary; color: $primary; background: rgba($primary, .12); }
   }
 
   &__filter-popover {
@@ -673,15 +779,15 @@ $radius:    10px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
-    background: $surface2;
+    background: $surface;
     border: 1px solid $border;
     border-radius: $radius;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    padding: 0.75rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    padding: .75rem;
     min-width: 200px;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: .5rem;
 
     &::before {
       content: '';
@@ -700,39 +806,40 @@ $radius:    10px;
     border: 1px solid $border;
     border-radius: 6px;
     color: $text;
-    font-size: 0.85rem;
-    padding: 0.4rem 0.6rem;
+    font-size: .85rem;
+    padding: .4rem .6rem;
     width: 100%;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color .2s;
 
-    &:focus {
-      border-color: $primary;
+    &:focus { border-color: $primary; }
+    &::placeholder { color: $text-muted; }
+  }
+
+  &__filter-actions { display: flex; gap: .5rem; justify-content: flex-end; }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .admin__sidebar {
+    width: 56px;
+    overflow: visible;
+
+    .admin__sidebar-header { padding: .75rem .5rem; }
+    .admin__logo-text, .admin__nav-label,
+    .admin__nav-count, .admin__nav-badge,
+    .admin__sidebar-stats, .admin__nav-group-label { display: none; }
+
+    .admin__nav-item {
+      justify-content: center;
+      padding: .7rem;
     }
 
-    &::placeholder {
-      color: $text-muted;
-    }
+    .admin__nav-icon { width: auto; margin: 0; opacity: 1; }
+    .admin__logo { justify-content: center; }
+    .admin__logo-icon { width: 30px; height: 30px; font-size: .9rem; }
   }
 
-  &__filter-actions {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-  }
-
-  &__filter-badge {
-    display: inline-block;
-    background: rgba($primary, 0.15);
-    color: $primary;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    padding: 1px 8px;
-    margin-left: 0.5rem;
-  }
-
-  &__clear-filters {
-    font-size: 0.75rem;
-    margin-left: 0.25rem;
-  }
+  .admin__content { padding: 1rem; }
+  .admin__topbar  { padding: 1rem; }
 }

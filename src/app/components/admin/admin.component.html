@@ -1,14 +1,24 @@
 <div class="admin">
 
-  <div class="admin__header">
-    <div class="admin__header-left">
-      <a routerLink="/" class="admin__back">← Retour</a>
-      <div>
-        <h1 class="admin__title">⚙️ Administration</h1>
-        <p class="admin__subtitle">Gestion du scraping et des données</p>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SIDEBAR                                                               -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <aside class="admin__sidebar">
+
+    <!-- Logo + back -->
+    <div class="admin__sidebar-header">
+      <a routerLink="/" class="admin__back">← Retour au site</a>
+      <div class="admin__logo">
+        <div class="admin__logo-icon">⚙️</div>
+        <div class="admin__logo-text">
+          <h1 class="admin__title">Administration</h1>
+          <p class="admin__subtitle">Gestion & Scraping</p>
+        </div>
       </div>
     </div>
-    <div class="admin__header-stats">
+
+    <!-- Stats rapides -->
+    <div class="admin__sidebar-stats">
       <div class="admin__stat">
         <span class="admin__stat-value">{{ websites.length }}</span>
         <span class="admin__stat-label">Sites</span>
@@ -18,510 +28,1129 @@
         <span class="admin__stat-label">Jobs</span>
       </div>
       @if (runningJobs.length > 0) {
-        <div class="admin__stat admin__stat--running">
+        <div class="admin__stat admin__stat--running admin__stat--wide">
           <span class="admin__stat-value">{{ runningJobs.length }}</span>
           <span class="admin__stat-label">En cours ⏳</span>
         </div>
       }
     </div>
-  </div>
 
-  <div class="admin__tabs">
-    <button class="admin__tab" [class.admin__tab--active]="activeTab === 'websites'" (click)="setTab('websites')">
-      🌐 Sites <span class="admin__tab-count">{{ websites.length }}</span>
-    </button>
-    <button class="admin__tab" [class.admin__tab--active]="activeTab === 'jobs'" (click)="setTab('jobs')">
-      🔄 Jobs <span class="admin__tab-count">{{ jobs.length }}</span>
-    </button>
-    <button class="admin__tab" [class.admin__tab--active]="activeTab === 'offres'" (click)="setTab('offres')">
-      📦 Offres
-    </button>
-    <button class="admin__tab" [class.admin__tab--active]="activeTab === 'pays'" (click)="setTab('pays')">
-      🌍 Pays <span class="admin__tab-count">{{ paysList2.length }}</span>
-    </button>
-    <button class="admin__tab" [class.admin__tab--active]="activeTab === 'currencies'" (click)="setTab('currencies')">
-      💱 Devises <span class="admin__tab-count">{{ currencies.length }}</span>
-    </button>
-    <button class="admin__tab" [class.admin__tab--active]="activeTab === 'operateurs'" (click)="setTab('operateurs')">
-      📡 Opérateurs <span class="admin__tab-count">{{ operateurs.length }}</span>
-    </button>
-  </div>
+    <!-- Navigation groupée -->
+    <nav class="admin__nav">
 
-  <!-- ═══ ONGLET SITES ══════════════════════════════════════════════════════ -->
-  @if (activeTab === 'websites') {
-    <div class="admin__panel">
-      <div class="admin__panel-toolbar">
-        <h2 class="admin__panel-title">Sites à scraper</h2>
-        <div class="admin__toolbar-btns">
-          <select class="admin__select admin__select--filter" [(ngModel)]="filterPays">
-            <option value="">🌍 Tous les pays</option>
-            @for (p of paysList; track p) {
-              <option [value]="p">📍 {{ p }}</option>
-            }
-          </select>
-          <button class="btn btn--ghost" [disabled]="autoFillingPays" (click)="autoFillPays()">
-            @if (autoFillingPays) { ⏳ } @else { 🌍 } Auto-remplir pays
-          </button>
-          <button class="btn btn--primary" (click)="showAddWebsite = !showAddWebsite">
-            + Ajouter un site
-          </button>
-        </div>
-      </div>
+      <!-- Groupe : Scraping -->
+      <div class="admin__nav-group">
+        <div class="admin__nav-group-label">Scraping</div>
 
-      @if (websitesError) {
-        <div class="admin__error">⚠️ {{ websitesError }}</div>
-      }
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'websites'" (click)="setTab('websites')">
+          <span class="admin__nav-icon">🌐</span>
+          <span class="admin__nav-label">Sites</span>
+          <span class="admin__nav-count">{{ websites.length }}</span>
+        </button>
 
-      @if (showAddWebsite) {
-        <div class="admin__form-card">
-          <h3 class="admin__form-title">Nouveau site</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Opérateur</label>
-              <input class="admin__input" type="text" placeholder="ex: Moov Africa" [(ngModel)]="newWebsite.operator" />
-            </div>
-            <div class="admin__field">
-              <label class="admin__label">Pays</label>
-              <select class="admin__select" [(ngModel)]="newWebsite.pays">
-                <option value="">— Sélectionner un pays —</option>
-                @for (p of allPaysList; track p) { <option [value]="p">📍 {{ p }}</option> }
-              </select>
-            </div>
-            <div class="admin__field admin__field--wide">
-              <label class="admin__label">URL</label>
-              <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="newWebsite.url" />
-            </div>
-          </div>
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="showAddWebsite = false">Annuler</button>
-            <button class="btn btn--primary"
-              [disabled]="addingWebsite || !newWebsite.operator || !newWebsite.pays || !newWebsite.url"
-              (click)="addWebsite()">
-              @if (addingWebsite) { ⏳ Ajout… } @else { ✅ Ajouter }
-            </button>
-          </div>
-        </div>
-      }
-
-      <ui-data-table
-        [columns]="websiteColumns"
-        [rows]="filteredWebsites"
-        [loading]="websitesLoading"
-        emptyMessage="Aucun site enregistré."
-        filterType="simple"
-      >
-        <ng-template #rowTemplate let-site>
-          <tr [class.admin__row--inactive]="!site.is_active">
-            <td><span class="admin__op-name">{{ site.operator }}</span></td>
-            <td>
-              @if (editingPaysId === site.id) {
-                <div class="admin__pays-edit">
-                  <select class="admin__select admin__input--sm" [(ngModel)]="editingPaysValue"
-                    (keyup.enter)="savePays(site)" (keyup.escape)="cancelEditPays()">
-                    <option value="">— Pays —</option>
-                    @for (p of allPaysList; track p) { <option [value]="p">{{ p }}</option> }
-                  </select>
-                  <button class="btn btn--sm btn--primary" (click)="savePays(site)">✓</button>
-                  <button class="btn btn--sm btn--ghost" (click)="cancelEditPays()">✕</button>
-                </div>
-              } @else {
-                <span class="admin__pays-badge" [class.admin__pays-badge--empty]="!site.pays"
-                  (click)="startEditPays(site)" title="Cliquer pour modifier">
-                  {{ site.pays || '— cliquer pour définir' }}
-                </span>
-              }
-            </td>
-            <td><a [href]="site.url" target="_blank" class="admin__url">{{ site.url }}</a></td>
-            <td>
-              <span [class]="site.is_active ? 'badge badge--success' : 'badge badge--pending'">
-                {{ site.is_active ? '✅ Actif' : '⏸ Inactif' }}
-              </span>
-            </td>
-            <td class="admin__date">{{ formatDate(site.created_at) }}</td>
-            <td>
-              <div class="admin__actions">
-                <button class="btn btn--sm btn--ghost" (click)="toggleWebsiteActive(site)"
-                  [title]="site.is_active ? 'Désactiver' : 'Activer'">
-                  {{ site.is_active ? '⏸' : '▶️' }}
-                </button>
-                <button class="btn btn--sm btn--danger" (click)="deleteWebsite(site.id)" title="Supprimer">🗑</button>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </ui-data-table>
-    </div>
-  }
-
-  <!-- ═══ ONGLET JOBS ═══════════════════════════════════════════════════════ -->
-  @if (activeTab === 'jobs') {
-    <div class="admin__panel">
-      <div class="admin__panel-toolbar">
-        <h2 class="admin__panel-title">Jobs de scraping</h2>
-        <div class="admin__toolbar-btns">
-          <select class="admin__select admin__select--filter" [(ngModel)]="filterJobStatus">
-            <option value="">📋 Tous les statuts</option>
-            <option value="SUCCESS">✅ SUCCESS</option>
-            <option value="RUNNING">⏳ RUNNING</option>
-            <option value="FAILED">❌ FAILED</option>
-            <option value="PENDING">🕐 PENDING</option>
-          </select>
-          <button class="btn btn--ghost" (click)="loadJobs()">🔄 Rafraîchir</button>
-          <button class="btn btn--primary" (click)="showScrapeForm = !showScrapeForm">
-            🚀 Lancer un scraping
-          </button>
-        </div>
-      </div>
-
-      @if (jobsError) { <div class="admin__error">⚠️ {{ jobsError }}</div> }
-      @if (scrapeSuccess) { <div class="admin__success">{{ scrapeSuccess }}</div> }
-
-      @if (showScrapeForm) {
-        <div class="admin__form-card admin__form-card--scrape">
-          <h3 class="admin__form-title">🚀 Nouveau scraping</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Site enregistré (optionnel)</label>
-              <select class="admin__select" [(ngModel)]="scrapeWebsiteId" (ngModelChange)="onWebsiteSelect()">
-                <option value="">— URL manuelle —</option>
-                @for (group of activeWebsitesByPays; track group.pays) {
-                  <optgroup [label]="'📍 ' + group.pays">
-                    @for (site of group.sites; track site.id) {
-                      <option [value]="site.id">{{ site.operator }} — {{ site.url }}</option>
-                    }
-                  </optgroup>
-                }
-              </select>
-            </div>
-          </div>
-          <div class="admin__form-row">
-            <div class="admin__field admin__field--wide">
-              <label class="admin__label">URL cible</label>
-              <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="scrapeUrl" />
-            </div>
-          </div>
-          <div class="admin__form-row">
-            <label class="admin__checkbox-label">
-              <input type="checkbox" [(ngModel)]="scrapeJsEnabled" />
-              <span>Activer JavaScript (Playwright)</span>
-            </label>
-          </div>
-          @if (scrapeError) { <div class="admin__error">⚠️ {{ scrapeError }}</div> }
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="showScrapeForm = false">Annuler</button>
-            <button class="btn btn--primary btn--launch" [disabled]="scraping || !scrapeUrl" (click)="launchScrape()">
-              @if (scraping) { <span class="admin__spinner"></span> Scraping en cours… }
-              @else { 🚀 Lancer le scraping }
-            </button>
-          </div>
-        </div>
-      }
-
-      <ui-data-table
-        [columns]="jobColumns"
-        [rows]="filteredJobs"
-        [loading]="jobsLoading"
-        emptyMessage="Aucun job trouvé."
-        filterType="simple"
-      >
-        <ng-template #rowTemplate let-job>
-          <tr>
-            <td><code class="admin__id">{{ job.id.slice(0, 8) }}…</code></td>
-            <td>{{ websiteName(job.website_id) }}</td>
-            <td>
-              <a [href]="job.target_url" target="_blank" class="admin__url">
-                {{ job.target_url.length > 40 ? job.target_url.slice(0, 40) + '…' : job.target_url }}
-              </a>
-            </td>
-            <td>
-              <span [class]="job.js_enabled ? 'badge badge--info' : 'badge badge--pending'">
-                {{ job.js_enabled ? 'JS' : 'HTTP' }}
-              </span>
-            </td>
-            <td>
-              <span [class]="statusClass(job.status)">{{ statusIcon(job.status) }} {{ job.status }}</span>
-            </td>
-            <td>
-              @if (jobOffresCount.has(job.id)) {
-                <span class="admin__offres-count">{{ jobOffresCount.get(job.id) }}</span>
-              } @else if (job.status === 'SUCCESS') {
-                <span class="admin__offres-count admin__offres-count--loading">…</span>
-              } @else { — }
-            </td>
-            <td class="admin__date">{{ formatDate(job.created_at) }}</td>
-            <td class="admin__date">{{ formatDate(job.updated_at) }}</td>
-            <td>
-              <div class="admin__actions">
-                <button class="btn btn--sm btn--ghost" (click)="viewJobOffres(job)" title="Voir les offres">📦</button>
-                <button class="btn btn--sm btn--ghost" (click)="rerunJob(job.id)"
-                  [disabled]="job.status === 'RUNNING'" title="Relancer">🔄</button>
-                <button class="btn btn--sm btn--danger" (click)="deleteJob(job.id)"
-                  [disabled]="job.status === 'RUNNING'" title="Supprimer">🗑</button>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </ui-data-table>
-    </div>
-  }
-
-  <!-- ═══ ONGLET OFFRES ════════════════════════════════════════════════════ -->
-  @if (activeTab === 'offres') {
-    <div class="admin__panel">
-      <div class="admin__panel-toolbar">
-        <h2 class="admin__panel-title">
-          📦 Offres
-          @if (offresJobLabel) { <span class="admin__panel-subtitle">— {{ offresJobLabel }}</span> }
-        </h2>
-        <div class="admin__toolbar-btns">
-          @if (offresOperators.length > 1) {
-            <select class="admin__select admin__select--filter" [(ngModel)]="filterOffreOperator">
-              <option value="">👥 Tous les opérateurs</option>
-              @for (op of offresOperators; track op) { <option [value]="op">{{ op }}</option> }
-            </select>
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'jobs'" (click)="setTab('jobs')">
+          <span class="admin__nav-icon">🔄</span>
+          <span class="admin__nav-label">Jobs</span>
+          @if (runningJobs.length > 0) {
+            <span class="admin__nav-badge">{{ runningJobs.length }} actifs</span>
+          } @else {
+            <span class="admin__nav-count">{{ jobs.length }}</span>
           }
-          <button class="btn btn--ghost" (click)="loadAllOffres()">Toutes les offres</button>
-        </div>
+        </button>
       </div>
 
-      @if (offresError) { <div class="admin__error">⚠️ {{ offresError }}</div> }
+      <!-- Groupe : Offres -->
+      <div class="admin__nav-group">
+        <div class="admin__nav-group-label">Offres</div>
 
-      <ui-data-table
-        [columns]="offreColumns"
-        [rows]="offres"
-        [loading]="offresLoading"
-        emptyMessage="Aucune offre trouvée."
-        filterType="simple"
-      >
-        <ng-template #rowTemplate let-offre>
-          <tr [class.admin__row--inactive]="!offre.actif">
-            <td><strong>{{ offre.operator }}</strong></td>
-            <td><span class="badge badge--info">{{ offre.categorie }}</span></td>
-            <td>{{ offre.plan_name ?? '—' }}</td>
-            <td>{{ offre.volume ?? '—' }}</td>
-            <td>{{ offre.bonus ?? '—' }}</td>
-            <td>
-              @if (offre.tarif_fcfa) { <strong>{{ offre.tarif_fcfa | number:'1.0-0' }} F</strong> }
-              @else { — }
-            </td>
-            <td>{{ offre.validite ?? '—' }}</td>
-            <td>
-              <span [class]="offre.actif ? 'badge badge--success' : 'badge badge--pending'">
-                {{ offre.actif ? '✅' : '⏸' }}
-              </span>
-            </td>
-            <td class="admin__date">{{ formatDate(offre.scraped_at) }}</td>
-          </tr>
-        </ng-template>
-      </ui-data-table>
-    </div>
-  }
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'internet'" (click)="setTab('internet')">
+          <span class="admin__nav-icon">📶</span>
+          <span class="admin__nav-label">Internet</span>
+          <span class="admin__nav-count">{{ offres.length }}</span>
+        </button>
 
-  <!-- ═══ ONGLET PAYS ═══════════════════════════════════════════════════════ -->
-  @if (activeTab === 'pays') {
-    <div class="admin__panel">
-      <div class="admin__panel-toolbar">
-        <h2 class="admin__panel-title">🌍 Pays</h2>
-        <div class="admin__toolbar-btns">
-          <button class="btn btn--ghost" (click)="loadPays()">🔄 Rafraîchir</button>
-          <button class="btn btn--primary" (click)="showAddPays = !showAddPays">+ Ajouter un pays</button>
-        </div>
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'voix'" (click)="setTab('voix')">
+          <span class="admin__nav-icon">📞</span>
+          <span class="admin__nav-label">Voix</span>
+          <span class="admin__nav-count">{{ voixOffres.length }}</span>
+        </button>
+
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'roaming'" (click)="setTab('roaming')">
+          <span class="admin__nav-icon">✈️</span>
+          <span class="admin__nav-label">Roaming</span>
+          <span class="admin__nav-count">{{ roamingOffres.length }}</span>
+        </button>
+
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'offres'" (click)="setTab('offres')">
+          <span class="admin__nav-icon">📦</span>
+          <span class="admin__nav-label">Toutes les offres</span>
+        </button>
       </div>
 
-      @if (paysError) { <div class="admin__error">⚠️ {{ paysError }}</div> }
+      <!-- Groupe : Référentiel -->
+      <div class="admin__nav-group">
+        <div class="admin__nav-group-label">Référentiel</div>
 
-      @if (showAddPays) {
-        <div class="admin__form-card">
-          <h3 class="admin__form-title">Nouveau pays</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Nom</label>
-              <input class="admin__input" type="text" placeholder="ex: Bénin" [(ngModel)]="newPays.label" />
-            </div>
-          </div>
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="showAddPays = false">Annuler</button>
-            <button class="btn btn--primary" [disabled]="addingPays || !newPays.label" (click)="addPays()">
-              @if (addingPays) { ⏳ Ajout… } @else { ✅ Ajouter }
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'operateurs'" (click)="setTab('operateurs')">
+          <span class="admin__nav-icon">📡</span>
+          <span class="admin__nav-label">Opérateurs</span>
+          <span class="admin__nav-count">{{ operateurs.length }}</span>
+        </button>
+
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'pays'" (click)="setTab('pays')">
+          <span class="admin__nav-icon">🌍</span>
+          <span class="admin__nav-label">Pays</span>
+          <span class="admin__nav-count">{{ paysList2.length }}</span>
+        </button>
+
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'currencies'" (click)="setTab('currencies')">
+          <span class="admin__nav-icon">💱</span>
+          <span class="admin__nav-label">Devises</span>
+          <span class="admin__nav-count">{{ currencies.length }}</span>
+        </button>
+      </div>
+
+      <!-- Groupe : Gestion -->
+      <div class="admin__nav-group">
+        <div class="admin__nav-group-label">Gestion</div>
+
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'users'" (click)="setTab('users')">
+          <span class="admin__nav-icon">👥</span>
+          <span class="admin__nav-label">Utilisateurs</span>
+          <span class="admin__nav-count">{{ users.length }}</span>
+        </button>
+
+        <button class="admin__nav-item" [class.admin__nav-item--active]="activeTab === 'questionnaire'" (click)="setTab('questionnaire')">
+          <span class="admin__nav-icon">🧠</span>
+          <span class="admin__nav-label">Questionnaire</span>
+          <span class="admin__nav-count">{{ questions.length }}</span>
+        </button>
+      </div>
+
+    </nav>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- CONTENU PRINCIPAL                                                     -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="admin__main">
+
+    <!-- Topbar contextuelle -->
+    <div class="admin__topbar">
+      @switch (activeTab) {
+        @case ('websites')   { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">🌐</span> Sites à scraper <span class="admin__topbar-badge">{{ filteredWebsites.length }}</span></h2> }
+        @case ('jobs')       { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">🔄</span> Jobs de scraping <span class="admin__topbar-badge">{{ filteredJobs.length }}</span></h2> }
+        @case ('internet')   { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">📶</span> Offres Internet <span class="admin__topbar-badge">{{ offres.length }}</span></h2> }
+        @case ('voix')       { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">📞</span> Offres Voix <span class="admin__topbar-badge">{{ voixOffres.length }}</span></h2> }
+        @case ('roaming')    { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">✈️</span> Offres Roaming <span class="admin__topbar-badge">{{ roamingOffres.length }}</span></h2> }
+        @case ('offres')     { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">📦</span> Toutes les offres</h2> }
+        @case ('operateurs') { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">📡</span> Opérateurs <span class="admin__topbar-badge">{{ operateurs.length }}</span></h2> }
+        @case ('pays')       { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">🌍</span> Pays <span class="admin__topbar-badge">{{ paysList2.length }}</span></h2> }
+        @case ('currencies') { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">💱</span> Devises <span class="admin__topbar-badge">{{ currencies.length }}</span></h2> }
+        @case ('users')      { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">👥</span> Utilisateurs <span class="admin__topbar-badge">{{ users.length }}</span></h2> }
+        @case ('questionnaire') { <h2 class="admin__topbar-title"><span class="admin__topbar-icon">🧠</span> Questions du questionnaire <span class="admin__topbar-badge">{{ questions.length }}</span></h2> }
+      }
+
+      <!-- Actions rapides contextuelles -->
+      <div class="admin__topbar-actions">
+        @switch (activeTab) {
+          @case ('websites') {
+            <select class="admin__select admin__select--filter" [(ngModel)]="filterPays">
+              <option value="">🌍 Tous les pays</option>
+              @for (p of paysList; track p) { <option [value]="p">📍 {{ p }}</option> }
+            </select>
+            <button class="btn btn--ghost" [disabled]="autoFillingPays" (click)="autoFillPays()">
+              @if (autoFillingPays) { ⏳ } @else { 🌍 } Auto-remplir pays
             </button>
-          </div>
-        </div>
-      }
-
-      @if (editingPays) {
-        <div class="admin__form-card admin__form-card--edit">
-          <h3 class="admin__form-title">✏️ Modifier — {{ editingPays.label }}</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Nom</label>
-              <input class="admin__input" type="text" [(ngModel)]="editingPaysForm.label" />
-            </div>
-          </div>
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="editingPays = null">Annuler</button>
-            <button class="btn btn--primary" (click)="saveEditPays()">💾 Enregistrer</button>
-          </div>
-        </div>
-      }
-
-      <ui-data-table
-        [columns]="paysColumns"
-        [rows]="paysList2"
-        [loading]="paysLoading"
-        emptyMessage="Aucun pays enregistré."
-        filterType="simple"
-      >
-        <ng-template #rowTemplate let-p>
-          <tr>
-            <td><strong>{{ p.label }}</strong></td>
-            <td>
-              <div class="admin__actions">
-                <button class="btn btn--sm btn--ghost" (click)="startEditPaysItem(p)" title="Modifier">✏️</button>
-                <button class="btn btn--sm btn--danger" (click)="deletePays(p.id)" title="Supprimer">🗑</button>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </ui-data-table>
-    </div>
-  }
-
-  <!-- ═══ ONGLET DEVISES ════════════════════════════════════════════════════ -->
-  @if (activeTab === 'currencies') {
-    <div class="admin__panel">
-      <div class="admin__panel-toolbar">
-        <h2 class="admin__panel-title">💱 Devises</h2>
-        <div class="admin__toolbar-btns">
-          <button class="btn btn--ghost" (click)="loadCurrencies()">🔄 Rafraîchir</button>
-          <button class="btn btn--primary" (click)="showAddCurrency = !showAddCurrency">+ Ajouter une devise</button>
-        </div>
+            <button class="btn btn--primary" (click)="showAddWebsite = !showAddWebsite">+ Ajouter</button>
+          }
+          @case ('jobs') {
+            <select class="admin__select admin__select--filter" [(ngModel)]="filterJobStatus">
+              <option value="">📋 Tous les statuts</option>
+              <option value="SUCCESS">✅ SUCCESS</option>
+              <option value="RUNNING">⏳ RUNNING</option>
+              <option value="FAILED">❌ FAILED</option>
+              <option value="PENDING">🕐 PENDING</option>
+            </select>
+            <button class="btn btn--ghost" (click)="loadJobs()">🔄 Rafraîchir</button>
+            <button class="btn btn--primary" (click)="showScrapeForm = !showScrapeForm">🚀 Lancer</button>
+          }
+          @case ('internet') {
+            <button class="btn btn--ghost" (click)="loadAllOffres()">🔄 Rafraîchir</button>
+            <button class="btn btn--primary" (click)="showScrapeForm = !showScrapeForm">🚀 Scraper</button>
+          }
+          @case ('voix') {
+            <button class="btn btn--ghost" (click)="loadVoixOffres()">🔄 Rafraîchir</button>
+            <button class="btn btn--primary" (click)="showVoixJobForm = !showVoixJobForm">🚀 Scraper</button>
+          }
+          @case ('roaming') {
+            <button class="btn btn--ghost" (click)="loadRoamingOffres()">🔄 Rafraîchir</button>
+            <button class="btn btn--ghost" (click)="migrateRoamingTypes()">🔧 Migrer types</button>
+            <button class="btn btn--primary" (click)="showRoamingJobForm = !showRoamingJobForm">🚀 Scraper</button>
+          }
+          @case ('pays') {
+            <button class="btn btn--ghost" (click)="loadPays()">🔄 Rafraîchir</button>
+            <button class="btn btn--primary" (click)="showAddPays = !showAddPays">+ Ajouter</button>
+          }
+          @case ('currencies') {
+            <button class="btn btn--ghost" (click)="loadCurrencies()">🔄 Rafraîchir</button>
+            <button class="btn btn--primary" (click)="showAddCurrency = !showAddCurrency">+ Ajouter</button>
+          }
+          @case ('operateurs') {
+            <button class="btn btn--ghost" (click)="loadOperateurs()">🔄 Rafraîchir</button>
+            <button class="btn btn--primary" (click)="showAddOperateur = !showAddOperateur">+ Ajouter</button>
+          }
+          @case ('users') {
+            <input class="admin__input admin__input--search" type="text" placeholder="🔍 Rechercher…" [(ngModel)]="usersSearchFilter" />
+            <button class="btn btn--ghost" (click)="loadUsers()">🔄 Rafraîchir</button>
+            <button class="btn btn--primary" (click)="syncUsers()" [disabled]="usersLoading">🔄 Sync Keycloak</button>
+          }
+          @case ('questionnaire') {
+            <button class="btn btn--ghost" (click)="loadQuestions()">🔄 Rafraîchir</button>
+            <button class="btn btn--ghost" (click)="seedQuestions()" [disabled]="questionsLoading">🌱 Questions par défaut</button>
+            <button class="btn btn--primary" (click)="showAddQuestion = !showAddQuestion">+ Ajouter</button>
+          }
+        }
       </div>
-
-      @if (currenciesError) { <div class="admin__error">⚠️ {{ currenciesError }}</div> }
-
-      @if (showAddCurrency) {
-        <div class="admin__form-card">
-          <h3 class="admin__form-title">Nouvelle devise</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Nom</label>
-              <input class="admin__input" type="text" placeholder="ex: Franc CFA" [(ngModel)]="newCurrency.label" />
-            </div>
-          </div>
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="showAddCurrency = false">Annuler</button>
-            <button class="btn btn--primary" [disabled]="addingCurrency || !newCurrency.label" (click)="addCurrency()">
-              @if (addingCurrency) { ⏳ Ajout… } @else { ✅ Ajouter }
-            </button>
-          </div>
-        </div>
-      }
-
-      @if (editingCurrency) {
-        <div class="admin__form-card admin__form-card--edit">
-          <h3 class="admin__form-title">✏️ Modifier — {{ editingCurrency.label }}</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Nom</label>
-              <input class="admin__input" type="text" [(ngModel)]="editingCurrencyForm.label" />
-            </div>
-          </div>
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="editingCurrency = null">Annuler</button>
-            <button class="btn btn--primary" (click)="saveEditCurrency()">💾 Enregistrer</button>
-          </div>
-        </div>
-      }
-
-      <ui-data-table
-        [columns]="currencyColumns"
-        [rows]="currencies"
-        [loading]="currenciesLoading"
-        emptyMessage="Aucune devise enregistrée."
-        filterType="simple"
-      >
-        <ng-template #rowTemplate let-c>
-          <tr>
-            <td><strong>{{ c.label }}</strong></td>
-            <td>
-              <div class="admin__actions">
-                <button class="btn btn--sm btn--ghost" (click)="startEditCurrency(c)" title="Modifier">✏️</button>
-                <button class="btn btn--sm btn--danger" (click)="deleteCurrency(c.id)" title="Supprimer">🗑</button>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </ui-data-table>
     </div>
-  }
 
-  <!-- ═══ ONGLET OPÉRATEURS ════════════════════════════════════════════════ -->
-  @if (activeTab === 'operateurs') {
-    <div class="admin__panel">
-      <div class="admin__panel-toolbar">
-        <h2 class="admin__panel-title">📡 Opérateurs</h2>
-        <div class="admin__toolbar-btns">
-          <button class="btn btn--ghost" (click)="loadOperateurs()">🔄 Rafraîchir</button>
-          <button class="btn btn--primary" (click)="showAddOperateur = !showAddOperateur">+ Ajouter un opérateur</button>
-        </div>
-      </div>
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div class="admin__content">
 
-      @if (operateursError) { <div class="admin__error">⚠️ {{ operateursError }}</div> }
+      <!-- ══ SITES ══════════════════════════════════════════════════════════ -->
+      @if (activeTab === 'websites') {
 
-      @if (showAddOperateur) {
-        <div class="admin__form-card">
-          <h3 class="admin__form-title">Nouvel opérateur</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Nom</label>
-              <input class="admin__input" type="text" placeholder="ex: Moov Africa" [(ngModel)]="newOperateur.label" />
-            </div>
-          </div>
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="showAddOperateur = false">Annuler</button>
-            <button class="btn btn--primary" [disabled]="addingOperateur || !newOperateur.label" (click)="addOperateur()">
-              @if (addingOperateur) { ⏳ Ajout… } @else { ✅ Ajouter }
-            </button>
-          </div>
-        </div>
-      }
+        @if (websitesError) { <div class="admin__error">⚠️ {{ websitesError }}</div> }
 
-      @if (editingOperateur) {
-        <div class="admin__form-card admin__form-card--edit">
-          <h3 class="admin__form-title">✏️ Modifier — {{ editingOperateur.label }}</h3>
-          <div class="admin__form-row">
-            <div class="admin__field">
-              <label class="admin__label">Nom</label>
-              <input class="admin__input" type="text" [(ngModel)]="editingOperateurForm.label" />
-            </div>
-          </div>
-          <div class="admin__form-actions">
-            <button class="btn btn--ghost" (click)="editingOperateur = null">Annuler</button>
-            <button class="btn btn--primary" (click)="saveEditOperateur()">💾 Enregistrer</button>
-          </div>
-        </div>
-      }
-
-      <ui-data-table
-        [columns]="operateurColumns"
-        [rows]="operateurs"
-        [loading]="operateursLoading"
-        emptyMessage="Aucun opérateur enregistré."
-        filterType="simple"
-      >
-        <ng-template #rowTemplate let-op>
-          <tr>
-            <td><strong>{{ op.label }}</strong></td>
-            <td>
-              <div class="admin__actions">
-                <button class="btn btn--sm btn--ghost" (click)="startEditOperateur(op)" title="Modifier">✏️</button>
-                <button class="btn btn--sm btn--danger" (click)="deleteOperateur(op.id)" title="Supprimer">🗑</button>
+        @if (showAddWebsite) {
+          <div class="admin__form-card">
+            <h3 class="admin__form-title">Nouveau site</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Opérateur</label>
+                <input class="admin__input" type="text" placeholder="ex: Moov Africa" [(ngModel)]="newWebsite.operator" />
               </div>
-            </td>
-          </tr>
-        </ng-template>
-      </ui-data-table>
-    </div>
-  }
+              <div class="admin__field">
+                <label class="admin__label">Pays</label>
+                <select class="admin__select" [(ngModel)]="newWebsite.pays">
+                  <option value="">— Sélectionner un pays —</option>
+                  @for (p of allPaysList; track p) { <option [value]="p">📍 {{ p }}</option> }
+                </select>
+              </div>
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">URL</label>
+                <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="newWebsite.url" />
+              </div>
+            </div>
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showAddWebsite = false">Annuler</button>
+              <button class="btn btn--primary"
+                [disabled]="addingWebsite || !newWebsite.operator || !newWebsite.pays || !newWebsite.url"
+                (click)="addWebsite()">
+                @if (addingWebsite) { ⏳ Ajout… } @else { ✅ Ajouter }
+              </button>
+            </div>
+          </div>
+        }
 
-</div>
+        <ui-data-table [columns]="websiteColumns" [rows]="filteredWebsites" [loading]="websitesLoading"
+          emptyMessage="Aucun site enregistré." filterType="simple">
+          <ng-template #rowTemplate let-site>
+            <tr [class.admin__row--inactive]="!site.is_active">
+              <td><span class="admin__op-name">{{ site.operator }}</span></td>
+              <td>
+                @if (editingPaysId === site.id) {
+                  <div class="admin__pays-edit">
+                    <select class="admin__select admin__input--sm" [(ngModel)]="editingPaysValue"
+                      (keyup.enter)="savePays(site)" (keyup.escape)="cancelEditPays()">
+                      <option value="">— Pays —</option>
+                      @for (p of allPaysList; track p) { <option [value]="p">{{ p }}</option> }
+                    </select>
+                    <button class="btn btn--sm btn--primary" (click)="savePays(site)">✓</button>
+                    <button class="btn btn--sm btn--ghost" (click)="cancelEditPays()">✕</button>
+                  </div>
+                } @else {
+                  <span class="admin__pays-badge" [class.admin__pays-badge--empty]="!site.pays"
+                    (click)="startEditPays(site)" title="Cliquer pour modifier">
+                    {{ site.pays || '— définir' }}
+                  </span>
+                }
+              </td>
+              <td><a [href]="site.url" target="_blank" class="admin__url">{{ site.url }}</a></td>
+              <td>
+                <span [class]="site.is_active ? 'badge badge--success' : 'badge badge--pending'">
+                  {{ site.is_active ? '✅ Actif' : '⏸ Inactif' }}
+                </span>
+              </td>
+              <td class="admin__date">{{ formatDate(site.created_at) }}</td>
+              <td>
+                <div class="admin__actions">
+                  <button class="btn btn--sm btn--ghost" (click)="toggleWebsiteActive(site)"
+                    [title]="site.is_active ? 'Désactiver' : 'Activer'">
+                    {{ site.is_active ? '⏸' : '▶️' }}
+                  </button>
+                  <button class="btn btn--sm btn--danger" (click)="deleteWebsite(site.id)" title="Supprimer">🗑</button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ JOBS ═══════════════════════════════════════════════════════════ -->
+      @if (activeTab === 'jobs') {
+
+        @if (jobsError)     { <div class="admin__error">⚠️ {{ jobsError }}</div> }
+        @if (scrapeSuccess) { <div class="admin__success">{{ scrapeSuccess }}</div> }
+
+        @if (showScrapeForm) {
+          <div class="admin__form-card admin__form-card--scrape">
+            <h3 class="admin__form-title">🚀 Nouveau scraping</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Site enregistré (optionnel)</label>
+                <select class="admin__select" [(ngModel)]="scrapeWebsiteId" (ngModelChange)="onWebsiteSelect()">
+                  <option value="">— URL manuelle —</option>
+                  @for (group of activeWebsitesByPays; track group.pays) {
+                    <optgroup [label]="'📍 ' + group.pays">
+                      @for (site of group.sites; track site.id) {
+                        <option [value]="site.id">{{ site.operator }} — {{ site.url }}</option>
+                      }
+                    </optgroup>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">URL cible</label>
+                <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="scrapeUrl" />
+                @if (scrapeUrl && (scrapeUrl.includes('roaming') || scrapeUrl.includes('itinerance'))) {
+                  <div class="admin__warning">⚠️ URL roaming détectée — utilisez l'onglet ✈️ Roaming.</div>
+                }
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <label class="admin__checkbox-label">
+                <input type="checkbox" [(ngModel)]="scrapeJsEnabled" />
+                <span>Activer JavaScript (Playwright)</span>
+              </label>
+            </div>
+            @if (scrapeError) { <div class="admin__error">⚠️ {{ scrapeError }}</div> }
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showScrapeForm = false">Annuler</button>
+              <button class="btn btn--primary btn--launch" [disabled]="scraping || !scrapeUrl" (click)="launchScrape()">
+                @if (scraping) { <span class="admin__spinner"></span> En cours… }
+                @else { 🚀 Lancer }
+              </button>
+            </div>
+          </div>
+        }
+
+        <ui-data-table [columns]="jobColumns" [rows]="filteredJobs" [loading]="jobsLoading"
+          emptyMessage="Aucun job trouvé." filterType="simple">
+          <ng-template #rowTemplate let-job>
+            <tr>
+              <td><code class="admin__id">{{ job.id.slice(0, 8) }}…</code></td>
+              <td>{{ websiteName(job.website_id) }}</td>
+              <td>
+                <a [href]="job.target_url" target="_blank" class="admin__url">
+                  {{ job.target_url.length > 40 ? job.target_url.slice(0, 40) + '…' : job.target_url }}
+                </a>
+              </td>
+              <td>
+                <span [class]="job.js_enabled ? 'badge badge--info' : 'badge badge--pending'">
+                  {{ job.js_enabled ? 'JS' : 'HTTP' }}
+                </span>
+              </td>
+              <td><span [class]="statusClass(job.status)">{{ statusIcon(job.status) }} {{ job.status }}</span></td>
+              <td>
+                @if (jobOffresCount.has(job.id)) {
+                  <span class="admin__offres-count">{{ jobOffresCount.get(job.id) }}</span>
+                } @else if (job.status === 'SUCCESS') {
+                  <span class="admin__offres-count admin__offres-count--loading">…</span>
+                } @else { — }
+              </td>
+              <td class="admin__date">{{ formatDate(job.created_at) }}</td>
+              <td class="admin__date">{{ formatDate(job.updated_at) }}</td>
+              <td>
+                <div class="admin__actions">
+                  <button class="btn btn--sm btn--ghost" (click)="viewJobOffres(job)" title="Voir les offres">📦</button>
+                  <button class="btn btn--sm btn--ghost" (click)="rerunJob(job.id)"
+                    [disabled]="job.status === 'RUNNING'" title="Relancer">🔄</button>
+                  <button class="btn btn--sm btn--danger" (click)="deleteJob(job.id)"
+                    [disabled]="job.status === 'RUNNING'" title="Supprimer">🗑</button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ OFFRES INTERNET ════════════════════════════════════════════════ -->
+      @if (activeTab === 'internet') {
+
+        @if (scrapeSuccess) { <div class="admin__success">{{ scrapeSuccess }}</div> }
+        @if (offresError)   { <div class="admin__error">⚠️ {{ offresError }}</div> }
+
+        @if (showScrapeForm) {
+          <div class="admin__form-card admin__form-card--scrape">
+            <h3 class="admin__form-title">🚀 Scraping Internet</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Site enregistré (optionnel)</label>
+                <select class="admin__select" [(ngModel)]="scrapeWebsiteId" (ngModelChange)="onWebsiteSelect()">
+                  <option value="">— URL manuelle —</option>
+                  @for (group of activeWebsitesByPays; track group.pays) {
+                    <optgroup [label]="'📍 ' + group.pays">
+                      @for (site of group.sites; track site.id) {
+                        <option [value]="site.id">{{ site.operator }} — {{ site.url }}</option>
+                      }
+                    </optgroup>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">URL cible</label>
+                <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="scrapeUrl" />
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <label class="admin__checkbox-label">
+                <input type="checkbox" [(ngModel)]="scrapeJsEnabled" />
+                <span>Activer JavaScript (Playwright)</span>
+              </label>
+            </div>
+            @if (scrapeError) { <div class="admin__error">⚠️ {{ scrapeError }}</div> }
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showScrapeForm = false">Annuler</button>
+              <button class="btn btn--primary btn--launch" [disabled]="scraping || !scrapeUrl" (click)="launchScrape()">
+                @if (scraping) { <span class="admin__spinner"></span> En cours… }
+                @else { 🚀 Lancer }
+              </button>
+            </div>
+          </div>
+        }
+
+        <div class="admin__panel-toolbar">
+          <div class="admin__toolbar-btns">
+            @if (offresOperators.length > 1) {
+              <select class="admin__select admin__select--filter" [(ngModel)]="filterOffreOperator">
+                <option value="">👥 Tous les opérateurs</option>
+                @for (op of offresOperators; track op) { <option [value]="op">{{ op }}</option> }
+              </select>
+            }
+            <button class="btn btn--ghost" (click)="loadAllOffres()">Toutes les offres</button>
+          </div>
+        </div>
+
+        <ui-data-table [columns]="offreColumns" [rows]="offres" [loading]="offresLoading"
+          emptyMessage="Aucune offre internet. Lancez un scraping." filterType="simple">
+          <ng-template #rowTemplate let-offre>
+            <tr [class.admin__row--inactive]="!offre.actif">
+              <td><strong>{{ offre.operator }}</strong></td>
+              <td><span class="badge badge--info">{{ offre.categorie }}</span></td>
+              <td>{{ offre.plan_name ?? '—' }}</td>
+              <td>{{ offre.volume ?? '—' }}</td>
+              <td>{{ offre.bonus ?? '—' }}</td>
+              <td>
+                @if (offre.tarif_fcfa) { <strong>{{ offre.tarif_fcfa | number:'1.0-0' }} F</strong> }
+                @else { — }
+              </td>
+              <td>{{ offre.validite ?? '—' }}</td>
+              <td>
+                <span [class]="offre.actif ? 'badge badge--success' : 'badge badge--pending'">
+                  {{ offre.actif ? '✅' : '⏸' }}
+                </span>
+              </td>
+              <td class="admin__date">{{ formatDate(offre.scraped_at) }}</td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ OFFRES VOIX ═════════════════════════════════════════════════════ -->
+      @if (activeTab === 'voix') {
+
+        @if (voixJobSuccess)  { <div class="admin__success">{{ voixJobSuccess }}</div> }
+        @if (voixOffresError) { <div class="admin__error">⚠️ {{ voixOffresError }}</div> }
+
+        @if (showVoixJobForm) {
+          <div class="admin__form-card admin__form-card--scrape">
+            <h3 class="admin__form-title">🚀 Scraping Voix</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Site enregistré (optionnel)</label>
+                <select class="admin__select" [(ngModel)]="voixJobWebsiteId" (ngModelChange)="onVoixWebsiteSelect()">
+                  <option value="">— URL manuelle —</option>
+                  @for (group of activeWebsitesByPays; track group.pays) {
+                    <optgroup [label]="'📍 ' + group.pays">
+                      @for (site of group.sites; track site.id) {
+                        <option [value]="site.id">{{ site.operator }} — {{ site.url }}</option>
+                      }
+                    </optgroup>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">URL cible</label>
+                <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="voixJobUrl" />
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Pays</label>
+                <select class="admin__select" [(ngModel)]="voixJobPays">
+                  @for (p of allPaysList; track p) { <option [value]="p">📍 {{ p }}</option> }
+                </select>
+              </div>
+              <label class="admin__checkbox-label">
+                <input type="checkbox" [(ngModel)]="voixJobJsEnabled" />
+                <span>Activer JavaScript</span>
+              </label>
+            </div>
+            @if (voixJobError) { <div class="admin__error">⚠️ {{ voixJobError }}</div> }
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showVoixJobForm = false">Annuler</button>
+              <button class="btn btn--primary btn--launch" [disabled]="voixJobLaunching || !voixJobUrl" (click)="launchVoixJob()">
+                @if (voixJobLaunching) { <span class="admin__spinner"></span> En cours… }
+                @else { 🚀 Lancer }
+              </button>
+            </div>
+          </div>
+        }
+
+        <div class="admin__panel-toolbar">
+          <div class="admin__toolbar-btns">
+            @if (voixOperators.length > 1) {
+              <select class="admin__select admin__select--filter" [(ngModel)]="voixFilterOperator">
+                <option value="">👥 Tous les opérateurs</option>
+                @for (op of voixOperators; track op) { <option [value]="op">{{ op }}</option> }
+              </select>
+            }
+            @if (voixPays.length > 1) {
+              <select class="admin__select admin__select--filter" [(ngModel)]="voixFilterPays">
+                <option value="">🌍 Tous les pays</option>
+                @for (p of voixPays; track p) { <option [value]="p">{{ p }}</option> }
+              </select>
+            }
+          </div>
+        </div>
+
+        <ui-data-table [columns]="voixOffreColumns" [rows]="filteredVoixOffres" [loading]="voixOffresLoading"
+          emptyMessage="Aucune offre voix. Lancez un scraping." filterType="simple">
+          <ng-template #rowTemplate let-o>
+            <tr>
+              <td><strong>{{ o.operator }}</strong></td>
+              <td>{{ o.pays }}</td>
+              <td><span class="badge badge--info">{{ o.category }}</span></td>
+              <td>{{ o.plan_name ?? '—' }}</td>
+              <td>@if (o.price) { <strong>{{ o.price | number:'1.0-0' }} F</strong> } @else { — }</td>
+              <td>@if (o.volume_recu) { {{ o.volume_recu | number:'1.0-0' }} F } @else { — }</td>
+              <td>{{ o.ussd_code ?? '—' }}</td>
+              <td>{{ o.validity ?? '—' }}</td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ OFFRES ROAMING ══════════════════════════════════════════════════ -->
+      @if (activeTab === 'roaming') {
+
+        @if (roamingJobSuccess)  { <div class="admin__success">{{ roamingJobSuccess }}</div> }
+        @if (roamingOffresError) { <div class="admin__error">⚠️ {{ roamingOffresError }}</div> }
+
+        @if (showRoamingJobForm) {
+          <div class="admin__form-card admin__form-card--scrape">
+            <h3 class="admin__form-title">🚀 Scraping Roaming</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Site enregistré (optionnel)</label>
+                <select class="admin__select" [(ngModel)]="roamingJobWebsiteId" (ngModelChange)="onRoamingWebsiteSelect()">
+                  <option value="">— URL manuelle —</option>
+                  @for (group of activeWebsitesByPays; track group.pays) {
+                    <optgroup [label]="'📍 ' + group.pays">
+                      @for (site of group.sites; track site.id) {
+                        <option [value]="site.id">{{ site.operator }} — {{ site.url }}</option>
+                      }
+                    </optgroup>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">URL cible</label>
+                <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="roamingJobUrl" />
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Type de source</label>
+                <select class="admin__select" [(ngModel)]="roamingJobSourceType">
+                  <option value="html">HTML (page web)</option>
+                  <option value="pdf">PDF (document)</option>
+                </select>
+              </div>
+              <label class="admin__checkbox-label">
+                <input type="checkbox" [(ngModel)]="roamingJobJsEnabled" />
+                <span>Activer JavaScript</span>
+              </label>
+            </div>
+            @if (roamingJobError) { <div class="admin__error">⚠️ {{ roamingJobError }}</div> }
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showRoamingJobForm = false">Annuler</button>
+              <button class="btn btn--primary btn--launch" [disabled]="roamingJobLaunching || !roamingJobUrl" (click)="launchRoamingJob()">
+                @if (roamingJobLaunching) { <span class="admin__spinner"></span> En cours… }
+                @else { 🚀 Lancer }
+              </button>
+            </div>
+          </div>
+        }
+
+        <div class="admin__panel-toolbar">
+          <div class="admin__toolbar-btns">
+            @if (roamingOperators.length > 1) {
+              <select class="admin__select admin__select--filter" [(ngModel)]="roamingFilterOperator">
+                <option value="">👥 Tous les opérateurs</option>
+                @for (op of roamingOperators; track op) { <option [value]="op">{{ op }}</option> }
+              </select>
+            }
+          </div>
+        </div>
+
+        <ui-data-table [columns]="roamingOffreColumns" [rows]="filteredRoamingOffres" [loading]="roamingOffresLoading"
+          emptyMessage="Aucune offre roaming. Lancez un scraping." filterType="simple">
+          <ng-template #rowTemplate let-o>
+            <tr>
+              <td><strong>{{ o.operator }}</strong></td>
+              <td><strong>{{ o.pays_destination }}</strong></td>
+              <td>{{ o.zone_operateur ?? '—' }}</td>
+              <td>@if (o.tarif_appel) { <strong>{{ o.tarif_appel | number:'1.0-0' }} F</strong> } @else { — }</td>
+              <td>@if (o.tarif_sms)   { {{ o.tarif_sms   | number:'1.0-0' }} F } @else { — }</td>
+              <td>@if (o.tarif_data)  { {{ o.tarif_data  | number:'1.0-0' }} F } @else { — }</td>
+              <td>{{ o.unite_data ?? '—' }}</td>
+              <td>{{ o.validite ?? '—' }}</td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ TOUTES OFFRES ═══════════════════════════════════════════════════ -->
+      @if (activeTab === 'offres') {
+
+        @if (offresError) { <div class="admin__error">⚠️ {{ offresError }}</div> }
+
+        <div class="admin__panel-toolbar">
+          <p class="admin__panel-subtitle">
+            @if (offresJobLabel) { — {{ offresJobLabel }} }
+          </p>
+          <div class="admin__toolbar-btns">
+            @if (offresOperators.length > 1) {
+              <select class="admin__select admin__select--filter" [(ngModel)]="filterOffreOperator">
+                <option value="">👥 Tous les opérateurs</option>
+                @for (op of offresOperators; track op) { <option [value]="op">{{ op }}</option> }
+              </select>
+            }
+            <button class="btn btn--ghost" (click)="loadAllOffres()">Toutes les offres</button>
+          </div>
+        </div>
+
+        <ui-data-table [columns]="offreColumns" [rows]="offres" [loading]="offresLoading"
+          emptyMessage="Aucune offre trouvée." filterType="simple">
+          <ng-template #rowTemplate let-offre>
+            <tr [class.admin__row--inactive]="!offre.actif">
+              <td><strong>{{ offre.operator }}</strong></td>
+              <td><span class="badge badge--info">{{ offre.categorie }}</span></td>
+              <td>{{ offre.plan_name ?? '—' }}</td>
+              <td>{{ offre.volume ?? '—' }}</td>
+              <td>{{ offre.bonus ?? '—' }}</td>
+              <td>@if (offre.tarif_fcfa) { <strong>{{ offre.tarif_fcfa | number:'1.0-0' }} F</strong> } @else { — }</td>
+              <td>{{ offre.validite ?? '—' }}</td>
+              <td>
+                <span [class]="offre.actif ? 'badge badge--success' : 'badge badge--pending'">
+                  {{ offre.actif ? '✅' : '⏸' }}
+                </span>
+              </td>
+              <td class="admin__date">{{ formatDate(offre.scraped_at) }}</td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ OPÉRATEURS ═════════════════════════════════════════════════════ -->
+      @if (activeTab === 'operateurs') {
+
+        @if (operateursError) { <div class="admin__error">⚠️ {{ operateursError }}</div> }
+
+        @if (showAddOperateur) {
+          <div class="admin__form-card">
+            <h3 class="admin__form-title">Nouvel opérateur</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Nom</label>
+                <input class="admin__input" type="text" placeholder="ex: Moov Africa" [(ngModel)]="newOperateur.label" />
+              </div>
+            </div>
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showAddOperateur = false">Annuler</button>
+              <button class="btn btn--primary" [disabled]="addingOperateur || !newOperateur.label" (click)="addOperateur()">
+                @if (addingOperateur) { ⏳ Ajout… } @else { ✅ Ajouter }
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (editingOperateur) {
+          <div class="admin__form-card admin__form-card--edit">
+            <h3 class="admin__form-title">✏️ Modifier — {{ editingOperateur.label }}</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Nom</label>
+                <input class="admin__input" type="text" [(ngModel)]="editingOperateurForm.label" />
+              </div>
+            </div>
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="editingOperateur = null">Annuler</button>
+              <button class="btn btn--primary" (click)="saveEditOperateur()">💾 Enregistrer</button>
+            </div>
+          </div>
+        }
+
+        <ui-data-table [columns]="operateurColumns" [rows]="operateurs" [loading]="operateursLoading"
+          emptyMessage="Aucun opérateur enregistré." filterType="simple">
+          <ng-template #rowTemplate let-op>
+            <tr>
+              <td><strong>{{ op.label }}</strong></td>
+              <td>
+                <div class="admin__actions">
+                  <button class="btn btn--sm btn--ghost" (click)="startEditOperateur(op)" title="Modifier">✏️</button>
+                  <button class="btn btn--sm btn--danger" (click)="deleteOperateur(op.id)" title="Supprimer">🗑</button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ PAYS ════════════════════════════════════════════════════════════ -->
+      @if (activeTab === 'pays') {
+
+        @if (paysError) { <div class="admin__error">⚠️ {{ paysError }}</div> }
+
+        @if (showAddPays) {
+          <div class="admin__form-card">
+            <h3 class="admin__form-title">Nouveau pays</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Nom <span class="admin__required">*</span></label>
+                <input class="admin__input" type="text" placeholder="ex: Bénin" [(ngModel)]="newPays.label" />
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Code ISO</label>
+                <input class="admin__input" type="text" placeholder="BJ" maxlength="2" [(ngModel)]="newPays.code_iso2" style="text-transform:uppercase" />
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Indicatif</label>
+                <input class="admin__input" type="text" placeholder="+229" [(ngModel)]="newPays.indicatif" />
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Drapeau</label>
+                <input class="admin__input" type="text" placeholder="🇧🇯" [(ngModel)]="newPays.drapeau" />
+              </div>
+              <div class="admin__field">
+                <label class="admin__label">Région</label>
+                <select class="admin__select" [(ngModel)]="newPays.region">
+                  <option value="">— Sélectionner —</option>
+                  <option>Afrique de l'Ouest</option><option>Afrique Centrale</option>
+                  <option>Afrique de l'Est</option><option>Afrique du Nord</option>
+                  <option>Afrique Australe</option><option>Europe</option>
+                  <option>Amériques</option><option>Asie</option>
+                  <option>Océanie</option><option>Moyen-Orient</option>
+                </select>
+              </div>
+            </div>
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showAddPays = false">Annuler</button>
+              <button class="btn btn--primary" [disabled]="addingPays || !newPays.label" (click)="addPays()">
+                @if (addingPays) { ⏳ Ajout… } @else { ✅ Ajouter }
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (editingPays) {
+          <div class="admin__form-card admin__form-card--edit">
+            <h3 class="admin__form-title">✏️ Modifier — {{ editingPays.drapeau }} {{ editingPays.label }}</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Nom <span class="admin__required">*</span></label>
+                <input class="admin__input" type="text" [(ngModel)]="editingPaysForm.label" />
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Code ISO</label>
+                <input class="admin__input" type="text" maxlength="2" [(ngModel)]="editingPaysForm.code_iso2" style="text-transform:uppercase" />
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Indicatif</label>
+                <input class="admin__input" type="text" [(ngModel)]="editingPaysForm.indicatif" />
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Drapeau</label>
+                <input class="admin__input" type="text" [(ngModel)]="editingPaysForm.drapeau" />
+              </div>
+              <div class="admin__field">
+                <label class="admin__label">Région</label>
+                <select class="admin__select" [(ngModel)]="editingPaysForm.region">
+                  <option value="">— Sélectionner —</option>
+                  <option>Afrique de l'Ouest</option><option>Afrique Centrale</option>
+                  <option>Afrique de l'Est</option><option>Afrique du Nord</option>
+                  <option>Afrique Australe</option><option>Europe</option>
+                  <option>Amériques</option><option>Asie</option>
+                  <option>Océanie</option><option>Moyen-Orient</option>
+                </select>
+              </div>
+            </div>
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="editingPays = null">Annuler</button>
+              <button class="btn btn--primary" (click)="saveEditPays()">💾 Enregistrer</button>
+            </div>
+          </div>
+        }
+
+        <ui-data-table [columns]="paysColumns" [rows]="paysList2" [loading]="paysLoading"
+          emptyMessage="Aucun pays enregistré." filterType="simple">
+          <ng-template #rowTemplate let-p>
+            <tr>
+              <td class="admin__pays-flag">{{ p.drapeau || '🌍' }}</td>
+              <td><strong>{{ p.label }}</strong></td>
+              <td>
+                @if (p.code_iso2) { <span class="admin__badge admin__badge--iso">{{ p.code_iso2 }}</span> }
+                @else { <span class="admin__muted">—</span> }
+              </td>
+              <td>{{ p.indicatif || '—' }}</td>
+              <td>{{ p.region || '—' }}</td>
+              <td>
+                <div class="admin__actions">
+                  <button class="btn btn--sm btn--ghost" (click)="startEditPaysItem(p)" title="Modifier">✏️</button>
+                  <button class="btn btn--sm btn--danger" (click)="deletePays(p.id)" title="Supprimer">🗑</button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ DEVISES ════════════════════════════════════════════════════════ -->
+      @if (activeTab === 'currencies') {
+
+        @if (currenciesError) { <div class="admin__error">⚠️ {{ currenciesError }}</div> }
+
+        @if (showAddCurrency) {
+          <div class="admin__form-card">
+            <h3 class="admin__form-title">Nouvelle devise</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Nom</label>
+                <input class="admin__input" type="text" placeholder="ex: Franc CFA" [(ngModel)]="newCurrency.label" />
+              </div>
+            </div>
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showAddCurrency = false">Annuler</button>
+              <button class="btn btn--primary" [disabled]="addingCurrency || !newCurrency.label" (click)="addCurrency()">
+                @if (addingCurrency) { ⏳ Ajout… } @else { ✅ Ajouter }
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (editingCurrency) {
+          <div class="admin__form-card admin__form-card--edit">
+            <h3 class="admin__form-title">✏️ Modifier — {{ editingCurrency.label }}</h3>
+            <div class="admin__form-row">
+              <div class="admin__field">
+                <label class="admin__label">Nom</label>
+                <input class="admin__input" type="text" [(ngModel)]="editingCurrencyForm.label" />
+              </div>
+            </div>
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="editingCurrency = null">Annuler</button>
+              <button class="btn btn--primary" (click)="saveEditCurrency()">💾 Enregistrer</button>
+            </div>
+          </div>
+        }
+
+        <ui-data-table [columns]="currencyColumns" [rows]="currencies" [loading]="currenciesLoading"
+          emptyMessage="Aucune devise enregistrée." filterType="simple">
+          <ng-template #rowTemplate let-c>
+            <tr>
+              <td><strong>{{ c.label }}</strong></td>
+              <td>
+                <div class="admin__actions">
+                  <button class="btn btn--sm btn--ghost" (click)="startEditCurrency(c)" title="Modifier">✏️</button>
+                  <button class="btn btn--sm btn--danger" (click)="deleteCurrency(c.id)" title="Supprimer">🗑</button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </ui-data-table>
+      }
+
+      <!-- ══ UTILISATEURS ═══════════════════════════════════════════════════ -->
+      @if (activeTab === 'users') {
+
+        @if (usersError)   { <div class="admin__error">⚠️ {{ usersError }}</div> }
+        @if (usersSyncMsg) { <div class="admin__success">{{ usersSyncMsg }}</div> }
+
+        @if (usersLoading && users.length === 0) {
+          <div class="admin__loading">⏳ Chargement des utilisateurs…</div>
+        }
+
+        @if (!usersLoading || users.length > 0) {
+          <div class="admin__users-stats">
+            <div class="admin__stat">
+              <span class="admin__stat-value">{{ users.length }}</span>
+              <span class="admin__stat-label">Total</span>
+            </div>
+            <div class="admin__stat">
+              <span class="admin__stat-value">{{ activeUsersCount }}</span>
+              <span class="admin__stat-label">Actifs</span>
+            </div>
+            <div class="admin__stat">
+              <span class="admin__stat-value">{{ adminUsersCount }}</span>
+              <span class="admin__stat-label">Admins</span>
+            </div>
+          </div>
+
+          <div class="admin__table-wrap">
+            <table class="admin__table">
+              <thead>
+                <tr>
+                  <th>Utilisateur</th><th>Email</th><th>Rôles</th>
+                  <th>Statut</th><th>Dernière connexion</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (filteredUsers.length === 0) {
+                  <tr><td colspan="6" class="admin__empty-row">Aucun utilisateur trouvé.</td></tr>
+                }
+                @for (u of filteredUsers; track u.keycloak_id) {
+                  <tr [class.admin__row--inactive]="!u.is_active">
+                    <td>
+                      <div class="admin__user-cell">
+                        <span class="admin__user-avatar">{{ u.username?.charAt(0)?.toUpperCase() ?? '?' }}</span>
+                        <div>
+                          <div class="admin__user-name">{{ u.username ?? '—' }}</div>
+                          <div class="admin__user-id">{{ u.keycloak_id.slice(0, 8) }}…</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ u.email ?? '—' }}</td>
+                    <td>
+                      <div class="admin__roles">
+                        @for (role of u.roles; track role) {
+                          <span class="badge" [class.badge--success]="role === 'admin'" [class.badge--info]="role !== 'admin'">
+                            {{ role }}
+                          </span>
+                        }
+                        @if (!u.roles.length) { <span class="admin__muted">—</span> }
+                      </div>
+                    </td>
+                    <td>
+                      <span [class]="u.is_active ? 'badge badge--success' : 'badge badge--pending'">
+                        {{ u.is_active ? '✅ Actif' : '⏸ Inactif' }}
+                      </span>
+                    </td>
+                    <td class="admin__date">{{ formatDate(u.last_seen_at) }}</td>
+                    <td>
+                      <button class="btn btn--sm" [class.btn--ghost]="u.is_active" [class.btn--primary]="!u.is_active"
+                        (click)="toggleUserActive(u)" [title]="u.is_active ? 'Désactiver' : 'Activer'">
+                        {{ u.is_active ? '⏸ Désactiver' : '▶️ Activer' }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      <!-- ══ QUESTIONNAIRE ════════════════════════════════════════════════════ -->
+      @if (activeTab === 'questionnaire') {
+
+        @if (questionsError)   { <div class="admin__error">⚠️ {{ questionsError }}</div> }
+        @if (questionsSuccess) { <div class="admin__success">{{ questionsSuccess }}</div> }
+
+        <!-- Formulaire d'ajout -->
+        @if (showAddQuestion) {
+          <div class="admin__form-card">
+            <h3 class="admin__form-title">Nouvelle question</h3>
+
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Ordre <span class="admin__required">*</span></label>
+                <input class="admin__input" type="number" min="1" [(ngModel)]="newQuestion.order" />
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Type</label>
+                <select class="admin__select" [(ngModel)]="newQuestion.input_type">
+                  <option value="select">select</option>
+                  <option value="multi_select">multi_select</option>
+                  <option value="number">number</option>
+                  <option value="text">text</option>
+                </select>
+              </div>
+              <div class="admin__field admin__field--sm">
+                <label class="admin__label">Options dynamiques</label>
+                <select class="admin__select" [(ngModel)]="newQuestion.dynamic_options">
+                  <option [value]="null">— Statiques —</option>
+                  <option value="operators">operators</option>
+                  <option value="pays">pays</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">Texte de la question <span class="admin__required">*</span></label>
+                <input class="admin__input" type="text" placeholder="ex: Quel est votre besoin principal ?" [(ngModel)]="newQuestion.text" />
+              </div>
+              <div class="admin__field">
+                <label class="admin__label">Clé technique (field_key) <span class="admin__required">*</span></label>
+                <input class="admin__input" type="text" placeholder="ex: usage, budget, duration…" [(ngModel)]="newQuestion.field_key" />
+              </div>
+            </div>
+
+            <!-- Condition de branchement -->
+            <div class="admin__form-row">
+              <label class="admin__checkbox-label">
+                <input type="checkbox" [(ngModel)]="newQuestionHasCondition" />
+                <span>Condition d'affichage (branchement)</span>
+              </label>
+            </div>
+            @if (newQuestionHasCondition) {
+              <div class="admin__form-row">
+                <div class="admin__field">
+                  <label class="admin__label">Dépend de la clé</label>
+                  <input class="admin__input" type="text" placeholder="ex: usage" [(ngModel)]="newQuestionConditionKey" />
+                </div>
+                <div class="admin__field">
+                  <label class="admin__label">Afficher quand (valeurs séparées par virgule)</label>
+                  <input class="admin__input" type="text" placeholder="ex: internet, voix" [(ngModel)]="newQuestionConditionValues" />
+                </div>
+              </div>
+            }
+
+            <!-- Options statiques -->
+            @if (!newQuestion.dynamic_options) {
+              <div class="admin__form-section">
+                <label class="admin__label">Options de réponse</label>
+                <div class="admin__form-row">
+                  <div class="admin__field">
+                    <input class="admin__input" type="text" placeholder="Label (ex: Internet)" [(ngModel)]="newOptionLabel" />
+                  </div>
+                  <div class="admin__field">
+                    <input class="admin__input" type="text" placeholder="Valeur (ex: internet)" [(ngModel)]="newOptionValue" />
+                  </div>
+                  <button class="btn btn--sm btn--ghost" (click)="addOptionToNew()">+ Ajouter</button>
+                </div>
+                @if (newQuestion.options.length > 0) {
+                  <div class="admin__options-list">
+                    @for (opt of newQuestion.options; track opt.value; let i = $index) {
+                      <div class="admin__option-chip">
+                        <span>{{ opt.label }} → <code>{{ opt.value }}</code></span>
+                        <button class="btn btn--sm btn--danger" (click)="removeOptionFromNew(i)">✕</button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="admin__hint">Les options seront chargées dynamiquement depuis <strong>{{ newQuestion.dynamic_options }}</strong>.</p>
+            }
+
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="showAddQuestion = false; resetNewQuestion()">Annuler</button>
+              <button class="btn btn--primary"
+                [disabled]="addingQuestion || !newQuestion.text || !newQuestion.field_key"
+                (click)="addQuestion()">
+                @if (addingQuestion) { ⏳ Création… } @else { ✅ Créer }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Liste des questions -->
+        @if (questionsLoading && questions.length === 0) {
+          <div class="admin__loading">⏳ Chargement des questions…</div>
+        } @else if (questions.length === 0 && !questionsLoading) {
+          <div class="admin__empty-state">
+            <p>Aucune question configurée.</p>
+            <p>Cliquez sur <strong>🌱 Questions par défaut</strong> pour insérer les questions prédéfinies.</p>
+          </div>
+        } @else {
+          <div class="admin__table-wrap">
+            <table class="admin__table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Question</th>
+                  <th>Clé</th>
+                  <th>Type</th>
+                  <th>Options</th>
+                  <th>Condition</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (q of questions; track q.id) {
+                  <tr>
+                    <td><strong>{{ q.order }}</strong></td>
+                    <td>{{ q.text }}</td>
+                    <td><code class="admin__id">{{ q.field_key }}</code></td>
+                    <td><span class="badge badge--info">{{ q.input_type }}</span></td>
+                    <td>
+                      @if (q.options.length > 0) {
+                        <div class="admin__options-preview">
+                          @for (opt of q.options.slice(0, 3); track opt.id) {
+                            <span class="admin__option-chip admin__option-chip--sm">{{ opt.label }}</span>
+                          }
+                          @if (q.options.length > 3) {
+                            <span class="admin__muted">+{{ q.options.length - 3 }}</span>
+                          }
+                        </div>
+                      } @else {
+                        <span class="admin__muted">dynamiques</span>
+                      }
+                    </td>
+                    <td>
+                      @if (q.condition) {
+                        <span class="admin__condition">
+                          Si <code>{{ q.condition.depends_on }}</code> = <code>{{ q.condition.show_when.join(', ') }}</code>
+                        </span>
+                      } @else {
+                        <span class="admin__muted">Toujours</span>
+                      }
+                    </td>
+                    <td>
+                      <div class="admin__actions">
+                        <button class="btn btn--sm btn--danger" (click)="deleteQuestion(q.id)" title="Supprimer">🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+    </div><!-- /admin__content -->
+  </div><!-- /admin__main -->
+
+</div><!-- /admin -->

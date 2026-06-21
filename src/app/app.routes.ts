@@ -9,6 +9,12 @@ export const routes: Routes = [
       import('./components/comparison/comparison.component').then(m => m.ComparisonComponent),
   },
   {
+    path: 'recommandation',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/recommandation/recommandation.component').then(m => m.RecommandationComponent),
+  },
+  {
     path: 'questionnaire',
     canActivate: [authGuard],
     loadComponent: () =>

@@ -3,16 +3,23 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
+import { RoamingService } from '../../services/roaming.service';
+import { CompareService } from '../../services/compare.service';
+import { RecommendService } from '../../services/recommend.service';
 import {
   Website, WebsiteCreate, Job, OffreInternet,
   Pays, PaysCreate, PaysUpdate,
   Currency, CurrencyCreate, CurrencyUpdate,
   Operateur, OperateurCreate, OperateurUpdate,
 } from '../../models/admin.model';
+import { OffreRoaming, RoamingJobCreate } from '../../models/roaming.model';
+import { OffreVoix } from '../../models/voix.model';
+import { UserProfile } from '../../models/compare.model';
+import { QuestionOut, QuestionCreate } from '../../models/recommend.model';
 import { DataTableComponent } from '../../ui/data-table/data-table.component';
 import { TableColumn } from '../../ui/data-table/data-table.model';
 
-export type AdminTab = 'websites' | 'jobs' | 'offres' | 'pays' | 'currencies' | 'operateurs';
+export type AdminTab = 'websites' | 'jobs' | 'offres' | 'pays' | 'currencies' | 'operateurs' | 'roaming' | 'voix' | 'internet' | 'users' | 'questionnaire';
 
 @Component({
   selector: 'app-admin',
@@ -23,6 +30,9 @@ export type AdminTab = 'websites' | 'jobs' | 'offres' | 'pays' | 'currencies' | 
 })
 export class AdminComponent implements OnInit, OnDestroy {
   private readonly svc = inject(AdminService);
+  private readonly roamingSvc = inject(RoamingService);
+  private readonly compareSvc = inject(CompareService);
+  private readonly recommendSvc = inject(RecommendService);
 
   activeTab: AdminTab = 'websites';
 
@@ -60,8 +70,12 @@ export class AdminComponent implements OnInit, OnDestroy {
   ];
 
   readonly paysColumns: TableColumn[] = [
-    { key: 'label',    label: 'Nom',     filterable: true },
-    { key: '_actions', label: 'Actions' },
+    { key: 'drapeau',   label: '' },
+    { key: 'label',     label: 'Nom',       filterable: true },
+    { key: 'code_iso2', label: 'ISO',       filterable: true },
+    { key: 'indicatif', label: 'Indicatif' },
+    { key: 'region',    label: 'Région',    filterable: true },
+    { key: '_actions',  label: 'Actions' },
   ];
 
   readonly currencyColumns: TableColumn[] = [
@@ -141,6 +155,161 @@ export class AdminComponent implements OnInit, OnDestroy {
   jobOffresCount = new Map<string, number>();
   private _pollingTimer: ReturnType<typeof setInterval> | null = null;
 
+  // ── Questionnaire ─────────────────────────────────────────────────────────
+  questions: QuestionOut[] = [];
+  questionsLoading = false;
+  questionsError: string | null = null;
+  questionsSuccess: string | null = null;
+
+  showAddQuestion = false;
+  addingQuestion = false;
+  newQuestion: QuestionCreate = {
+    order: 1,
+    text: '',
+    field_key: '',
+    input_type: 'select',
+    condition: null,
+    dynamic_options: null,
+    options: [],
+  };
+  newOptionLabel = '';
+  newOptionValue = '';
+
+  // Condition helper
+  newQuestionHasCondition = false;
+  newQuestionConditionKey = '';
+  newQuestionConditionValues = '';
+
+  readonly questionColumns: TableColumn[] = [
+    { key: 'order',      label: '#',           filterable: false },
+    { key: 'text',       label: 'Question',    filterable: true  },
+    { key: 'field_key',  label: 'Clé',         filterable: true  },
+    { key: 'input_type', label: 'Type' },
+    { key: 'options',    label: 'Options' },
+    { key: 'condition',  label: 'Condition' },
+    { key: '_actions',   label: 'Actions' },
+  ];
+
+  // ── Roaming ──────────────────────────────────────────────────────────────
+  roamingOffres: OffreRoaming[] = [];
+  roamingOffresLoading = false;
+  roamingOffresError: string | null = null;
+
+  showRoamingJobForm = false;
+  roamingJobWebsiteId = '';
+  roamingJobUrl = '';
+  roamingJobJsEnabled = false;
+  roamingJobSourceType: 'html' | 'pdf' = 'html';
+  roamingJobLaunching = false;
+  roamingJobSuccess: string | null = null;
+  roamingJobError: string | null = null;
+
+  roamingFilterOperator = '';
+
+  readonly roamingOffreColumns: TableColumn[] = [
+    { key: 'operator',       label: 'Opérateur',    filterable: true },
+    { key: 'pays_destination', label: 'Pays',        filterable: true },
+    { key: 'zone_operateur', label: 'Zone',          filterable: true },
+    { key: 'tarif_appel',    label: 'Appel (FCFA)',  filterable: true },
+    { key: 'tarif_sms',      label: 'SMS (FCFA)',    filterable: true },
+    { key: 'tarif_data',     label: 'Data (FCFA)',   filterable: true },
+    { key: 'unite_data',     label: 'Unité data' },
+    { key: 'validite',       label: 'Validité' },
+  ];
+
+  // ── Voix ──────────────────────────────────────────────────────────────────
+  voixOffres: OffreVoix[] = [];
+  voixOffresLoading = false;
+  voixOffresError: string | null = null;
+
+  showVoixJobForm = false;
+  voixJobWebsiteId = '';
+  voixJobUrl = '';
+  voixJobJsEnabled = false;
+  voixJobPays = 'Bénin';
+  voixJobLaunching = false;
+  voixJobSuccess: string | null = null;
+  voixJobError: string | null = null;
+  voixFilterOperator = '';
+  voixFilterPays = '';
+
+  readonly voixOffreColumns: TableColumn[] = [
+    { key: 'operator',    label: 'Opérateur',  filterable: true },
+    { key: 'pays',        label: 'Pays',        filterable: true },
+    { key: 'category',    label: 'Catégorie',   filterable: true },
+    { key: 'plan_name',   label: 'Nom',         filterable: true },
+    { key: 'price',       label: 'Prix (FCFA)', filterable: true },
+    { key: 'volume_recu', label: 'Crédit reçu' },
+    { key: 'ussd_code',   label: 'USSD' },
+    { key: 'validity',    label: 'Validité' },
+  ];
+
+  // ── Users ──────────────────────────────────────────────────────────────────
+  users: UserProfile[] = [];
+  usersLoading = false;
+  usersError: string | null = null;
+  usersSyncMsg: string | null = null;
+  usersSearchFilter = '';
+
+  readonly userColumns: TableColumn[] = [
+    { key: 'username',      label: 'Utilisateur',  filterable: true },
+    { key: 'email',         label: 'Email',         filterable: true },
+    { key: 'roles',         label: 'Rôles' },
+    { key: 'is_active',     label: 'Statut' },
+    { key: 'last_seen_at',  label: 'Dernière connexion' },
+    { key: '_actions',      label: 'Actions' },
+  ];
+
+  get filteredUsers(): UserProfile[] {
+    const q = this.usersSearchFilter.toLowerCase();
+    if (!q) return this.users;
+    return this.users.filter(u =>
+      (u.username ?? '').toLowerCase().includes(q) ||
+      (u.email ?? '').toLowerCase().includes(q) ||
+      u.roles.some(r => r.toLowerCase().includes(q))
+    );
+  }
+
+  get activeUsersCount(): number {
+    return this.users.filter(u => u.is_active).length;
+  }
+
+  get adminUsersCount(): number {
+    return this.users.filter(u => u.roles.includes('admin')).length;
+  }
+
+  loadUsers(): void {
+    this.usersLoading = true;
+    this.usersError = null;
+    this.compareSvc.getUsers().subscribe({
+      next: (data) => { this.users = data; this.usersLoading = false; },
+      error: (e: Error) => { this.usersError = e.message; this.usersLoading = false; },
+    });
+  }
+
+  toggleUserActive(u: UserProfile): void {
+    const action$ = u.is_active
+      ? this.compareSvc.deactivateUser(u.keycloak_id)
+      : this.compareSvc.activateUser(u.keycloak_id);
+    action$.subscribe({
+      next: (updated) => { this.users = this.users.map(x => x.keycloak_id === updated.keycloak_id ? updated : x); },
+      error: (e: Error) => { this.usersError = e.message; },
+    });
+  }
+
+  syncUsers(): void {
+    this.usersLoading = true;
+    this.usersSyncMsg = null;
+    this.compareSvc.syncAllUsers().subscribe({
+      next: (res) => {
+        this.usersSyncMsg = `✅ ${res.synced} utilisateurs synchronisés depuis Keycloak.`;
+        this.usersLoading = false;
+        this.loadUsers();
+      },
+      error: (e: Error) => { this.usersError = e.message; this.usersLoading = false; },
+    });
+  }
+
   get activeOffreFiltersCount(): number { return 0; }
 
   get activeWebsites(): Website[] {
@@ -205,9 +374,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   setTab(tab: AdminTab): void {
     this.activeTab = tab;
     if (tab === 'offres' && this.offres.length === 0) this.loadAllOffres();
+    if (tab === 'internet' && this.offres.length === 0) this.loadAllOffres();
     if (tab === 'pays' && this.paysList2.length === 0) this.loadPays();
     if (tab === 'currencies' && this.currencies.length === 0) this.loadCurrencies();
     if (tab === 'operateurs' && this.operateurs.length === 0) this.loadOperateurs();
+    if (tab === 'roaming' && this.roamingOffres.length === 0) this.loadRoamingOffres();
+    if (tab === 'voix' && this.voixOffres.length === 0) this.loadVoixOffres();
+    if (tab === 'users' && this.users.length === 0) this.loadUsers();
+    if (tab === 'questionnaire' && this.questions.length === 0) this.loadQuestions();
   }
 
   toggleOffrePopover(_col: string, _event: Event): void {}
@@ -395,7 +569,13 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   startEditPaysItem(p: Pays): void {
     this.editingPays = p;
-    this.editingPaysForm = { label: p.label };
+    this.editingPaysForm = {
+      label: p.label,
+      code_iso2: p.code_iso2 ?? '',
+      indicatif: p.indicatif ?? '',
+      drapeau: p.drapeau ?? '',
+      region: p.region ?? '',
+    };
   }
 
   saveEditPays(): void {
@@ -573,6 +753,242 @@ export class AdminComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  // ── Roaming methods ──────────────────────────────────────────────────────
+
+  get roamingOperators(): string[] {
+    return [...new Set(this.roamingOffres.map(o => o.operator))].sort();
+  }
+
+  get filteredRoamingOffres(): OffreRoaming[] {
+    if (!this.roamingFilterOperator) return this.roamingOffres;
+    return this.roamingOffres.filter(o => o.operator === this.roamingFilterOperator);
+  }
+
+  loadRoamingOffres(): void {
+    this.roamingOffresLoading = true;
+    this.roamingOffresError = null;
+    this.roamingSvc.getAll().subscribe({
+      next: (data) => { this.roamingOffres = data; this.roamingOffresLoading = false; },
+      error: (e: Error) => { this.roamingOffresError = e.message; this.roamingOffresLoading = false; },
+    });
+  }
+
+  migrateRoamingTypes(): void {
+    this.svc.migrateRoamingTypes().subscribe({
+      next: (res: { updated: number; total: number }) => {
+        this.roamingJobSuccess = `Migration terminée : ${res.updated} offres mises à jour sur ${res.total}.`;
+        this.loadRoamingOffres();
+      },
+      error: (e: Error) => { this.roamingOffresError = e.message; },
+    });
+  }
+
+  onRoamingWebsiteSelect(): void {
+    const site = this.websites.find(w => w.id === this.roamingJobWebsiteId);
+    if (site) this.roamingJobUrl = site.url;
+  }
+
+  launchRoamingJob(): void {
+    const url = this.roamingJobWebsiteId
+      ? this.websites.find(w => w.id === this.roamingJobWebsiteId)?.url ?? this.roamingJobUrl
+      : this.roamingJobUrl;
+
+    if (!url.trim()) { this.roamingJobError = 'URL requise.'; return; }
+
+    this.roamingJobLaunching = true;
+    this.roamingJobError = null;
+    this.roamingJobSuccess = null;
+
+    const payload: RoamingJobCreate = {
+      website_id: this.roamingJobWebsiteId || undefined,
+      target_url: url,
+      js_enabled: this.roamingJobJsEnabled,
+      source_type: this.roamingJobSourceType,
+      extraction_rules: {},
+    };
+
+    this.roamingSvc.createJob(payload).subscribe({
+      next: (job) => {
+        this.jobs = [job, ...this.jobs];
+        this.roamingJobLaunching = false;
+        this.roamingJobSuccess = `Job roaming lancé (ID: ${job.id.slice(0, 8)}…) — statut : ${job.status}`;
+        this.showRoamingJobForm = false;
+        this._startPolling(job.id);
+      },
+      error: (e: Error) => { this.roamingJobError = e.message; this.roamingJobLaunching = false; },
+    });
+  }
+
+  // ── Voix methods ──────────────────────────────────────────────────────────
+
+  get voixOperators(): string[] {
+    return [...new Set(this.voixOffres.map(o => o.operator))].sort();
+  }
+
+  get voixPays(): string[] {
+    return [...new Set(this.voixOffres.map(o => o.pays))].sort();
+  }
+
+  get filteredVoixOffres(): OffreVoix[] {
+    return this.voixOffres.filter(o =>
+      (!this.voixFilterOperator || o.operator === this.voixFilterOperator) &&
+      (!this.voixFilterPays || o.pays === this.voixFilterPays)
+    );
+  }
+
+  loadVoixOffres(): void {
+    this.voixOffresLoading = true;
+    this.voixOffresError = null;
+    this.svc.getAllVoixOffres().subscribe({
+      next: (data) => { this.voixOffres = data; this.voixOffresLoading = false; },
+      error: (e: Error) => { this.voixOffresError = e.message; this.voixOffresLoading = false; },
+    });
+  }
+
+  onVoixWebsiteSelect(): void {
+    const site = this.websites.find(w => w.id === this.voixJobWebsiteId);
+    if (site) {
+      this.voixJobUrl = site.url;
+      if (site.pays) this.voixJobPays = site.pays;
+    }
+  }
+
+  launchVoixJob(): void {
+    const url = this.voixJobWebsiteId
+      ? this.websites.find(w => w.id === this.voixJobWebsiteId)?.url ?? this.voixJobUrl
+      : this.voixJobUrl;
+
+    if (!url.trim()) { this.voixJobError = 'URL requise.'; return; }
+
+    this.voixJobLaunching = true;
+    this.voixJobError = null;
+    this.voixJobSuccess = null;
+
+    this.svc.createVoixJob({
+      website_id: this.voixJobWebsiteId || undefined,
+      target_url: url,
+      js_enabled: this.voixJobJsEnabled,
+      pays: this.voixJobPays,
+      extraction_rules: {},
+    }).subscribe({
+      next: (job) => {
+        this.jobs = [job, ...this.jobs];
+        this.voixJobLaunching = false;
+        this.voixJobSuccess = `Job voix lancé (ID: ${job.id.slice(0, 8)}…) — statut : ${job.status}`;
+        this.showVoixJobForm = false;
+        this._startPolling(job.id);
+      },
+      error: (e: Error) => { this.voixJobError = e.message; this.voixJobLaunching = false; },
+    });
+  }
+
+  // ── Voix end ──────────────────────────────────────────────────────────────
+
+  // ── Questionnaire methods ─────────────────────────────────────────────────
+
+  loadQuestions(): void {
+    this.questionsLoading = true;
+    this.questionsError = null;
+    this.recommendSvc.listQuestions().subscribe({
+      next: (data) => { this.questions = data; this.questionsLoading = false; },
+      error: (e: Error) => { this.questionsError = e.message; this.questionsLoading = false; },
+    });
+  }
+
+  addOptionToNew(): void {
+    if (!this.newOptionLabel.trim() || !this.newOptionValue.trim()) return;
+    this.newQuestion.options = [
+      ...this.newQuestion.options,
+      { label: this.newOptionLabel.trim(), value: this.newOptionValue.trim() },
+    ];
+    this.newOptionLabel = '';
+    this.newOptionValue = '';
+  }
+
+  removeOptionFromNew(index: number): void {
+    this.newQuestion.options = this.newQuestion.options.filter((_, i) => i !== index);
+  }
+
+  addQuestion(): void {
+    if (!this.newQuestion.text.trim() || !this.newQuestion.field_key.trim()) return;
+
+    // Construire la condition si activée
+    if (this.newQuestionHasCondition && this.newQuestionConditionKey.trim() && this.newQuestionConditionValues.trim()) {
+      this.newQuestion.condition = {
+        depends_on: this.newQuestionConditionKey.trim(),
+        show_when: this.newQuestionConditionValues.split(',').map(v => v.trim()).filter(Boolean),
+      };
+    } else {
+      this.newQuestion.condition = null;
+    }
+
+    this.addingQuestion = true;
+    this.questionsError = null;
+    this.recommendSvc.createQuestion(this.newQuestion).subscribe({
+      next: (q) => {
+        this.questions = [...this.questions, q].sort((a, b) => a.order - b.order);
+        this.showAddQuestion = false;
+        this.addingQuestion = false;
+        this.questionsSuccess = `✅ Question "${q.text}" créée avec succès.`;
+        this.resetNewQuestion();
+        setTimeout(() => { this.questionsSuccess = null; }, 4000);
+      },
+      error: (e: Error) => { this.questionsError = e.message; this.addingQuestion = false; },
+    });
+  }
+
+  deleteQuestion(id: string): void {
+    if (!confirm('Supprimer cette question ? Les réponses associées seront perdues.')) return;
+    this.recommendSvc.deleteQuestion(id).subscribe({
+      next: () => {
+        this.questions = this.questions.filter(q => q.id !== id);
+        this.questionsSuccess = '✅ Question supprimée.';
+        setTimeout(() => { this.questionsSuccess = null; }, 3000);
+      },
+      error: (e: Error) => { this.questionsError = e.message; },
+    });
+  }
+
+  seedQuestions(): void {
+    if (!confirm('Insérer les questions par défaut ? (Sans effet si des questions existent déjà)')) return;
+    this.questionsLoading = true;
+    this.recommendSvc.seedQuestions().subscribe({
+      next: (res) => {
+        this.questionsSuccess = res.count > 0
+          ? `✅ ${res.count} questions créées.`
+          : `ℹ️ ${res.message}`;
+        this.questionsLoading = false;
+        this.loadQuestions();
+        setTimeout(() => { this.questionsSuccess = null; }, 5000);
+      },
+      error: (e: Error) => { this.questionsError = e.message; this.questionsLoading = false; },
+    });
+  }
+
+  resetNewQuestion(): void {
+    this.newQuestion = {
+      order: this.questions.length + 1,
+      text: '',
+      field_key: '',
+      input_type: 'select',
+      condition: null,
+      dynamic_options: null,
+      options: [],
+    };
+    this.newOptionLabel = '';
+    this.newOptionValue = '';
+    this.newQuestionHasCondition = false;
+    this.newQuestionConditionKey = '';
+    this.newQuestionConditionValues = '';
+  }
+
+  questionConditionLabel(q: QuestionOut): string {
+    if (!q.condition) return '—';
+    return `Si ${q.condition.depends_on} = ${q.condition.show_when.join(', ')}`;
+  }
+
+  // ── Questionnaire end ─────────────────────────────────────────────────────
 
   private _startPolling(jobId: string): void {
     this._stopPolling();

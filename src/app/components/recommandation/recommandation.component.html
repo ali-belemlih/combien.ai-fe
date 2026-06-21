@@ -1,0 +1,175 @@
+<div class="reco">
+
+  <!-- ══ En-tête ══════════════════════════════════════════════════════════════ -->
+  <div class="reco__hero">
+    <h1 class="reco__title">🎯 Trouver la meilleure offre</h1>
+    <p class="reco__subtitle">
+      Indiquez votre budget et votre usage — notre IA trouve les offres les plus adaptées.
+    </p>
+  </div>
+
+  <!-- ══ Formulaire de recherche ══════════════════════════════════════════════ -->
+  <div class="reco__form">
+
+    <!-- Sélecteur d'usage -->
+    <div class="reco__form-section">
+      <label class="reco__form-label">Quel type d'offre ?</label>
+      <div class="reco__usage-grid">
+        @for (opt of usageOptions; track opt.value) {
+          <button
+            type="button"
+            class="reco__usage-btn"
+            [class.reco__usage-btn--active]="selectedUsage === opt.value"
+            [style.--usage-color]="opt.color"
+            (click)="selectedUsage = opt.value"
+          >
+            <span class="reco__usage-icon">{{ opt.icon }}</span>
+            <span class="reco__usage-label">{{ opt.label }}</span>
+            <span class="reco__usage-desc">{{ opt.desc }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Budget -->
+    <div class="reco__form-section">
+      <label class="reco__form-label">Votre budget maximum</label>
+
+      <!-- Presets rapides -->
+      <div class="reco__budget-presets">
+        @for (preset of budgetPresets; track preset) {
+          <button
+            type="button"
+            class="reco__preset-btn"
+            [class.reco__preset-btn--active]="budget === preset"
+            (click)="setBudget(preset)"
+          >
+            {{ preset | number:'1.0-0' }} F
+          </button>
+        }
+      </div>
+
+      <!-- Input manuel -->
+      <div class="reco__budget-input-wrap">
+        <input
+          type="number"
+          class="reco__budget-input"
+          [(ngModel)]="budget"
+          min="100"
+          max="100000"
+          step="100"
+          placeholder="Saisir un montant…"
+        />
+        <span class="reco__budget-currency">FCFA</span>
+      </div>
+    </div>
+
+    <!-- Bouton recherche -->
+    <button
+      pButton
+      type="button"
+      class="reco__search-btn"
+      [disabled]="loading || !budget || budget <= 0"
+      (click)="search()"
+    >
+      @if (loading) {
+        <i class="pi pi-spin pi-spinner"></i> Recherche en cours…
+      } @else {
+        <i class="pi pi-search"></i> Trouver les meilleures offres
+      }
+    </button>
+  </div>
+
+  <!-- ══ Erreur ════════════════════════════════════════════════════════════════ -->
+  @if (error) {
+    <div class="reco__error">
+      <i class="pi pi-exclamation-triangle"></i> {{ error }}
+    </div>
+  }
+
+  <!-- ══ Résultats ════════════════════════════════════════════════════════════ -->
+  @if (hasSearched && !loading && !error) {
+
+    @if (results.length === 0) {
+      <div class="reco__empty">
+        <span class="reco__empty-icon">😕</span>
+        <p>Aucune offre trouvée pour ce budget.</p>
+        <p class="reco__empty-hint">Essayez d'augmenter votre budget ou de changer le type d'offre.</p>
+      </div>
+    } @else {
+
+      <!-- Résumé -->
+      <div class="reco__results-header">
+        <h2 class="reco__results-title">
+          {{ results.length }} offre{{ results.length > 1 ? 's' : '' }} trouvée{{ results.length > 1 ? 's' : '' }}
+          <span class="reco__results-budget">pour {{ budget | number:'1.0-0' }} FCFA max</span>
+        </h2>
+        @if (savings) {
+          <span class="reco__savings-badge">💰 {{ savings }}</span>
+        }
+      </div>
+
+      <!-- Top offre mise en avant -->
+      @if (topOffer) {
+        <div class="reco__top-card" [style.--op-color]="getOpColor(topOffer.pays_name)">
+          <div class="reco__top-badge">🏆 Meilleure offre</div>
+          <div class="reco__top-content">
+            <div class="reco__top-left">
+              <span class="reco__top-logo">{{ getOpLogo(topOffer.pays_name) }}</span>
+              <div>
+                <div class="reco__top-plan">{{ topOffer.plan_name || 'Offre sans nom' }}</div>
+                @if (topOffer.pays_name) {
+                  <div class="reco__top-pays">📍 {{ topOffer.pays_name }}</div>
+                }
+                @if (topOffer.validite) {
+                  <div class="reco__top-validity">⏱ Valable {{ topOffer.validite }}</div>
+                }
+              </div>
+            </div>
+            <div class="reco__top-right">
+              <div class="reco__top-metric-label">{{ getMetricLabel() }}</div>
+              <div class="reco__top-metric-value">{{ getMetricValue(topOffer) }}</div>
+              <div class="reco__top-price">{{ formatPrice(topOffer.tarif) }}</div>
+              <div class="reco__top-ratio">{{ getRatio(topOffer) }}</div>
+              @if (topOffer.ussd_code) {
+                <div class="reco__top-ussd">📲 {{ topOffer.ussd_code }}</div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Liste des autres offres -->
+      <div class="reco__list">
+        @for (offre of results; track offre.id; let i = $index) {
+          @if (i > 0) {
+            <div class="reco__item" [class.reco__item--alt]="i % 2 === 0">
+              <div class="reco__item-rank">#{{ i + 1 }}</div>
+
+              <div class="reco__item-info">
+                <div class="reco__item-plan">{{ offre.plan_name || 'Offre sans nom' }}</div>
+                <div class="reco__item-meta">
+                  @if (offre.pays_name) { <span class="reco__item-pays">📍 {{ offre.pays_name }}</span> }
+                  @if (offre.validite)  { <span class="reco__item-valid">⏱ {{ offre.validite }}</span> }
+                  @if (offre.ussd_code) { <span class="reco__item-ussd">📲 {{ offre.ussd_code }}</span> }
+                </div>
+              </div>
+
+              <div class="reco__item-metric">
+                <div class="reco__item-metric-label">{{ getMetricLabel() }}</div>
+                <div class="reco__item-metric-value">{{ getMetricValue(offre) }}</div>
+              </div>
+
+              <div class="reco__item-price-block">
+                <div class="reco__item-price">{{ formatPrice(offre.tarif) }}</div>
+                <div class="reco__item-ratio">{{ getRatio(offre) }}</div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+    }
+  }
+
+</div>
