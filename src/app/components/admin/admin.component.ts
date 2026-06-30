@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { RoamingService } from '../../services/roaming.service';
 import { CompareService } from '../../services/compare.service';
@@ -33,6 +33,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   private readonly roamingSvc = inject(RoamingService);
   private readonly compareSvc = inject(CompareService);
   private readonly recommendSvc = inject(RecommendService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   activeTab: AdminTab = 'websites';
 
@@ -365,6 +367,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadWebsites();
     this.loadJobs();
+    // Lire le tab depuis les queryParams (ex: retour depuis add-question)
+    const tab = this.route.snapshot.queryParamMap.get('tab') as AdminTab | null;
+    if (tab) this.setTab(tab);
   }
 
   ngOnDestroy(): void {
@@ -886,6 +891,66 @@ export class AdminComponent implements OnInit, OnDestroy {
   // ── Voix end ──────────────────────────────────────────────────────────────
 
   // ── Questionnaire methods ─────────────────────────────────────────────────
+
+  goToAddQuestion(): void {
+    this.router.navigate(['/admin/add-question']);
+  }
+
+  // ── Drag & drop questionnaire ─────────────────────────────────────────────
+  draggedQuestionIndex: number | null = null;
+  dragOverQuestionIndex: number | null = null;
+  questionsOrderDirty = false;
+  savingOrder = false;
+
+  onQuestionDragStart(index: number): void {
+    this.draggedQuestionIndex = index;
+  }
+
+  onQuestionDragOver(event: DragEvent, index: number): void {
+    event.preventDefault();
+    this.dragOverQuestionIndex = index;
+  }
+
+  onQuestionDrop(targetIndex: number): void {
+    if (this.draggedQuestionIndex === null || this.draggedQuestionIndex === targetIndex) {
+      this.draggedQuestionIndex = null;
+      this.dragOverQuestionIndex = null;
+      return;
+    }
+    const updated = [...this.questions];
+    const [moved] = updated.splice(this.draggedQuestionIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+    this.questions = updated.map((q, i) => ({ ...q, order: i + 1 }));
+    this.questionsOrderDirty = true;
+    this.draggedQuestionIndex = null;
+    this.dragOverQuestionIndex = null;
+  }
+
+  onQuestionDragEnd(): void {
+    this.draggedQuestionIndex = null;
+    this.dragOverQuestionIndex = null;
+  }
+
+  saveQuestionsOrder(): void {
+    if (!this.questionsOrderDirty || this.savingOrder) return;
+    this.savingOrder = true;
+    this.questionsError = null;
+
+    // Envoyer un PATCH pour chaque question avec son nouvel ordre
+    const calls = this.questions.map(q =>
+      this.recommendSvc.updateQuestionOrder(q.id, q.order).toPromise()
+    );
+
+    Promise.all(calls).then(() => {
+      this.savingOrder = false;
+      this.questionsOrderDirty = false;
+      this.questionsSuccess = '✅ Ordre enregistré avec succès.';
+      setTimeout(() => { this.questionsSuccess = null; }, 3000);
+    }).catch((err: Error) => {
+      this.savingOrder = false;
+      this.questionsError = `Erreur lors de la sauvegarde : ${err.message}`;
+    });
+  }
 
   loadQuestions(): void {
     this.questionsLoading = true;

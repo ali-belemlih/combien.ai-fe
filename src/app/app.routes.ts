@@ -36,5 +36,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/admin/admin.component').then(m => m.AdminComponent),
   },
+  {
+    path: 'admin/add-question',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./components/add-question/add-question.component').then(m => m.AddQuestionComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

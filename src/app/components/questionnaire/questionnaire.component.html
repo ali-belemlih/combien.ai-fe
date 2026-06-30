@@ -3,8 +3,10 @@
   <!-- ─── Chargement ──────────────────────────────────────────────────────────── -->
   @if (loading) {
     <div class="quiz__loading">
-      <i class="pi pi-spin pi-spinner quiz__spinner"></i>
-      <p>Chargement…</p>
+      <div class="quiz__loading-spinner">
+        <i class="pi pi-spin pi-spinner"></i>
+      </div>
+      <p>Chargement de la question…</p>
     </div>
   }
 
@@ -12,6 +14,7 @@
   @if (error && !loading) {
     <div class="quiz__error">
       <i class="pi pi-exclamation-triangle quiz__error-icon"></i>
+      <h3>Une erreur est survenue</h3>
       <p>{{ error }}</p>
       <button pButton label="Réessayer" icon="pi pi-refresh" (click)="startQuestionnaire()"></button>
     </div>
@@ -23,30 +26,42 @@
     <!-- ÉTAPE 0 : ACCUEIL                                                     -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     @if (currentStep === 0) {
-      <div class="quiz__type-select">
-        <h2 class="quiz__type-title">Trouvez le forfait parfait pour vous</h2>
-        <p class="quiz__type-subtitle">
-          Je vais vous poser quelques questions pour vous recommander les meilleures offres selon vos besoins et votre budget.
-        </p>
-        <div class="quiz__start-actions">
-          <button pButton class="quiz__start-btn" (click)="startQuestionnaire()">
-            <span class="quiz__type-card-icon">🎯</span>
-            <span class="quiz__type-card-label">Commencer le questionnaire</span>
-            <span class="quiz__type-card-desc">Questions adaptées à votre profil</span>
+      <div class="quiz__welcome">
+        <div class="quiz__welcome-hero">
+          <span class="quiz__welcome-emoji">🎯</span>
+          <h1 class="quiz__welcome-title">Trouvez le forfait parfait</h1>
+          <p class="quiz__welcome-subtitle">
+            Répondez à quelques questions et obtenez des recommandations personnalisées
+            selon votre budget et vos besoins.
+          </p>
+          <button pButton class="quiz__welcome-btn" (click)="startQuestionnaire()">
+            <i class="pi pi-play-circle"></i>
+            Commencer
           </button>
+          <p class="quiz__welcome-hint">⏱ Moins de 2 minutes</p>
         </div>
+
         <div class="quiz__features">
           <div class="quiz__feature">
             <span class="quiz__feature-icon">🤖</span>
-            <span>Questionnaire intelligent adaptatif</span>
+            <div>
+              <strong>Questionnaire adaptatif</strong>
+              <p>Les questions s'ajustent à vos réponses</p>
+            </div>
           </div>
           <div class="quiz__feature">
             <span class="quiz__feature-icon">⚡</span>
-            <span>Scoring multi-critères (budget, volume, durée, opérateur)</span>
+            <div>
+              <strong>Scoring multi-critères</strong>
+              <p>Budget, data, durée, opérateur</p>
+            </div>
           </div>
           <div class="quiz__feature">
             <span class="quiz__feature-icon">🏆</span>
-            <span>Top 5 des meilleures offres avec explication</span>
+            <div>
+              <strong>Top recommandations</strong>
+              <p>Les meilleures offres avec explications</p>
+            </div>
           </div>
         </div>
       </div>
@@ -56,122 +71,141 @@
     <!-- QUIZ : QUESTIONS ADAPTATIVES                                          -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     @if (currentStep >= 1 && !finished && currentQuestion) {
-      <p-card styleClass="quiz__card">
+      <div class="quiz__card-wrapper">
 
         <!-- En-tête avec progression -->
-        <ng-template pTemplate="header">
-          <div class="quiz__header">
-            <p-progressBar [value]="progress" [showValue]="false" styleClass="quiz__progress" />
-            <div class="quiz__step-info">
-              <span class="quiz__step-count">Question {{ currentStep }}</span>
-              <span class="quiz__step-progress">{{ progress }}%</span>
-            </div>
-            <h2 class="quiz__title">{{ currentQuestion.text }}</h2>
+        <div class="quiz__header">
+          <div class="quiz__step-info">
+            <span class="quiz__step-count">Question {{ currentQuestion.order }}</span>
+            <span class="quiz__step-progress">{{ progress }}%</span>
           </div>
-        </ng-template>
+          <div class="quiz__progress-bar">
+            <div class="quiz__progress-fill" [style.width.%]="progress"></div>
+          </div>
+          <h2 class="quiz__title">{{ currentQuestion.text }}</h2>
+        </div>
 
-        <!-- ─── Options de la question ─────────────────────────────────────── -->
+        <!-- ─── Corps deux colonnes ───────────────────────────────────────── -->
         <div class="quiz__body">
-          <div class="quiz__options quiz__options--grid">
-            @for (opt of currentQuestion.options; track opt.id) {
-              <button pButton type="button"
-                [class]="isSelected(opt.value) ? 'quiz__option-btn quiz__option-btn--tall' : 'quiz__option-btn quiz__option-btn--tall p-button-outlined'"
-                (click)="selectOption(opt.value)">
-                <span class="quiz__option-label">{{ opt.label }}</span>
-                @if (isSelected(opt.value)) {
-                  <i class="pi pi-check quiz__option-badge"></i>
-                }
-              </button>
-            }
-          </div>
+          <div class="quiz__body-inner">
 
-          <!-- Résumé des réponses précédentes -->
-          @if (answersSummary.length > 0) {
-            <div class="quiz__answers-trail">
-              @for (a of answersSummary; track a.key) {
-                <span class="quiz__answer-chip">
-                  <strong>{{ a.key }}</strong> : {{ a.value }}
-                </span>
+            <!-- Colonne gauche : options -->
+            <div class="quiz__body-left">
+              <div class="quiz__options quiz__options--grid">
+                @for (opt of currentQuestion.options; track opt.id) {
+                  <button
+                    type="button"
+                    class="quiz__option-btn"
+                    [class.quiz__option-btn--selected]="isSelected(opt.value)"
+                    (click)="selectOption(opt.value)">
+                    <span class="quiz__option-label">{{ opt.label }}</span>
+                    @if (isSelected(opt.value)) {
+                      <span class="quiz__option-check">
+                        <i class="pi pi-check"></i>
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Colonne droite : résumé des réponses -->
+            <div class="quiz__body-right">
+              <span class="quiz__body-right-title">
+                <i class="pi pi-check-circle"></i> Vos réponses
+              </span>
+              @if (answersSummary.length === 0) {
+                <p class="quiz__body-right-empty">Aucune réponse encore…</p>
+              } @else {
+                @for (a of answersSummary; track a.key) {
+                  <div class="quiz__answer-chip">
+                    <span class="quiz__chip-key">{{ a.key }}</span>
+                    <span class="quiz__chip-val">{{ a.value }}</span>
+                  </div>
+                }
               }
             </div>
-          }
+
+          </div>
         </div>
 
         <!-- ─── Navigation ─────────────────────────────────────────────────── -->
-        <ng-template pTemplate="footer">
-          <div class="quiz__footer">
-            <button pButton label="← Retour" class="p-button-outlined" (click)="prev()"></button>
-            <button pButton
-              label="Suivant →"
-              [disabled]="!canSubmit"
-              (click)="submitAnswer()">
-            </button>
-          </div>
-        </ng-template>
+        <div class="quiz__footer">
+          <button class="quiz__nav-btn quiz__nav-btn--back" (click)="prev()">
+            <i class="pi pi-arrow-left"></i> Retour
+          </button>
+          <button
+            class="quiz__nav-btn quiz__nav-btn--next"
+            [disabled]="!canSubmit"
+            (click)="submitAnswer()">
+            Suivant <i class="pi pi-arrow-right"></i>
+          </button>
+        </div>
 
-      </p-card>
+      </div>
     }
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- RÉSULTATS                                                             -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     @if (currentStep === -1 && finished) {
-      <p-card styleClass="quiz__card">
+      <div class="quiz__card-wrapper quiz__card-wrapper--results">
 
-        <ng-template pTemplate="header">
-          <div class="quiz__header quiz__header--results">
-            <p-progressBar [value]="100" [showValue]="false" styleClass="quiz__progress" />
-            <h2 class="quiz__title">🎯 Vos recommandations personnalisées</h2>
-            @if (explanation) {
-              <p class="quiz__explanation">{{ explanation }}</p>
-            }
+        <div class="quiz__header quiz__header--results">
+          <div class="quiz__progress-bar">
+            <div class="quiz__progress-fill" style="width:100%"></div>
           </div>
-        </ng-template>
+          <h2 class="quiz__title">🎯 Vos recommandations personnalisées</h2>
+          @if (explanation) {
+            <p class="quiz__explanation">{{ explanation }}</p>
+          }
+        </div>
 
         <div class="quiz__body quiz__body--results">
 
           <!-- Résumé des réponses -->
           @if (answersSummary.length > 0) {
             <div class="quiz__summary">
-              @for (a of answersSummary; track a.key) {
-                <div class="quiz__summary-item">
-                  <span class="quiz__summary-key">{{ a.key }}</span>
-                  <span class="quiz__summary-val">{{ a.value }}</span>
-                </div>
-              }
+              <span class="quiz__summary-label"><i class="pi pi-check-circle"></i> Votre profil</span>
+              <div class="quiz__summary-chips">
+                @for (a of answersSummary; track a.key) {
+                  <div class="quiz__summary-item">
+                    <span class="quiz__summary-key">{{ a.key }}</span>
+                    <span class="quiz__summary-val">{{ a.value }}</span>
+                  </div>
+                }
+              </div>
             </div>
-            <p-divider />
           }
 
           <!-- Résultats vides -->
           @if (recommendations.length === 0) {
             <div class="quiz__no-results">
-              <i class="pi pi-face-smile quiz__no-results-icon"></i>
+              <i class="pi pi-inbox quiz__no-results-icon"></i>
               <h3>Aucune offre trouvée</h3>
-              <p>Essayez d'élargir votre budget ou de changer vos critères.</p>
+              <p>Essayez d'élargir votre budget ou de modifier vos critères.</p>
               <button pButton label="Recommencer" icon="pi pi-refresh" class="p-button-outlined" (click)="restart()"></button>
             </div>
           } @else {
 
             <div class="quiz__results-header">
               <h3 class="quiz__results-title">
-                <i class="pi pi-compass"></i>
+                <i class="pi pi-list"></i>
                 {{ recommendations.length }} offre{{ recommendations.length > 1 ? 's' : '' }} recommandée{{ recommendations.length > 1 ? 's' : '' }}
               </h3>
             </div>
 
             <div class="quiz__results-grid">
               @for (rec of recommendations; track rec.source_id; let i = $index) {
-                <p-card styleClass="result-card">
+                <div class="result-card" [class.result-card--best]="i === 0">
+
                   @if (i === 0) {
-                    <ng-template pTemplate="header">
-                      <div class="result-card__best">
-                        <p-tag value="⭐ Meilleur choix" severity="warn" />
-                      </div>
-                    </ng-template>
+                    <div class="result-card__badge">
+                      <i class="pi pi-star-fill"></i> Meilleur choix
+                    </div>
                   }
 
-                  <!-- Score + Rang -->
+                  <!-- Score + Rang + Infos -->
                   <div class="result-card__header">
                     <span class="result-card__rank">#{{ rec.rank }}</span>
                     <div class="result-card__title-group">
@@ -182,10 +216,17 @@
                         <p class="result-card__category">{{ getCategorieLabel(rec.categorie) }}</p>
                       }
                     </div>
-                    <p-tag
-                      [value]="getScoreLabel(rec.score) + ' · ' + rec.score + '%'"
-                      [severity]="getScoreSeverity(rec.score)"
-                      styleClass="result-card__score" />
+                    <div class="result-card__score-wrap">
+                      <p-rating
+                        [ngModel]="getStars(rec.score)"
+                        [readonly]="true"
+                        [stars]="5"
+                        styleClass="result-card__rating"
+                      />
+                      <span class="result-card__score-num" [class]="'score-' + getScoreSeverity(rec.score)">
+                        {{ getScoreLabel(rec.score) }} · {{ rec.score }}%
+                      </span>
+                    </div>
                   </div>
 
                   <!-- Stats principales -->
@@ -212,37 +253,39 @@
 
                   <!-- Raison de la recommandation -->
                   <div class="result-card__reason">
-                    <i class="pi pi-info-circle"></i>
+                    <i class="pi pi-lightbulb"></i>
                     <span>{{ rec.reason }}</span>
                   </div>
 
-                  <ng-template pTemplate="footer">
-                    <div class="result-card__tags">
-                      @if (rec.categorie) {
-                        <p-tag [value]="getCategorieLabel(rec.categorie)" severity="info" />
-                      }
-                      @if (rec.validite) {
-                        <p-tag [value]="'⏱ ' + rec.validite" severity="secondary" />
-                      }
-                      @if (rec.ussd_code) {
-                        <p-tag [value]="rec.ussd_code" severity="success" />
-                      }
-                    </div>
-                  </ng-template>
-                </p-card>
+                  <!-- Tags -->
+                  <div class="result-card__tags">
+                    @if (rec.categorie) {
+                      <span class="result-card__tag result-card__tag--info">{{ getCategorieLabel(rec.categorie) }}</span>
+                    }
+                    @if (rec.validite) {
+                      <span class="result-card__tag result-card__tag--secondary">⏱ {{ rec.validite }}</span>
+                    }
+                    @if (rec.ussd_code) {
+                      <span class="result-card__tag result-card__tag--success">{{ rec.ussd_code }}</span>
+                    }
+                  </div>
+
+                </div>
               }
             </div>
           }
         </div>
 
-        <ng-template pTemplate="footer">
-          <div class="quiz__footer">
-            <button pButton label="🔄 Recommencer" class="p-button-outlined" (click)="restart()"></button>
-            <button pButton label="📊 Voir tous les forfaits" class="p-button-secondary" (click)="goToComparison()"></button>
-          </div>
-        </ng-template>
+        <div class="quiz__footer quiz__footer--results">
+          <button class="quiz__nav-btn quiz__nav-btn--back" (click)="restart()">
+            <i class="pi pi-refresh"></i> Recommencer
+          </button>
+          <button class="quiz__nav-btn quiz__nav-btn--next" (click)="goToComparison()">
+            <i class="pi pi-table"></i> Voir tous les forfaits
+          </button>
+        </div>
 
-      </p-card>
+      </div>
     }
 
   }

@@ -41,6 +41,13 @@ export class RecommendService {
       .pipe(catchError(this._handleError));
   }
 
+  /** Met à jour l'ordre d'une question (admin). */
+  updateQuestionOrder(questionId: string, order: number): Observable<QuestionOut> {
+    return this.http
+      .patch<QuestionOut>(`${this.base}/questions/${questionId}`, { order })
+      .pipe(catchError(this._handleError));
+  }
+
   /** Supprime une question par son ID (admin). */
   deleteQuestion(questionId: string): Observable<void> {
     return this.http

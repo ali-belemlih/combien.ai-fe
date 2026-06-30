@@ -208,7 +208,13 @@
           @case ('questionnaire') {
             <button class="btn btn--ghost" (click)="loadQuestions()">🔄 Rafraîchir</button>
             <button class="btn btn--ghost" (click)="seedQuestions()" [disabled]="questionsLoading">🌱 Questions par défaut</button>
-            <button class="btn btn--primary" (click)="showAddQuestion = !showAddQuestion">+ Ajouter</button>
+            @if (questionsOrderDirty) {
+              <button class="btn btn--save-order" (click)="saveQuestionsOrder()" [disabled]="savingOrder">
+                @if (savingOrder) { <span class="admin__spinner"></span> Sauvegarde… }
+                @else { 💾 Enregistrer l'ordre }
+              </button>
+            }
+            <button class="btn btn--primary" (click)="goToAddQuestion()">+ Ajouter</button>
           }
         }
       </div>
@@ -986,105 +992,6 @@
         @if (questionsError)   { <div class="admin__error">⚠️ {{ questionsError }}</div> }
         @if (questionsSuccess) { <div class="admin__success">{{ questionsSuccess }}</div> }
 
-        <!-- Formulaire d'ajout -->
-        @if (showAddQuestion) {
-          <div class="admin__form-card">
-            <h3 class="admin__form-title">Nouvelle question</h3>
-
-            <div class="admin__form-row">
-              <div class="admin__field admin__field--sm">
-                <label class="admin__label">Ordre <span class="admin__required">*</span></label>
-                <input class="admin__input" type="number" min="1" [(ngModel)]="newQuestion.order" />
-              </div>
-              <div class="admin__field admin__field--sm">
-                <label class="admin__label">Type</label>
-                <select class="admin__select" [(ngModel)]="newQuestion.input_type">
-                  <option value="select">select</option>
-                  <option value="multi_select">multi_select</option>
-                  <option value="number">number</option>
-                  <option value="text">text</option>
-                </select>
-              </div>
-              <div class="admin__field admin__field--sm">
-                <label class="admin__label">Options dynamiques</label>
-                <select class="admin__select" [(ngModel)]="newQuestion.dynamic_options">
-                  <option [value]="null">— Statiques —</option>
-                  <option value="operators">operators</option>
-                  <option value="pays">pays</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="admin__form-row">
-              <div class="admin__field admin__field--wide">
-                <label class="admin__label">Texte de la question <span class="admin__required">*</span></label>
-                <input class="admin__input" type="text" placeholder="ex: Quel est votre besoin principal ?" [(ngModel)]="newQuestion.text" />
-              </div>
-              <div class="admin__field">
-                <label class="admin__label">Clé technique (field_key) <span class="admin__required">*</span></label>
-                <input class="admin__input" type="text" placeholder="ex: usage, budget, duration…" [(ngModel)]="newQuestion.field_key" />
-              </div>
-            </div>
-
-            <!-- Condition de branchement -->
-            <div class="admin__form-row">
-              <label class="admin__checkbox-label">
-                <input type="checkbox" [(ngModel)]="newQuestionHasCondition" />
-                <span>Condition d'affichage (branchement)</span>
-              </label>
-            </div>
-            @if (newQuestionHasCondition) {
-              <div class="admin__form-row">
-                <div class="admin__field">
-                  <label class="admin__label">Dépend de la clé</label>
-                  <input class="admin__input" type="text" placeholder="ex: usage" [(ngModel)]="newQuestionConditionKey" />
-                </div>
-                <div class="admin__field">
-                  <label class="admin__label">Afficher quand (valeurs séparées par virgule)</label>
-                  <input class="admin__input" type="text" placeholder="ex: internet, voix" [(ngModel)]="newQuestionConditionValues" />
-                </div>
-              </div>
-            }
-
-            <!-- Options statiques -->
-            @if (!newQuestion.dynamic_options) {
-              <div class="admin__form-section">
-                <label class="admin__label">Options de réponse</label>
-                <div class="admin__form-row">
-                  <div class="admin__field">
-                    <input class="admin__input" type="text" placeholder="Label (ex: Internet)" [(ngModel)]="newOptionLabel" />
-                  </div>
-                  <div class="admin__field">
-                    <input class="admin__input" type="text" placeholder="Valeur (ex: internet)" [(ngModel)]="newOptionValue" />
-                  </div>
-                  <button class="btn btn--sm btn--ghost" (click)="addOptionToNew()">+ Ajouter</button>
-                </div>
-                @if (newQuestion.options.length > 0) {
-                  <div class="admin__options-list">
-                    @for (opt of newQuestion.options; track opt.value; let i = $index) {
-                      <div class="admin__option-chip">
-                        <span>{{ opt.label }} → <code>{{ opt.value }}</code></span>
-                        <button class="btn btn--sm btn--danger" (click)="removeOptionFromNew(i)">✕</button>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            } @else {
-              <p class="admin__hint">Les options seront chargées dynamiquement depuis <strong>{{ newQuestion.dynamic_options }}</strong>.</p>
-            }
-
-            <div class="admin__form-actions">
-              <button class="btn btn--ghost" (click)="showAddQuestion = false; resetNewQuestion()">Annuler</button>
-              <button class="btn btn--primary"
-                [disabled]="addingQuestion || !newQuestion.text || !newQuestion.field_key"
-                (click)="addQuestion()">
-                @if (addingQuestion) { ⏳ Création… } @else { ✅ Créer }
-              </button>
-            </div>
-          </div>
-        }
-
         <!-- Liste des questions -->
         @if (questionsLoading && questions.length === 0) {
           <div class="admin__loading">⏳ Chargement des questions…</div>
@@ -1095,9 +1002,10 @@
           </div>
         } @else {
           <div class="admin__table-wrap">
-            <table class="admin__table">
+            <table class="admin__table admin__table--draggable">
               <thead>
                 <tr>
+                  <th class="admin__th-drag"></th>
                   <th>#</th>
                   <th>Question</th>
                   <th>Clé</th>
@@ -1108,9 +1016,19 @@
                 </tr>
               </thead>
               <tbody>
-                @for (q of questions; track q.id) {
-                  <tr>
-                    <td><strong>{{ q.order }}</strong></td>
+                @for (q of questions; track q.id; let i = $index) {
+                  <tr
+                    draggable="true"
+                    [class.admin__row--dragging]="draggedQuestionIndex === i"
+                    [class.admin__row--dragover]="dragOverQuestionIndex === i && draggedQuestionIndex !== i"
+                    (dragstart)="onQuestionDragStart(i)"
+                    (dragover)="onQuestionDragOver($event, i)"
+                    (drop)="onQuestionDrop(i)"
+                    (dragend)="onQuestionDragEnd()">
+                    <td class="admin__td-drag">
+                      <span class="admin__drag-handle" title="Glisser pour réordonner">⠿</span>
+                    </td>
+                    <td><strong class="admin__order-badge">{{ q.order }}</strong></td>
                     <td>{{ q.text }}</td>
                     <td><code class="admin__id">{{ q.field_key }}</code></td>
                     <td><span class="badge badge--info">{{ q.input_type }}</span></td>

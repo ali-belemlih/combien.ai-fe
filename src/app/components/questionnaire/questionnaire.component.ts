@@ -7,6 +7,8 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { DividerModule } from 'primeng/divider';
+import { KnobModule } from 'primeng/knob';
+import { RatingModule } from 'primeng/rating';
 
 import { RecommendService } from '../../services/recommend.service';
 import {
@@ -19,7 +21,7 @@ import {
 @Component({
   selector: 'app-questionnaire',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TagModule, ProgressBarModule, DividerModule],
+  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TagModule, ProgressBarModule, DividerModule, KnobModule, RatingModule],
   templateUrl: './questionnaire.component.html',
   styleUrl: './questionnaire.component.scss',
 })
@@ -188,6 +190,18 @@ export class QuestionnaireComponent implements OnInit {
     if (score >= 55) return 'info';
     if (score >= 35) return 'warn';
     return 'danger';
+  }
+
+  getKnobColor(score: number): string {
+    if (score >= 75) return '#16a34a';
+    if (score >= 55) return '#2563eb';
+    if (score >= 35) return '#d97706';
+    return '#dc2626';
+  }
+
+  /** Convertit un score 0-100 en étoiles 0-5 pour p-rating */
+  getStars(score: number): number {
+    return Math.round((score / 100) * 5);
   }
 
   getCategorieLabel(cat: string | null): string {
