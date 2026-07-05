@@ -6,11 +6,20 @@ export const authGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.isAuthenticated()) return true;
+  if (!auth.isAuthenticated()) {
+    const returnUrl = route.url.map(s => s.path).join('/') || '/';
+    router.navigate(['/login'], { queryParams: { returnUrl } });
+    return false;
+  }
 
-  const returnUrl = route.url.map(s => s.path).join('/') || '/';
-  router.navigate(['/login'], { queryParams: { returnUrl } });
-  return false;
+  // Vérifie que le compte n'est pas désactivé côté backend
+  const profile = auth.userProfile();
+  if (profile !== null && !profile.is_active) {
+    auth.logout();
+    return false;
+  }
+
+  return true;
 };
 
 export const adminGuard: CanActivateFn = () => {
@@ -19,6 +28,13 @@ export const adminGuard: CanActivateFn = () => {
 
   if (!auth.isAuthenticated()) {
     router.navigate(['/login'], { queryParams: { returnUrl: '/admin' } });
+    return false;
+  }
+
+  // Vérifie que le compte n'est pas désactivé côté backend
+  const profile = auth.userProfile();
+  if (profile !== null && !profile.is_active) {
+    auth.logout();
     return false;
   }
 

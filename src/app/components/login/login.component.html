@@ -11,27 +11,19 @@
 
       <ul class="login__features">
         <li class="login__feature">
-          <span class="login__feature-icon">
-            <i class="pi pi-chart-bar"></i>
-          </span>
+          <span class="login__feature-icon"><i class="pi pi-chart-bar"></i></span>
           <span>Comparaison en temps réel</span>
         </li>
         <li class="login__feature">
-          <span class="login__feature-icon">
-            <i class="pi pi-compass"></i>
-          </span>
+          <span class="login__feature-icon"><i class="pi pi-compass"></i></span>
           <span>Recommandations personnalisées</span>
         </li>
         <li class="login__feature">
-          <span class="login__feature-icon">
-            <i class="pi pi-shield"></i>
-          </span>
+          <span class="login__feature-icon"><i class="pi pi-shield"></i></span>
           <span>Données sécurisées</span>
         </li>
       </ul>
     </div>
-
-    <!-- Cercles décoratifs -->
     <div class="login__deco login__deco--1"></div>
     <div class="login__deco login__deco--2"></div>
     <div class="login__deco login__deco--3"></div>
@@ -41,100 +33,247 @@
   <div class="login__panel">
     <div class="login__card">
 
-      <!-- Logo mobile (visible seulement sur petit écran) -->
+      <!-- Logo mobile -->
       <div class="login__mobile-logo">
         <i class="pi pi-wifi"></i>
         <span>combien<span class="login__brand-dot">.ai</span></span>
       </div>
 
-      <h1 class="login__title">Bon retour 👋</h1>
-      <p class="login__subtitle">Connectez-vous pour accéder à votre espace.</p>
+      <!-- ══════════════════════════════════════════════════════
+           ÉTAPE 1 : Identifiants
+      ══════════════════════════════════════════════════════ -->
+      @if (step() === 'credentials') {
+        <h1 class="login__title">Bon retour 👋</h1>
+        <p class="login__subtitle">Connectez-vous pour accéder à votre espace.</p>
 
-      <!-- Message d'erreur -->
-      @if (errorMessage()) {
-        <div class="login__error" role="alert">
-          <i class="pi pi-exclamation-circle"></i>
-          {{ errorMessage() }}
-        </div>
+        @if (errorMessage()) {
+          <div class="login__error" role="alert">
+            <i class="pi pi-exclamation-circle"></i>
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <form class="login__form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+          <div class="login__field">
+            <label class="login__label" for="username">Identifiant</label>
+            <div class="login__input-wrap">
+              <i class="pi pi-user login__input-icon"></i>
+              <input
+                id="username"
+                class="login__input"
+                type="text"
+                formControlName="username"
+                placeholder="Votre identifiant"
+                autocomplete="username"
+                [class.login__input--error]="form.get('username')?.invalid && form.get('username')?.touched"
+              />
+            </div>
+            @if (form.get('username')?.invalid && form.get('username')?.touched) {
+              <span class="login__field-error">
+                <i class="pi pi-times-circle"></i> L'identifiant est requis.
+              </span>
+            }
+          </div>
+
+          <div class="login__field">
+            <label class="login__label" for="password">Mot de passe</label>
+            <div class="login__input-wrap">
+              <i class="pi pi-lock login__input-icon"></i>
+              <input
+                id="password"
+                class="login__input login__input--password"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Votre mot de passe"
+                autocomplete="current-password"
+                [class.login__input--error]="form.get('password')?.invalid && form.get('password')?.touched"
+              />
+              <button type="button" class="login__toggle-pw" (click)="togglePassword()"
+                [attr.aria-label]="showPassword() ? 'Masquer' : 'Afficher'">
+                <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+              </button>
+            </div>
+            @if (form.get('password')?.invalid && form.get('password')?.touched) {
+              <span class="login__field-error">
+                <i class="pi pi-times-circle"></i> Le mot de passe est requis.
+              </span>
+            }
+          </div>
+
+          <button class="login__btn" type="submit" [disabled]="loading()">
+            @if (loading()) {
+              <i class="pi pi-spin pi-spinner"></i> Connexion en cours…
+            } @else {
+              <i class="pi pi-sign-in"></i> Se connecter
+            }
+          </button>
+
+        </form>
+
+        <p class="login__powered">
+          <i class="pi pi-shield"></i>
+          Authentification sécurisée via digi-auth
+        </p>
       }
 
-      <!-- Formulaire -->
-      <form class="login__form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-
-        <!-- Identifiant -->
-        <div class="login__field">
-          <label class="login__label" for="username">Identifiant</label>
-          <div class="login__input-wrap">
-            <i class="pi pi-user login__input-icon"></i>
-            <input
-              id="username"
-              class="login__input"
-              type="text"
-              formControlName="username"
-              placeholder="Votre identifiant"
-              autocomplete="username"
-              [class.login__input--error]="form.get('username')?.invalid && form.get('username')?.touched"
-            />
+      <!-- ══════════════════════════════════════════════════════
+           ÉTAPE 2a : Setup TOTP (première configuration)
+      ══════════════════════════════════════════════════════ -->
+      @if (step() === 'totp-setup') {
+        <div class="login__totp-header">
+          <div class="login__totp-icon">
+            <i class="pi pi-qrcode"></i>
           </div>
-          @if (form.get('username')?.invalid && form.get('username')?.touched) {
-            <span class="login__field-error">
-              <i class="pi pi-times-circle"></i> L'identifiant est requis.
-            </span>
+          <h1 class="login__title">Sécuriser votre compte</h1>
+          <p class="login__subtitle">
+            Scannez le QR code avec <strong>Google Authenticator</strong>
+            ou <strong>Microsoft Authenticator</strong> pour activer la double authentification.
+          </p>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="login__error" role="alert">
+            <i class="pi pi-exclamation-circle"></i>
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <!-- QR Code -->
+        <div class="login__qr-container">
+          @if (qrLoading()) {
+            <div class="login__qr-loading">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>Génération du QR code…</span>
+            </div>
+          } @else if (qrCodeUri()) {
+            <img
+              class="login__qr-image"
+              [src]="qrImageUrl"
+              alt="QR code TOTP"
+              width="200"
+              height="200"
+            />
           }
         </div>
 
-        <!-- Mot de passe -->
-        <div class="login__field">
-          <label class="login__label" for="password">Mot de passe</label>
-          <div class="login__input-wrap">
-            <i class="pi pi-lock login__input-icon"></i>
-            <input
-              id="password"
-              class="login__input login__input--password"
-              [type]="showPassword() ? 'text' : 'password'"
-              formControlName="password"
-              placeholder="Votre mot de passe"
-              autocomplete="current-password"
-              [class.login__input--error]="form.get('password')?.invalid && form.get('password')?.touched"
-            />
-            <button
-              type="button"
-              class="login__toggle-pw"
-              (click)="togglePassword()"
-              [attr.aria-label]="showPassword() ? 'Masquer' : 'Afficher'"
-            >
-              <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
-            </button>
+        <!-- Secret manuel -->
+        @if (totpSecret()) {
+          <div class="login__secret">
+            <p class="login__secret-label">
+              <i class="pi pi-key"></i>
+              Ou entrez ce code manuellement :
+            </p>
+            <code class="login__secret-code">{{ totpSecret() }}</code>
           </div>
-          @if (form.get('password')?.invalid && form.get('password')?.touched) {
-            <span class="login__field-error">
-              <i class="pi pi-times-circle"></i> Le mot de passe est requis.
-            </span>
-          }
+        }
+
+        <div class="login__totp-instructions">
+          <p>Après avoir scanné, entrez le code à 6 chiffres généré par l'application :</p>
         </div>
 
-        <!-- Bouton submit -->
-        <button
-          class="login__btn"
-          type="submit"
-          [disabled]="loading()"
-        >
-          @if (loading()) {
-            <i class="pi pi-spin pi-spinner"></i>
-            Connexion en cours…
-          } @else {
-            <i class="pi pi-sign-in"></i>
-            Se connecter
-          }
+        <!-- Formulaire code TOTP -->
+        <form class="login__form" [formGroup]="totpForm" (ngSubmit)="onTotpSetupSubmit()" novalidate>
+
+          <div class="login__field">
+            <label class="login__label" for="totp-code-setup">Code de vérification</label>
+            <div class="login__input-wrap">
+              <i class="pi pi-shield login__input-icon"></i>
+              <input
+                id="totp-code-setup"
+                class="login__input login__input--totp"
+                type="text"
+                inputmode="numeric"
+                formControlName="code"
+                placeholder="000 000"
+                maxlength="6"
+                autocomplete="one-time-code"
+                [class.login__input--error]="totpForm.get('code')?.invalid && totpForm.get('code')?.touched"
+              />
+            </div>
+            @if (totpForm.get('code')?.invalid && totpForm.get('code')?.touched) {
+              <span class="login__field-error">
+                <i class="pi pi-times-circle"></i> Entrez un code à 6 chiffres.
+              </span>
+            }
+          </div>
+
+          <button class="login__btn" type="submit" [disabled]="loading()">
+            @if (loading()) {
+              <i class="pi pi-spin pi-spinner"></i> Vérification…
+            } @else {
+              <i class="pi pi-check"></i> Activer et se connecter
+            }
+          </button>
+
+        </form>
+
+        <button class="login__back" type="button" (click)="backToLogin()">
+          <i class="pi pi-arrow-left"></i> Retour à la connexion
         </button>
+      }
 
-      </form>
+      <!-- ══════════════════════════════════════════════════════
+           ÉTAPE 2b : Vérification TOTP (2FA déjà configuré)
+      ══════════════════════════════════════════════════════ -->
+      @if (step() === 'totp-verify') {
+        <div class="login__totp-header">
+          <div class="login__totp-icon login__totp-icon--verify">
+            <i class="pi pi-mobile"></i>
+          </div>
+          <h1 class="login__title">Vérification en 2 étapes</h1>
+          <p class="login__subtitle">
+            Ouvrez votre application Authenticator et entrez le code à 6 chiffres.
+          </p>
+        </div>
 
-      <!-- Footer -->
-      <p class="login__powered">
-        <i class="pi pi-shield"></i>
-        Authentification sécurisée via Keycloak
-      </p>
+        @if (errorMessage()) {
+          <div class="login__error" role="alert">
+            <i class="pi pi-exclamation-circle"></i>
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <form class="login__form" [formGroup]="totpForm" (ngSubmit)="onTotpVerifySubmit()" novalidate>
+
+          <div class="login__field">
+            <label class="login__label" for="totp-code-verify">Code à 6 chiffres</label>
+            <div class="login__input-wrap">
+              <i class="pi pi-shield login__input-icon"></i>
+              <input
+                id="totp-code-verify"
+                class="login__input login__input--totp"
+                type="text"
+                inputmode="numeric"
+                formControlName="code"
+                placeholder="000 000"
+                maxlength="6"
+                autocomplete="one-time-code"
+                autofocus
+                [class.login__input--error]="totpForm.get('code')?.invalid && totpForm.get('code')?.touched"
+              />
+            </div>
+            @if (totpForm.get('code')?.invalid && totpForm.get('code')?.touched) {
+              <span class="login__field-error">
+                <i class="pi pi-times-circle"></i> Entrez un code à 6 chiffres.
+              </span>
+            }
+          </div>
+
+          <button class="login__btn" type="submit" [disabled]="loading()">
+            @if (loading()) {
+              <i class="pi pi-spin pi-spinner"></i> Vérification…
+            } @else {
+              <i class="pi pi-lock-open"></i> Valider
+            }
+          </button>
+
+        </form>
+
+        <button class="login__back" type="button" (click)="backToLogin()">
+          <i class="pi pi-arrow-left"></i> Utiliser un autre compte
+        </button>
+      }
 
     </div>
   </div>
