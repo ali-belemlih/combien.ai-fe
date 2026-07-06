@@ -137,10 +137,24 @@
     justify-content: center;
   }
 
+  &__user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.05rem;
+  }
+
   &__user-name {
     font-size: 0.875rem;
     font-weight: 600;
     color: #e2e8f0;
+    line-height: 1.2;
+  }
+
+  &__user-email {
+    font-size: 0.7rem;
+    color: #90caf9;
+    line-height: 1.2;
   }
 
   &__user-badge {

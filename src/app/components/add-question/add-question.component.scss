@@ -1,0 +1,381 @@
+$primary:    #6c63ff;
+$primary-h:  #5a52e0;
+$bg:         #f4f6fb;
+$surface:    #ffffff;
+$border:     #dde1ef;
+$text:       #1e2340;
+$text-muted: #64748b;
+$success:    #16a34a;
+$danger:     #dc2626;
+$radius:     10px;
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+.aq-page {
+  min-height: calc(100vh - 80px);
+  background: $bg;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+.aq-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.aq-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 8px;
+  color: $text-muted;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+
+  &:hover {
+    color: $text;
+    border-color: $text-muted;
+  }
+}
+
+.aq-header__title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: $text;
+  margin: 0 0 0.25rem;
+}
+
+.aq-header__subtitle {
+  font-size: 0.9rem;
+  color: $text-muted;
+  margin: 0;
+}
+
+// ─── Alertes ─────────────────────────────────────────────────────────────────
+.aq-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: $radius;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+
+  &--error {
+    background: rgba($danger, 0.08);
+    border: 1px solid rgba($danger, 0.3);
+    color: #b91c1c;
+  }
+
+  &--success {
+    background: rgba($success, 0.08);
+    border: 1px solid rgba($success, 0.3);
+    color: #15803d;
+  }
+}
+
+// ─── Formulaire ──────────────────────────────────────────────────────────────
+.aq-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// ─── Section ─────────────────────────────────────────────────────────────────
+.aq-section {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 14px;
+  padding: 1.75rem 2rem;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+    margin: 0 0 1.5rem;
+  }
+
+  &__num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: $primary;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__optional {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: $text-muted;
+    background: #f1f5f9;
+    border: 1px solid $border;
+    border-radius: 20px;
+    padding: 0.1rem 0.55rem;
+  }
+}
+
+// ─── Rows & Fields ────────────────────────────────────────────────────────────
+.aq-row {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+
+  &:last-child { margin-bottom: 0; }
+
+  &--mt { margin-top: 1rem; }
+}
+
+.aq-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 200px;
+
+  &--sm  { flex: 0 0 160px; }
+  &--wide { flex: 2; }
+}
+
+.aq-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.aq-required {
+  color: $danger;
+  margin-left: 2px;
+}
+
+.aq-hint {
+  font-size: 0.75rem;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.aq-input,
+.aq-select {
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: 8px;
+  color: $text;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
+    background: $surface;
+  }
+
+  &::placeholder { color: $text-muted; }
+}
+
+// ─── Options ─────────────────────────────────────────────────────────────────
+.aq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__add {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    .aq-input { flex: 1; min-width: 150px; }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.aq-empty {
+  font-size: 0.82rem;
+  color: $text-muted;
+  font-style: italic;
+  margin: 0;
+  padding: 0.75rem 0;
+}
+
+.aq-option-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #f8fafc;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.85rem;
+
+  &__label {
+    font-weight: 500;
+    color: $text;
+    flex: 1;
+  }
+
+  &__arrow {
+    font-size: 0.7rem;
+    color: $text-muted;
+  }
+
+  &__value {
+    background: rgba($primary, 0.1);
+    color: $primary;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  &__remove {
+    background: transparent;
+    border: none;
+    color: $text-muted;
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+    margin-left: auto;
+
+    &:hover { color: $danger; }
+
+    i { font-size: 0.7rem; }
+  }
+}
+
+.aq-dynamic-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba($primary, 0.06);
+  border: 1px solid rgba($primary, 0.2);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-size: 0.875rem;
+  color: $primary;
+
+  i { flex-shrink: 0; }
+  strong { font-weight: 700; }
+}
+
+// ─── Checkbox condition ───────────────────────────────────────────────────────
+.aq-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: $text-muted;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: $primary;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+// ─── Actions ─────────────────────────────────────────────────────────────────
+.aq-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.aq-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--primary {
+    background: $primary;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba($primary, 0.35);
+
+    &:hover:not(:disabled) {
+      background: $primary-h;
+      transform: translateY(-1px);
+    }
+  }
+
+  &--secondary {
+    background: #f1f5f9;
+    color: $text;
+    border: 1px solid $border;
+
+    &:hover:not(:disabled) { background: #e2e8f0; }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $text-muted;
+    border: 1px solid $border;
+
+    &:hover:not(:disabled) { color: $text; border-color: $text-muted; }
+  }
+}
+
+// ─── Spinner ──────────────────────────────────────────────────────────────────
+.aq-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(#fff, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: aq-spin 0.7s linear infinite;
+}
+
+@keyframes aq-spin { to { transform: rotate(360deg); } }
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .aq-page { padding: 1.25rem 1rem 3rem; }
+  .aq-section { padding: 1.25rem; }
+  .aq-field--sm { flex: 1; min-width: 0; }
+  .aq-actions { flex-wrap: wrap; .aq-btn { flex: 1; justify-content: center; } }
+}

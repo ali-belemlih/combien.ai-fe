@@ -9,6 +9,12 @@ export const routes: Routes = [
       import('./components/comparison/comparison.component').then(m => m.ComparisonComponent),
   },
   {
+    path: 'recommandation',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/recommandation/recommandation.component').then(m => m.RecommandationComponent),
+  },
+  {
     path: 'questionnaire',
     canActivate: [authGuard],
     loadComponent: () =>
@@ -29,6 +35,12 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () =>
       import('./components/admin/admin.component').then(m => m.AdminComponent),
+  },
+  {
+    path: 'admin/add-question',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./components/add-question/add-question.component').then(m => m.AddQuestionComponent),
   },
   { path: '**', redirectTo: '' },
 ];

@@ -5,6 +5,8 @@ import { Operator, Plan, BestValue, FilterOption, SortOption, ChartBar } from '.
 import { OperatorService, SortKey } from '../../services/operator.service';
 import { OffreVoix, OperatorVoix, VoixCategory, VoixComparePair } from '../../models/voix.model';
 import { VoixService } from '../../services/voix.service';
+import { OffreRoaming, RoamingCompareItem } from '../../models/roaming.model';
+import { RoamingService } from '../../services/roaming.service';
 import { BestValueBannerComponent } from '../best-value-banner/best-value-banner.component';
 import { SearchInputComponent } from '../../ui/search-input/search-input.component';
 import { SortSelectComponent } from '../../ui/sort-select/sort-select.component';
@@ -15,9 +17,10 @@ import { KpiItem } from '../../ui/kpi-grid/kpi-grid.model';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
-export type ForfaitType = 'internet' | 'voix';
+export type ForfaitType = 'internet' | 'voix' | 'roaming';
 export type TabKey = 'all' | 'daily' | 'weekly' | 'monthly';
 export type ViewMode = 'cards' | 'compare' | 'chart' | 'table';
 export type FilterMode = 'contains' | 'startsWith' | 'notContains' | 'endsWith' | 'equals';
@@ -130,6 +133,24 @@ export class ComparisonComponent implements OnInit {
   };
   openVoixTablePopover: string | null = null;
 
+  // ── Roaming state ───────────────────────────────────────────────────────
+  allRoamingOffres: OffreRoaming[] = [];
+  roamingPays: string[] = [];
+  roamingSearchPays = '';
+  roamingSelectedPays = '';
+  roamingCompareResult: RoamingCompareItem[] = [];
+  roamingCompareLoading = false;
+  roamingCompareError: string | null = null;
+  roamingSearch = '';
+  roamingActiveType: 'international' | 'free_roaming' | 'internet' = 'international';
+  roamingViewMode: 'cards' | 'table' = 'cards';
+
+  readonly roamingTypeTabs = [
+    { value: 'international', label: '📞 International', desc: 'Appels vers l\'étranger' },
+    { value: 'free_roaming',  label: '🌍 Free Roaming',  desc: 'Appels en déplacement' },
+    { value: 'internet',      label: '📶 Internet',       desc: 'Data en déplacement' },
+  ];
+
   readonly filterModes: { label: string; value: FilterMode }[] = [
     { label: 'Contient',        value: 'contains'    },
     { label: 'Commence par',    value: 'startsWith'  },
@@ -141,6 +162,7 @@ export class ComparisonComponent implements OnInit {
   constructor(
     private svc: OperatorService,
     private voixSvc: VoixService,
+    private roamingSvc: RoamingService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -153,10 +175,15 @@ export class ComparisonComponent implements OnInit {
     forkJoin({
       operators: this.svc.loadOperators(),
       offres: this.voixSvc.getAll(),
+      // Roaming est optionnel — ne bloque pas le chargement si le backend est down
+      roamingOffres: this.roamingSvc.getAll().pipe(catchError(() => of<OffreRoaming[]>([]))),
+      roamingPays: this.roamingSvc.getPays().pipe(catchError(() => of<string[]>([]))),
     }).subscribe({
-      next: ({ operators, offres }) => {
+      next: ({ operators, offres, roamingOffres, roamingPays }) => {
         this.operators = operators;
         this.allOffres = offres.filter(o => o.actif);
+        this.allRoamingOffres = roamingOffres;
+        this.roamingPays = roamingPays;
         this._initCompareSelectors();
         this._initVoixCompare();
         this.loading = false;
@@ -688,5 +715,97 @@ export class ComparisonComponent implements OnInit {
 
   getOperatorCountry(operatorId: string): string {
     return this.filteredOperators.find(op => op.id === operatorId)?.country || '—';
+  }
+  
+  // ── Roaming methods ─────────────────────────────────────────────────────────
+  // ── Roaming methods ─────────────────────────────────────────────────────────
+
+  get allFilteredRoaming(): OffreRoaming[] {
+    const q = this.roamingSearch.toLowerCase();
+    // Dédupliquer par (operator normalisé + pays + zone) pour éviter les doublons de scraping
+    const seen = new Set<string>();
+    return this.allRoamingOffres.filter(o => {
+      // N'afficher que les offres avec au moins un tarif rempli
+      const hasData = o.tarif_appel !== null || o.tarif_sms !== null || o.tarif_data !== null;
+      if (!hasData) return false;
+
+      // Dédupliquer
+      const key = `${o.operator.toLowerCase().trim()}|${o.pays_destination.toLowerCase().trim()}|${(o.zone_operateur ?? '').toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+
+      if (!q) return true;
+      return o.operator.toLowerCase().includes(q) ||
+        o.pays_destination.toLowerCase().includes(q) ||
+        (o.zone_operateur ?? '').toLowerCase().includes(q);
+    });
+  }
+
+  get roamingGroupedByOperator(): { operator: string; offres: OffreRoaming[] }[] {
+    const map = new Map<string, OffreRoaming[]>();
+    for (const o of this.allFilteredRoaming) {
+      // Normaliser le nom de l'opérateur (même casse → regrouper moov-africa et Moov-Africa)
+      const opKey = o.operator.toLowerCase().trim();
+      const opDisplay = o.operator; // garder l'affichage du premier trouvé
+      if (!map.has(opKey)) map.set(opKey, []);
+      map.get(opKey)!.push(o);
+    }
+    return Array.from(map.entries())
+      .map(([, offres]) => ({ operator: offres[0].operator, offres }))
+      .sort((a, b) => a.operator.localeCompare(b.operator));
+  }
+
+  get filteredRoamingOffres(): OffreRoaming[] { return this.allFilteredRoaming; }
+  get roamingOperators(): string[] { return [...new Set(this.allFilteredRoaming.map(o => o.operator))].sort(); }
+  get roamingTotalOffres(): number { return this.allFilteredRoaming.length; }
+  get roamingTotalPays(): number   { return [...new Set(this.allFilteredRoaming.map(o => o.pays_destination))].length; }
+  get roamingTotalOperateurs(): number { return this.roamingOperators.length; }
+  get roamingPaysForType(): string[] { return [...new Set(this.allRoamingOffres.map(o => o.pays_destination))].sort(); }
+  get filteredRoamingPays(): string[] { return this.roamingPaysForType; }
+  get roamingCountByType(): Record<string, number> { return {}; }
+
+  onRoamingTypeChange(_type: 'international' | 'free_roaming' | 'internet'): void {}
+
+  compareRoaming(pays: string): void {
+    this.roamingSelectedPays = pays;
+    this.roamingCompareLoading = true;
+    this.roamingCompareError = null;
+    this.roamingCompareResult = [];
+
+    this.roamingSvc.compareByPays(pays).subscribe({
+      next: (data) => {
+        this.roamingCompareResult = data;
+        this.roamingCompareLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err: Error) => {
+        this.roamingCompareError = err.message;
+        this.roamingCompareLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  clearRoamingCompare(): void {
+    this.roamingSelectedPays = '';
+    this.roamingCompareResult = [];
+    this.roamingCompareError = null;
+  }
+
+  getRoamingByOperator(operator: string): OffreRoaming[] {
+    return this.allFilteredRoaming.filter(o => o.operator === operator);
+  }
+
+  roamingAdvantageClass(avantage: string | null): string {
+    if (!avantage) return '';
+    if (avantage.includes('APPEL')) return 'badge--success';
+    if (avantage.includes('DATA'))  return 'badge--info';
+    if (avantage.includes('SMS'))   return 'badge--warn';
+    return 'badge--info';
+  }
+
+  formatTarif(v: number | null): string {
+    if (v === null || v === undefined) return '—';
+    return `${v.toLocaleString('fr-FR')} FCFA`;
   }
 }

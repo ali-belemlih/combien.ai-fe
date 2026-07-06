@@ -4,14 +4,26 @@
 export interface Pays {
   id: number;
   label: string;
+  code_iso2?: string | null;
+  indicatif?: string | null;
+  drapeau?: string | null;
+  region?: string | null;
 }
 
 export interface PaysCreate {
   label: string;
+  code_iso2?: string;
+  indicatif?: string;
+  drapeau?: string;
+  region?: string;
 }
 
 export interface PaysUpdate {
   label?: string;
+  code_iso2?: string;
+  indicatif?: string;
+  drapeau?: string;
+  region?: string;
 }
 
 // ─── Currency ─────────────────────────────────────────────────────────────────

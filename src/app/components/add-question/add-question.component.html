@@ -1,0 +1,183 @@
+<div class="aq-page">
+
+  <!-- ── En-tête ───────────────────────────────────────────────────────────── -->
+  <div class="aq-header">
+    <button class="aq-back" (click)="cancel()">
+      <i class="pi pi-arrow-left"></i> Retour
+    </button>
+    <div class="aq-header__title-group">
+      <h1 class="aq-header__title">🧠 Nouvelle question</h1>
+      <p class="aq-header__subtitle">Ajoutez une question au questionnaire adaptatif</p>
+    </div>
+  </div>
+
+  <!-- ── Messages ──────────────────────────────────────────────────────────── -->
+  @if (error) {
+    <div class="aq-alert aq-alert--error">
+      <i class="pi pi-exclamation-triangle"></i> {{ error }}
+    </div>
+  }
+  @if (success) {
+    <div class="aq-alert aq-alert--success">
+      <i class="pi pi-check-circle"></i> {{ success }}
+    </div>
+  }
+
+  <!-- ── Formulaire ─────────────────────────────────────────────────────────── -->
+  <div class="aq-form">
+
+    <!-- Section 1 : Informations de base -->
+    <div class="aq-section">
+      <h2 class="aq-section__title">
+        <span class="aq-section__num">1</span> Informations de base
+      </h2>
+
+      <div class="aq-row">
+        <!-- Ordre -->
+        <div class="aq-field aq-field--sm">
+          <label class="aq-label">Ordre <span class="aq-required">*</span></label>
+          <input class="aq-input" type="number" min="1" [(ngModel)]="question.order"
+            placeholder="1" />
+          <span class="aq-hint">Position dans le questionnaire</span>
+        </div>
+
+        <!-- Type de saisie -->
+        <div class="aq-field aq-field--sm">
+          <label class="aq-label">Type de réponse <span class="aq-required">*</span></label>
+          <select class="aq-select" [(ngModel)]="question.input_type">
+            <option value="select">select — choix unique</option>
+            <option value="multi_select">multi_select — choix multiple</option>
+            <option value="number">number — valeur numérique</option>
+            <option value="text">text — texte libre</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="aq-row">
+        <!-- Texte de la question -->
+        <div class="aq-field aq-field--wide">
+          <label class="aq-label">Texte de la question <span class="aq-required">*</span></label>
+          <input class="aq-input" type="text"
+            placeholder="ex: Quel est votre besoin principal ?"
+            [(ngModel)]="question.text" />
+          <span class="aq-hint">Phrase affichée à l'utilisateur</span>
+        </div>
+
+        <!-- Clé technique -->
+        <div class="aq-field">
+          <label class="aq-label">Clé technique (field_key) <span class="aq-required">*</span></label>
+          <input class="aq-input" type="text"
+            placeholder="ex: usage, budget, duration…"
+            [(ngModel)]="question.field_key" />
+          <span class="aq-hint">Identifiant interne utilisé par le scoring</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2 : Options de réponse -->
+    <div class="aq-section">
+      <h2 class="aq-section__title">
+        <span class="aq-section__num">2</span> Options de réponse
+      </h2>
+
+      <!-- Options dynamiques -->
+      <div class="aq-row">
+        <div class="aq-field">
+          <label class="aq-label">Source des options</label>
+          <select class="aq-select" [(ngModel)]="question.dynamic_options">
+            <option [value]="null">— Statiques (définies manuellement) —</option>
+            <option value="operators">Dynamiques — Opérateurs</option>
+            <option value="pays">Dynamiques — Pays</option>
+          </select>
+          <span class="aq-hint">Si dynamiques, les options sont chargées automatiquement depuis la base</span>
+        </div>
+      </div>
+
+      <!-- Options statiques -->
+      @if (!question.dynamic_options) {
+        <div class="aq-options">
+          <div class="aq-options__add">
+            <input class="aq-input" type="text" placeholder="Label affiché (ex: Internet)"
+              [(ngModel)]="newOptionLabel" (keyup.enter)="addOption()" />
+            <input class="aq-input" type="text" placeholder="Valeur technique (ex: internet)"
+              [(ngModel)]="newOptionValue" (keyup.enter)="addOption()" />
+            <button class="aq-btn aq-btn--secondary" type="button" (click)="addOption()"
+              [disabled]="!newOptionLabel.trim() || !newOptionValue.trim()">
+              <i class="pi pi-plus"></i> Ajouter
+            </button>
+          </div>
+
+          @if (question.options.length === 0) {
+            <p class="aq-empty">Aucune option ajoutée. Appuyez sur Entrée ou cliquez "Ajouter".</p>
+          } @else {
+            <div class="aq-options__list">
+              @for (opt of question.options; track opt.value; let i = $index) {
+                <div class="aq-option-chip">
+                  <span class="aq-option-chip__label">{{ opt.label }}</span>
+                  <i class="pi pi-arrow-right aq-option-chip__arrow"></i>
+                  <code class="aq-option-chip__value">{{ opt.value }}</code>
+                  <button class="aq-option-chip__remove" type="button" (click)="removeOption(i)"
+                    title="Supprimer">
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="aq-dynamic-hint">
+          <i class="pi pi-database"></i>
+          Les options seront chargées dynamiquement depuis <strong>{{ question.dynamic_options }}</strong>.
+        </div>
+      }
+    </div>
+
+    <!-- Section 3 : Condition (optionnel) -->
+    <div class="aq-section">
+      <h2 class="aq-section__title">
+        <span class="aq-section__num">3</span> Condition d'affichage
+        <span class="aq-section__optional">optionnel</span>
+      </h2>
+
+      <label class="aq-checkbox">
+        <input type="checkbox" [(ngModel)]="hasCondition" />
+        <span>Afficher cette question seulement si une réponse précédente correspond</span>
+      </label>
+
+      @if (hasCondition) {
+        <div class="aq-row aq-row--mt">
+          <div class="aq-field">
+            <label class="aq-label">Dépend de la clé</label>
+            <input class="aq-input" type="text" placeholder="ex: usage"
+              [(ngModel)]="conditionKey" />
+            <span class="aq-hint">field_key de la question parente</span>
+          </div>
+          <div class="aq-field">
+            <label class="aq-label">Afficher quand la valeur est</label>
+            <input class="aq-input" type="text" placeholder="ex: internet, voix"
+              [(ngModel)]="conditionValues" />
+            <span class="aq-hint">Valeurs séparées par virgule</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Actions -->
+    <div class="aq-actions">
+      <button class="aq-btn aq-btn--ghost" type="button" (click)="cancel()">
+        Annuler
+      </button>
+      <button class="aq-btn aq-btn--primary" type="button"
+        [disabled]="!canSubmit"
+        (click)="submit()">
+        @if (saving) {
+          <span class="aq-spinner"></span> Création…
+        } @else {
+          <i class="pi pi-check"></i> Créer la question
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

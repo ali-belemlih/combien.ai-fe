@@ -18,6 +18,14 @@
       </a>
       <a
         pButton
+        class="p-button-text header__nav-btn"
+        routerLink="/recommandation"
+        routerLinkActive="header__nav-btn--active"
+      >
+        <i class="pi pi-star"></i> Recommandation
+      </a>
+      <a
+        pButton
         class="p-button-rounded header__nav-btn header__nav-btn--cta"
         routerLink="/questionnaire"
         routerLinkActive="header__nav-btn--active"
@@ -41,10 +49,13 @@
       @if (auth.isAuthenticated()) {
         <div class="header__user">
           <div class="header__user-info">
-            <span class="header__user-avatar">
-              {{ auth.user()?.username?.charAt(0)?.toUpperCase() ?? '?' }}
-            </span>
-            <span class="header__user-name">{{ auth.user()?.username }}</span>
+            <span class="header__user-avatar">{{ auth.avatarInitial() }}</span>
+            <div class="header__user-details">
+              <span class="header__user-name">{{ auth.displayName() }}</span>
+              @if (auth.userProfile()?.email) {
+                <span class="header__user-email">{{ auth.userProfile()?.email }}</span>
+              }
+            </div>
             @if (auth.isAdmin()) {
               <span class="header__user-badge">Admin</span>
             }

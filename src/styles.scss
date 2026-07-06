@@ -12,3 +12,20 @@ body {
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── PrimeNG Rating — étoiles dorées ─────────────────────────────────────── */
+.result-card__score-wrap {
+  /* CSS variables PrimeNG 17+ */
+  --p-rating-icon-color: #d1d5db;
+  --p-rating-icon-active-color: #f59e0b;
+  --p-rating-icon-size: 1rem;
+}
+
+/* Fallback direct sur les SVG générés par PrimeNG */
+.result-card__score-wrap p-rating .p-rating-item .p-icon {
+  color: #d1d5db !important;
+}
+
+.result-card__score-wrap p-rating .p-rating-item.p-rating-item-active .p-icon {
+  color: #f59e0b !important;
+}
