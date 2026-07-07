@@ -944,14 +944,14 @@
                 @if (filteredUsers.length === 0) {
                   <tr><td colspan="6" class="admin__empty-row">Aucun utilisateur trouvé.</td></tr>
                 }
-                @for (u of filteredUsers; track u.keycloak_id) {
-                  <tr [class.admin__row--inactive]="!u.is_active">
+                @for (u of filteredUsers; track u.id) {
+                  <tr [class.admin__row--inactive]="u.enabled === false">
                     <td>
                       <div class="admin__user-cell">
                         <span class="admin__user-avatar">{{ u.username?.charAt(0)?.toUpperCase() ?? '?' }}</span>
                         <div>
                           <div class="admin__user-name">{{ u.username ?? '—' }}</div>
-                          <div class="admin__user-id">{{ u.keycloak_id.slice(0, 8) }}…</div>
+                          <div class="admin__user-id">{{ u.id.slice(0, 8) }}…</div>
                         </div>
                       </div>
                     </td>
@@ -967,15 +967,15 @@
                       </div>
                     </td>
                     <td>
-                      <span [class]="u.is_active ? 'badge badge--success' : 'badge badge--pending'">
-                        {{ u.is_active ? '✅ Actif' : '⏸ Inactif' }}
+                      <span [class]="u.enabled !== false ? 'badge badge--success' : 'badge badge--pending'">
+                        {{ u.enabled !== false ? '✅ Actif' : '⏸ Inactif' }}
                       </span>
                     </td>
                     <td class="admin__date">{{ formatDate(u.last_seen_at) }}</td>
                     <td>
-                      <button class="btn btn--sm" [class.btn--ghost]="u.is_active" [class.btn--primary]="!u.is_active"
-                        (click)="toggleUserActive(u)" [title]="u.is_active ? 'Désactiver' : 'Activer'">
-                        {{ u.is_active ? '⏸ Désactiver' : '▶️ Activer' }}
+                      <button class="btn btn--sm" [class.btn--ghost]="u.enabled !== false" [class.btn--primary]="u.enabled === false"
+                        (click)="toggleUserActive(u)" [title]="u.enabled !== false ? 'Désactiver' : 'Activer'">
+                        {{ u.enabled !== false ? '⏸ Désactiver' : '▶️ Activer' }}
                       </button>
                     </td>
                   </tr>

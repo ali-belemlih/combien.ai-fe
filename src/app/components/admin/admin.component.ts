@@ -273,7 +273,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   get activeUsersCount(): number {
-    return this.users.filter(u => u.is_active).length;
+    return this.users.filter(u => u.enabled !== false).length;
   }
 
   get adminUsersCount(): number {
@@ -290,11 +290,11 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   toggleUserActive(u: UserProfile): void {
-    const action$ = u.is_active
-      ? this.compareSvc.deactivateUser(u.keycloak_id)
-      : this.compareSvc.activateUser(u.keycloak_id);
+    const action$ = u.enabled !== false
+      ? this.compareSvc.deactivateUser(u.id)
+      : this.compareSvc.activateUser(u.id);
     action$.subscribe({
-      next: (updated) => { this.users = this.users.map(x => x.keycloak_id === updated.keycloak_id ? updated : x); },
+      next: (updated) => { this.users = this.users.map(x => x.id === updated.id ? updated : x); },
       error: (e: Error) => { this.usersError = e.message; },
     });
   }

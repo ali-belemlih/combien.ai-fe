@@ -14,7 +14,7 @@ export const authGuard: CanActivateFn = (route) => {
 
   // Vérifie que le compte n'est pas désactivé côté backend
   const profile = auth.userProfile();
-  if (profile !== null && !profile.is_active) {
+  if (profile !== null && profile.enabled === false) {
     auth.logout();
     return false;
   }
@@ -33,7 +33,7 @@ export const adminGuard: CanActivateFn = () => {
 
   // Vérifie que le compte n'est pas désactivé côté backend
   const profile = auth.userProfile();
-  if (profile !== null && !profile.is_active) {
+  if (profile !== null && profile.enabled === false) {
     auth.logout();
     return false;
   }

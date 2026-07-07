@@ -260,7 +260,7 @@ export class AuthService {
     // Si le backend est indisponible, l'utilisateur peut quand même se connecter
     this._fetchAndSyncBackendProfile().then(profile => {
       console.log('[AuthService] Background profile sync result:', profile);
-      if (profile && !profile.is_active) {
+      if (profile && profile.enabled === false) {
         // Compte désactivé détecté après coup — déconnecter
         console.warn('[AuthService] Account disabled, logging out');
         this._clearStoredTokens();
