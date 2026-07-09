@@ -10,6 +10,7 @@ import {
   Pays, PaysCreate, PaysUpdate,
   Currency, CurrencyCreate, CurrencyUpdate,
   Operateur, OperateurCreate, OperateurUpdate,
+  FetchWebsiteRequest, FetchWebsiteResponse,
 } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -37,6 +38,16 @@ export class AdminService {
 
   autoFillPays(): Observable<Website[]> {
     return this.http.put<Website[]>(`${this.base}/websites/auto-pays`, {}).pipe(catchError(this._handleError));
+  }
+
+  /**
+   * Fetche le HTML brut d'une URL via le backend (httpx ou Playwright).
+   * Utile pour inspecter la structure d'un site avant de créer une règle d'extraction.
+   */
+  fetchWebsite(data: FetchWebsiteRequest): Observable<FetchWebsiteResponse> {
+    return this.http
+      .post<FetchWebsiteResponse>(`${this.base}/websites/fetch`, data)
+      .pipe(catchError(this._handleError));
   }
 
   // ── Jobs ──────────────────────────────────────────────────────────────────────

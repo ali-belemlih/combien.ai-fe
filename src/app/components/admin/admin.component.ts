@@ -6,11 +6,13 @@ import { AdminService } from '../../services/admin.service';
 import { RoamingService } from '../../services/roaming.service';
 import { CompareService } from '../../services/compare.service';
 import { RecommendService } from '../../services/recommend.service';
+import { AuthService } from '../../services/auth.service';
 import {
   Website, WebsiteCreate, Job, OffreInternet,
   Pays, PaysCreate, PaysUpdate,
   Currency, CurrencyCreate, CurrencyUpdate,
   Operateur, OperateurCreate, OperateurUpdate,
+  FetchWebsiteRequest, FetchWebsiteResponse,
 } from '../../models/admin.model';
 import { OffreRoaming, RoamingJobCreate } from '../../models/roaming.model';
 import { OffreVoix } from '../../models/voix.model';
@@ -35,6 +37,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   private readonly recommendSvc = inject(RecommendService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  readonly auth = inject(AuthService);
 
   activeTab: AdminTab = 'websites';
 
@@ -99,6 +102,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   autoFillingPays = false;
   editingPaysId: string | null = null;
   editingPaysValue = '';
+
+  // ── Fetch Website ────────────────────────────────────────────────────────
+  showFetchForm = false;
+  fetchRequest: FetchWebsiteRequest = { url: '', js_enabled: false, max_length: 50000 };
+  fetchResult: FetchWebsiteResponse | null = null;
+  fetchLoading = false;
+  fetchError: string | null = null;
+  fetchShowFullHtml = false;
 
   readonly PAYS_LISTE = [
     'Bénin', 'Burkina Faso', 'Cameroun', 'Côte d\'Ivoire', 'Gabon',
@@ -372,6 +383,14 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (tab) this.setTab(tab);
   }
 
+  get sessionExpired(): boolean {
+    return !this.auth.isAuthenticated();
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/login'], { queryParams: { returnUrl: '/admin' } });
+  }
+
   ngOnDestroy(): void {
     this._stopPolling();
   }
@@ -400,6 +419,43 @@ export class AdminComponent implements OnInit, OnDestroy {
       next: (data) => { this.websites = data; this.websitesLoading = false; },
       error: (e: Error) => { this.websitesError = e.message; this.websitesLoading = false; },
     });
+  }
+
+  // ── Fetch Website ─────────────────────────────────────────────────────────
+
+  openFetchForm(url?: string): void {
+    this.fetchRequest = { url: url ?? '', js_enabled: false, max_length: 50000 };
+    this.fetchResult = null;
+    this.fetchError = null;
+    this.fetchShowFullHtml = false;
+    this.showFetchForm = true;
+  }
+
+  closeFetchForm(): void {
+    this.showFetchForm = false;
+    this.fetchResult = null;
+    this.fetchError = null;
+  }
+
+  runFetch(): void {
+    if (!this.fetchRequest.url.trim()) { this.fetchError = 'URL requise.'; return; }
+    this.fetchLoading = true;
+    this.fetchError = null;
+    this.fetchResult = null;
+
+    this.svc.fetchWebsite(this.fetchRequest).subscribe({
+      next: (res) => { this.fetchResult = res; this.fetchLoading = false; },
+      error: (e: Error) => { this.fetchError = e.message; this.fetchLoading = false; },
+    });
+  }
+
+  copyHtml(): void {
+    if (!this.fetchResult) return;
+    navigator.clipboard.writeText(this.fetchResult.html).catch(() => {});
+  }
+
+  prefillFetchFromWebsite(site: Website): void {
+    this.openFetchForm(site.url);
   }
 
   addWebsite(): void {

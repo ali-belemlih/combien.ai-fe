@@ -122,3 +122,26 @@ export interface OffreInternet {
   created_at: string;
   updated_at: string;
 }
+
+// ─── Fetch Website ────────────────────────────────────────────────────────────
+
+export interface FetchWebsiteRequest {
+  url: string;
+  /** Si true, utilise Playwright (JS rendu). Défaut : false. */
+  js_enabled?: boolean;
+  /** Taille max du HTML retourné en caractères. 0 = illimité. Défaut : 50000. */
+  max_length?: number;
+}
+
+export interface FetchWebsiteResponse {
+  url: string;
+  status_code: number | null;
+  content_type: string | null;
+  html: string;
+  html_length: number;
+  truncated: boolean;
+  title: string | null;
+  links_count: number;
+  tables_count: number;
+  js_enabled: boolean;
+}

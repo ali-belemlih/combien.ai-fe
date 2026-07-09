@@ -928,3 +928,119 @@ $sidebar-w: 260px;
   .admin__content { padding: 1rem; }
   .admin__topbar  { padding: 1rem; }
 }
+
+// ─── Fetch Website ────────────────────────────────────────────────────────────
+.admin__form-card--fetch {
+  border-left: 4px solid $info;
+}
+
+.admin__form-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+
+  .admin__form-title { margin: 0; }
+}
+
+.admin__form-close {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: $text-muted;
+  padding: .2rem .4rem;
+  border-radius: 4px;
+  line-height: 1;
+  &:hover { background: $surface2; color: $text; }
+}
+
+.admin__form-hint {
+  font-size: .82rem;
+  color: $text-muted;
+  margin: 0 0 1rem;
+}
+
+.admin__fetch-result {
+  margin-top: 1.25rem;
+  border-top: 1px solid $border;
+  padding-top: 1rem;
+}
+
+.admin__fetch-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem .75rem;
+  margin-bottom: .75rem;
+}
+
+.admin__fetch-title {
+  font-weight: 600;
+  font-size: .88rem;
+  color: $text;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin__fetch-stat {
+  font-size: .82rem;
+  color: $text-muted;
+  background: $surface2;
+  padding: .2rem .55rem;
+  border-radius: 20px;
+}
+
+.admin__fetch-truncated {
+  color: $warning;
+  font-weight: 600;
+  margin-left: .25rem;
+}
+
+.admin__fetch-actions {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+
+.admin__fetch-html {
+  background: #0f1117;
+  color: #e2e8f0;
+  border-radius: $radius;
+  padding: 1rem 1.25rem;
+  font-size: .78rem;
+  line-height: 1.5;
+  max-height: 480px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+// ─── Bandeau session expirée ──────────────────────────────────────────────────
+.admin__session-banner {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem 1.5rem;
+  background: rgba($warning, .12);
+  border-bottom: 2px solid $warning;
+  color: darken($warning, 10%);
+  font-size: .88rem;
+  font-weight: 500;
+
+  .admin__session-banner-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  span:nth-child(2) {
+    flex: 1;
+  }
+
+  .btn {
+    flex-shrink: 0;
+  }
+}

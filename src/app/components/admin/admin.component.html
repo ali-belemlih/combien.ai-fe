@@ -135,6 +135,15 @@
   <!-- ══════════════════════════════════════════════════════════════════════ -->
   <div class="admin__main">
 
+    <!-- Bandeau session expirée -->
+    @if (sessionExpired) {
+      <div class="admin__session-banner">
+        <span class="admin__session-banner-icon">🔒</span>
+        <span>Votre session a expiré. Les actions d'écriture (scraping, ajout…) nécessitent une connexion.</span>
+        <button class="btn btn--primary btn--sm" (click)="goToLogin()">Se reconnecter</button>
+      </div>
+    }
+
     <!-- Topbar contextuelle -->
     <div class="admin__topbar">
       @switch (activeTab) {
@@ -162,6 +171,7 @@
             <button class="btn btn--ghost" [disabled]="autoFillingPays" (click)="autoFillPays()">
               @if (autoFillingPays) { ⏳ } @else { 🌍 } Auto-remplir pays
             </button>
+            <button class="btn btn--ghost" (click)="openFetchForm()">🔍 Fetch website</button>
             <button class="btn btn--primary" (click)="showAddWebsite = !showAddWebsite">+ Ajouter</button>
           }
           @case ('jobs') {
@@ -228,6 +238,85 @@
 
         @if (websitesError) { <div class="admin__error">⚠️ {{ websitesError }}</div> }
 
+        <!-- ── Fetch Website form ──────────────────────────────────────── -->
+        @if (showFetchForm) {
+          <div class="admin__form-card admin__form-card--fetch">
+            <div class="admin__form-card-header">
+              <h3 class="admin__form-title">🔍 Fetch website — aperçu HTML</h3>
+              <button class="admin__form-close" (click)="closeFetchForm()">✕</button>
+            </div>
+            <p class="admin__form-hint">
+              Fetche le HTML brut d'une URL pour inspecter sa structure avant de créer une règle de scraping.
+            </p>
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">URL à fetcher</label>
+                <input class="admin__input" type="url" placeholder="https://…"
+                  [(ngModel)]="fetchRequest.url" (keyup.enter)="runFetch()" />
+              </div>
+              <div class="admin__field">
+                <label class="admin__label">Taille max HTML</label>
+                <select class="admin__select" [(ngModel)]="fetchRequest.max_length">
+                  <option [value]="10000">10 000 chars</option>
+                  <option [value]="25000">25 000 chars</option>
+                  <option [value]="50000">50 000 chars (défaut)</option>
+                  <option [value]="100000">100 000 chars</option>
+                  <option [value]="0">Illimité</option>
+                </select>
+              </div>
+            </div>
+            <div class="admin__form-row">
+              <label class="admin__checkbox-label">
+                <input type="checkbox" [(ngModel)]="fetchRequest.js_enabled" />
+                <span>Activer JavaScript (Playwright) — pour les SPA</span>
+              </label>
+            </div>
+            @if (fetchError) { <div class="admin__error">⚠️ {{ fetchError }}</div> }
+            <div class="admin__form-actions">
+              <button class="btn btn--ghost" (click)="closeFetchForm()">Fermer</button>
+              <button class="btn btn--primary btn--launch"
+                [disabled]="fetchLoading || !fetchRequest.url"
+                (click)="runFetch()">
+                @if (fetchLoading) { <span class="admin__spinner"></span> Fetch en cours… }
+                @else { 🔍 Fetcher }
+              </button>
+            </div>
+
+            <!-- Résultat -->
+            @if (fetchResult) {
+              <div class="admin__fetch-result">
+                <div class="admin__fetch-meta">
+                  <span class="badge" [class.badge--success]="fetchResult.status_code === 200"
+                    [class.badge--failed]="fetchResult.status_code !== 200 && fetchResult.status_code !== null">
+                    HTTP {{ fetchResult.status_code ?? '—' }}
+                  </span>
+                  @if (fetchResult.title) {
+                    <span class="admin__fetch-title">📄 {{ fetchResult.title }}</span>
+                  }
+                  <span class="admin__fetch-stat">🔗 {{ fetchResult.links_count }} liens</span>
+                  <span class="admin__fetch-stat">📊 {{ fetchResult.tables_count }} tableaux</span>
+                  <span class="admin__fetch-stat">
+                    📦 {{ fetchResult.html_length | number }} chars
+                    @if (fetchResult.truncated) { <span class="admin__fetch-truncated">(tronqué)</span> }
+                  </span>
+                  @if (fetchResult.js_enabled) { <span class="badge badge--info">JS ✓</span> }
+                </div>
+
+                <div class="admin__fetch-actions">
+                  <button class="btn btn--sm btn--ghost" (click)="copyHtml()">📋 Copier HTML</button>
+                  <button class="btn btn--sm btn--ghost" (click)="fetchShowFullHtml = !fetchShowFullHtml">
+                    {{ fetchShowFullHtml ? '🙈 Masquer' : '👁 Voir HTML' }}
+                  </button>
+                </div>
+
+                @if (fetchShowFullHtml) {
+                  <pre class="admin__fetch-html">{{ fetchResult.html }}</pre>
+                }
+              </div>
+            }
+          </div>
+        }
+
         @if (showAddWebsite) {
           <div class="admin__form-card">
             <h3 class="admin__form-title">Nouveau site</h3>
@@ -291,6 +380,8 @@
               <td class="admin__date">{{ formatDate(site.created_at) }}</td>
               <td>
                 <div class="admin__actions">
+                  <button class="btn btn--sm btn--ghost" (click)="prefillFetchFromWebsite(site)"
+                    title="Fetcher ce site">🔍</button>
                   <button class="btn btn--sm btn--ghost" (click)="toggleWebsiteActive(site)"
                     [title]="site.is_active ? 'Désactiver' : 'Activer'">
                     {{ site.is_active ? '⏸' : '▶️' }}
