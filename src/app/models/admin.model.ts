@@ -62,7 +62,9 @@ export interface OperateurUpdate {
 
 export interface Website {
   id: string;
-  operator: string;
+  operator_id: number | null;
+  operator: string | null;
+  pays_id: number | null;
   pays: string | null;
   url: string;
   is_active: boolean;
@@ -70,14 +72,14 @@ export interface Website {
 }
 
 export interface WebsiteCreate {
-  operator: string;
-  pays?: string;
+  operator_id: number;
+  pays_id: number;
   url: string;
 }
 
 export interface WebsiteUpdate {
-  operator?: string;
-  pays?: string;
+  operator_id?: number;
+  pays_id?: number;
   url?: string;
   is_active?: boolean;
 }
@@ -113,7 +115,7 @@ export interface OffreInternet {
   operator: string;
   categorie: string;
   plan_name: string | null;
-  tarif_fcfa: number | null;
+  tarif: number | null;
   volume: string | null;
   bonus: string | null;
   validite: string | null;

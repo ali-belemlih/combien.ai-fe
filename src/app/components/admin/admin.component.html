@@ -323,13 +323,16 @@
             <div class="admin__form-row">
               <div class="admin__field">
                 <label class="admin__label">Opérateur</label>
-                <input class="admin__input" type="text" placeholder="ex: Moov Africa" [(ngModel)]="newWebsite.operator" />
+                <select class="admin__select" [(ngModel)]="newWebsite.operator_id">
+                  <option [ngValue]="0">— Sélectionner un opérateur —</option>
+                  @for (op of operateurs; track op.id) { <option [ngValue]="op.id">{{ op.label }}</option> }
+                </select>
               </div>
               <div class="admin__field">
                 <label class="admin__label">Pays</label>
-                <select class="admin__select" [(ngModel)]="newWebsite.pays">
-                  <option value="">— Sélectionner un pays —</option>
-                  @for (p of allPaysList; track p) { <option [value]="p">📍 {{ p }}</option> }
+                <select class="admin__select" [(ngModel)]="newWebsite.pays_id">
+                  <option [ngValue]="0">— Sélectionner un pays —</option>
+                  @for (p of paysList2; track p.id) { <option [ngValue]="p.id">📍 {{ p.label }}</option> }
                 </select>
               </div>
               <div class="admin__field admin__field--wide">
@@ -340,7 +343,7 @@
             <div class="admin__form-actions">
               <button class="btn btn--ghost" (click)="showAddWebsite = false">Annuler</button>
               <button class="btn btn--primary"
-                [disabled]="addingWebsite || !newWebsite.operator || !newWebsite.pays || !newWebsite.url"
+                [disabled]="addingWebsite || !newWebsite.operator_id || !newWebsite.pays_id || !newWebsite.url"
                 (click)="addWebsite()">
                 @if (addingWebsite) { ⏳ Ajout… } @else { ✅ Ajouter }
               </button>
@@ -420,7 +423,7 @@
             </div>
             <div class="admin__form-row">
               <div class="admin__field admin__field--wide">
-                <label class="admin__label">URL cible</label>
+                <label class="admin__label">URL cible (target_url)</label>
                 <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="scrapeUrl" />
                 @if (scrapeUrl && (scrapeUrl.includes('roaming') || scrapeUrl.includes('itinerance'))) {
                   <div class="admin__warning">⚠️ URL roaming détectée — utilisez l'onglet ✈️ Roaming.</div>
@@ -430,12 +433,57 @@
             <div class="admin__form-row">
               <label class="admin__checkbox-label">
                 <input type="checkbox" [(ngModel)]="scrapeJsEnabled" />
-                <span>Activer JavaScript (Playwright)</span>
+                <span>Activer JavaScript (js_enabled — Playwright)</span>
               </label>
+              <button class="btn btn--ghost btn--sm" (click)="scrapeShowAdvanced = !scrapeShowAdvanced">
+                {{ scrapeShowAdvanced ? '▲ Masquer options' : '▼ Options avancées' }}
+              </button>
             </div>
+
+            <!-- Analyze result -->
+            @if (scrapeAnalyzeResult) {
+              <div class="admin__form-card admin__form-card--analyze-result">
+                <h4 class="admin__form-subtitle">📊 Résultat de l'analyse</h4>
+                <div class="admin__analyze-meta">
+                  <span class="badge badge--info">Type : {{ scrapeAnalyzeResult['detected_type'] ?? 'inconnu' }}</span>
+                  <span class="badge badge--info">Tables : {{ scrapeAnalyzeResult['tables_detected'] ?? 0 }}</span>
+                  @if (scrapeAnalyzeResult['has_ussd']) { <span class="badge badge--info">USSD ✓</span> }
+                  @if (scrapeAnalyzeResult['has_volume_data']) { <span class="badge badge--info">Volume ✓</span> }
+                  @if (scrapeAnalyzeResult['note']) { <span class="badge badge--running">{{ scrapeAnalyzeResult['note'] }}</span> }
+                </div>
+                @if (scrapeAnalyzeResult['endpoint']) {
+                  <p class="admin__form-hint">Endpoint suggéré : <code>{{ scrapeAnalyzeResult['endpoint'] }}</code></p>
+                }
+              </div>
+            }
+
+            <!-- Advanced options -->
+            @if (scrapeShowAdvanced) {
+              <div class="admin__form-row">
+                <div class="admin__field admin__field--wide">
+                  <label class="admin__label">extraction_rules (JSON)</label>
+                  <textarea class="admin__textarea" rows="5" placeholder='{"strategy": "auto"}'
+                    [(ngModel)]="scrapeExtractionRules"></textarea>
+                  <p class="admin__form-hint">Règles d'extraction. Utilisez « Analyser » pour auto-remplir ou laissez vide pour le mode auto.</p>
+                </div>
+              </div>
+              <div class="admin__form-row">
+                <div class="admin__field admin__field--wide">
+                  <label class="admin__label">schema_definition (JSON)</label>
+                  <textarea class="admin__textarea" rows="3" placeholder='{}'
+                    [(ngModel)]="scrapeSchemaDefinition"></textarea>
+                  <p class="admin__form-hint">Définition du schéma de sortie. Optionnel — laissez vide pour le schéma par défaut.</p>
+                </div>
+              </div>
+            }
+
             @if (scrapeError) { <div class="admin__error">⚠️ {{ scrapeError }}</div> }
             <div class="admin__form-actions">
               <button class="btn btn--ghost" (click)="showScrapeForm = false">Annuler</button>
+              <button class="btn btn--ghost btn--analyze" [disabled]="scrapeAnalyzing || !scrapeUrl" (click)="analyzeScrapeUrl()">
+                @if (scrapeAnalyzing) { <span class="admin__spinner"></span> Analyse… }
+                @else { 🔍 Analyser d'abord }
+              </button>
               <button class="btn btn--primary btn--launch" [disabled]="scraping || !scrapeUrl" (click)="launchScrape()">
                 @if (scraping) { <span class="admin__spinner"></span> En cours… }
                 @else { 🚀 Lancer }
@@ -510,19 +558,55 @@
             </div>
             <div class="admin__form-row">
               <div class="admin__field admin__field--wide">
-                <label class="admin__label">URL cible</label>
+                <label class="admin__label">URL cible (target_url)</label>
                 <input class="admin__input" type="url" placeholder="https://…" [(ngModel)]="scrapeUrl" />
               </div>
             </div>
             <div class="admin__form-row">
               <label class="admin__checkbox-label">
                 <input type="checkbox" [(ngModel)]="scrapeJsEnabled" />
-                <span>Activer JavaScript (Playwright)</span>
+                <span>Activer JavaScript (js_enabled)</span>
               </label>
+              <button class="btn btn--ghost btn--sm" (click)="scrapeShowAdvanced = !scrapeShowAdvanced">
+                {{ scrapeShowAdvanced ? '▲ Masquer options' : '▼ Options avancées' }}
+              </button>
             </div>
+
+            @if (scrapeAnalyzeResult) {
+              <div class="admin__form-card admin__form-card--analyze-result">
+                <h4 class="admin__form-subtitle">📊 Résultat de l'analyse</h4>
+                <div class="admin__analyze-meta">
+                  <span class="badge badge--info">Type : {{ scrapeAnalyzeResult['detected_type'] ?? 'inconnu' }}</span>
+                  <span class="badge badge--info">Tables : {{ scrapeAnalyzeResult['tables_detected'] ?? 0 }}</span>
+                  @if (scrapeAnalyzeResult['has_volume_data']) { <span class="badge badge--info">Volume ✓</span> }
+                </div>
+              </div>
+            }
+
+            @if (scrapeShowAdvanced) {
+              <div class="admin__form-row">
+                <div class="admin__field admin__field--wide">
+                  <label class="admin__label">extraction_rules (JSON)</label>
+                  <textarea class="admin__textarea" rows="5" placeholder='{"strategy": "auto"}'
+                    [(ngModel)]="scrapeExtractionRules"></textarea>
+                </div>
+              </div>
+              <div class="admin__form-row">
+                <div class="admin__field admin__field--wide">
+                  <label class="admin__label">schema_definition (JSON)</label>
+                  <textarea class="admin__textarea" rows="3" placeholder='{}'
+                    [(ngModel)]="scrapeSchemaDefinition"></textarea>
+                </div>
+              </div>
+            }
+
             @if (scrapeError) { <div class="admin__error">⚠️ {{ scrapeError }}</div> }
             <div class="admin__form-actions">
               <button class="btn btn--ghost" (click)="showScrapeForm = false">Annuler</button>
+              <button class="btn btn--ghost btn--analyze" [disabled]="scrapeAnalyzing || !scrapeUrl" (click)="analyzeScrapeUrl()">
+                @if (scrapeAnalyzing) { <span class="admin__spinner"></span> Analyse… }
+                @else { 🔍 Analyser }
+              </button>
               <button class="btn btn--primary btn--launch" [disabled]="scraping || !scrapeUrl" (click)="launchScrape()">
                 @if (scraping) { <span class="admin__spinner"></span> En cours… }
                 @else { 🚀 Lancer }
@@ -553,7 +637,7 @@
               <td>{{ offre.volume ?? '—' }}</td>
               <td>{{ offre.bonus ?? '—' }}</td>
               <td>
-                @if (offre.tarif_fcfa) { <strong>{{ offre.tarif_fcfa | number:'1.0-0' }} F</strong> }
+                @if (offre.tarif) { <strong>{{ offre.tarif | number:'1.0-0' }} F</strong> }
                 @else { — }
               </td>
               <td>{{ offre.validite ?? '—' }}</td>

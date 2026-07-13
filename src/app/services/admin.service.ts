@@ -41,12 +41,12 @@ export class AdminService {
   }
 
   /**
-   * Fetche le HTML brut d'une URL via le backend (httpx ou Playwright).
-   * Utile pour inspecter la structure d'un site avant de créer une règle d'extraction.
+   * Analyse une URL via le backend — détecte structure et suggère extraction_rules.
+   * Utilise POST /jobs/analyze au lieu de /websites/fetch.
    */
   fetchWebsite(data: FetchWebsiteRequest): Observable<FetchWebsiteResponse> {
     return this.http
-      .post<FetchWebsiteResponse>(`${this.base}/websites/fetch`, data)
+      .post<FetchWebsiteResponse>(`${this.base}/jobs/analyze`, { url: data.url, js_enabled: data.js_enabled ?? false })
       .pipe(catchError(this._handleError));
   }
 
@@ -66,6 +66,18 @@ export class AdminService {
 
   rerunJob(id: string): Observable<Job> {
     return this.http.post<Job>(`${this.base}/jobs/${id}/run`, {}).pipe(catchError(this._handleError));
+  }
+
+  analyzeUrl(url: string, jsEnabled = false): Observable<Record<string, unknown>> {
+    return this.http.post<Record<string, unknown>>(`${this.base}/jobs/analyze`, { url, js_enabled: jsEnabled }).pipe(catchError(this._handleError));
+  }
+
+  debugHtml(url: string, jsEnabled = true, chars = 8000): Observable<Record<string, unknown>> {
+    return this.http.post<Record<string, unknown>>(`${this.base}/jobs/debug/html`, { url, js_enabled: jsEnabled, chars }).pipe(catchError(this._handleError));
+  }
+
+  debugPdf(url: string, pages = 5): Observable<Record<string, unknown>> {
+    return this.http.post<Record<string, unknown>>(`${this.base}/jobs/debug/pdf`, { url, pages }).pipe(catchError(this._handleError));
   }
 
   deleteJob(id: string): Observable<void> {

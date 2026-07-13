@@ -68,7 +68,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     { key: 'plan_name',  label: 'Nom',       filterable: true },
     { key: 'volume',     label: 'Volume',    filterable: true },
     { key: 'bonus',      label: 'Bonus',     filterable: true },
-    { key: 'tarif_fcfa', label: 'Tarif (FCFA)', filterable: true },
+    { key: 'tarif',      label: 'Tarif (FCFA)', filterable: true },
     { key: 'validite',   label: 'Validité',  filterable: true },
     { key: 'actif',      label: 'Actif' },
     { key: 'scraped_at', label: 'Scrapé le' },
@@ -97,7 +97,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   websitesLoading = false;
   websitesError: string | null = null;
   showAddWebsite = false;
-  newWebsite: WebsiteCreate = { operator: '', pays: '', url: '' };
+  newWebsite: WebsiteCreate = { operator_id: 0, pays_id: 0, url: '' };
   addingWebsite = false;
   autoFillingPays = false;
   editingPaysId: string | null = null;
@@ -127,6 +127,13 @@ export class AdminComponent implements OnInit, OnDestroy {
   scraping = false;
   scrapeSuccess: string | null = null;
   scrapeError: string | null = null;
+
+  // ── Job form — extraction rules & analyze ────────────────────────────────
+  scrapeExtractionRules = '{}';
+  scrapeSchemaDefinition = '{}';
+  scrapeAnalyzeResult: Record<string, unknown> | null = null;
+  scrapeAnalyzing = false;
+  scrapeShowAdvanced = false;
 
   offres: OffreInternet[] = [];
   offresLoading = false;
@@ -378,6 +385,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadWebsites();
     this.loadJobs();
+    this.loadOperateurs();
+    this.loadPays();
     // Lire le tab depuis les queryParams (ex: retour depuis add-question)
     const tab = this.route.snapshot.queryParamMap.get('tab') as AdminTab | null;
     if (tab) this.setTab(tab);
@@ -459,12 +468,18 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   addWebsite(): void {
-    if (!this.newWebsite.operator.trim() || !this.newWebsite.url.trim()) return;
+    if (!this.newWebsite.operator_id || !this.newWebsite.pays_id || !this.newWebsite.url.trim()) return;
     this.addingWebsite = true;
-    this.svc.createWebsite(this.newWebsite).subscribe({
+    const payload: WebsiteCreate = {
+      operator_id: Number(this.newWebsite.operator_id),
+      pays_id: Number(this.newWebsite.pays_id),
+      url: this.newWebsite.url.trim(),
+    };
+    console.log('[addWebsite] payload:', JSON.stringify(payload));
+    this.svc.createWebsite(payload).subscribe({
       next: (w) => {
         this.websites = [...this.websites, w];
-        this.newWebsite = { operator: '', pays: '', url: '' };
+        this.newWebsite = { operator_id: 0, pays_id: 0, url: '' };
         this.showAddWebsite = false;
         this.addingWebsite = false;
       },
@@ -494,7 +509,10 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   savePays(site: Website): void {
     if (!this.editingPaysValue.trim()) { this.cancelEditPays(); return; }
-    this.svc.updateWebsite(site.id, { pays: this.editingPaysValue.trim() }).subscribe({
+    // Find the pays_id from the pays list by label
+    const paysMatch = this.paysList2.find(p => p.label.toLowerCase() === this.editingPaysValue.trim().toLowerCase());
+    if (!paysMatch) { this.websitesError = 'Pays non trouvé dans la liste'; return; }
+    this.svc.updateWebsite(site.id, { pays_id: paysMatch.id }).subscribe({
       next: (updated) => {
         this.websites = this.websites.map(x => x.id === updated.id ? updated : x);
         this.editingPaysId = null;
@@ -536,6 +554,16 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     if (!url.trim()) { this.scrapeError = 'URL requise.'; return; }
 
+    // Parse extraction_rules et schema_definition depuis les champs JSON
+    let extractionRules: Record<string, unknown> = {};
+    let schemaDefinition: Record<string, unknown> = {};
+    try {
+      extractionRules = JSON.parse(this.scrapeExtractionRules || '{}');
+    } catch { this.scrapeError = 'extraction_rules : JSON invalide.'; return; }
+    try {
+      schemaDefinition = JSON.parse(this.scrapeSchemaDefinition || '{}');
+    } catch { this.scrapeError = 'schema_definition : JSON invalide.'; return; }
+
     this.scraping = true;
     this.scrapeError = null;
     this.scrapeSuccess = null;
@@ -544,18 +572,54 @@ export class AdminComponent implements OnInit, OnDestroy {
       website_id: this.scrapeWebsiteId || undefined,
       target_url: url,
       js_enabled: this.scrapeJsEnabled,
-      extraction_rules: {},
-      schema_definition: {},
+      extraction_rules: extractionRules,
+      schema_definition: schemaDefinition,
     }).subscribe({
       next: (job) => {
         this.jobs = [job, ...this.jobs];
         this.scraping = false;
         this.scrapeSuccess = `Job lancé (ID: ${job.id.slice(0, 8)}…) — statut : ${job.status}`;
         this.showScrapeForm = false;
+        this._resetScrapeForm();
         this._startPolling(job.id);
       },
       error: (e: Error) => { this.scrapeError = e.message; this.scraping = false; },
     });
+  }
+
+  analyzeScrapeUrl(): void {
+    const url = this.scrapeWebsiteId
+      ? this.websites.find(w => w.id === this.scrapeWebsiteId)?.url ?? this.scrapeUrl
+      : this.scrapeUrl;
+
+    if (!url.trim()) { this.scrapeError = 'URL requise pour analyser.'; return; }
+
+    this.scrapeAnalyzing = true;
+    this.scrapeError = null;
+    this.scrapeAnalyzeResult = null;
+
+    this.svc.analyzeUrl(url, this.scrapeJsEnabled).subscribe({
+      next: (res) => {
+        this.scrapeAnalyzeResult = res;
+        // Auto-remplir extraction_rules depuis la suggestion
+        const suggested = res['suggested_extraction_rules'];
+        if (suggested && Object.keys(suggested).length > 0) {
+          this.scrapeExtractionRules = JSON.stringify(suggested, null, 2);
+        }
+        this.scrapeAnalyzing = false;
+      },
+      error: (e: Error) => { this.scrapeError = e.message; this.scrapeAnalyzing = false; },
+    });
+  }
+
+  private _resetScrapeForm(): void {
+    this.scrapeWebsiteId = '';
+    this.scrapeUrl = '';
+    this.scrapeJsEnabled = false;
+    this.scrapeExtractionRules = '{}';
+    this.scrapeSchemaDefinition = '{}';
+    this.scrapeAnalyzeResult = null;
+    this.scrapeShowAdvanced = false;
   }
 
   rerunJob(id: string): void {
@@ -818,7 +882,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   // ── Roaming methods ──────────────────────────────────────────────────────
 
   get roamingOperators(): string[] {
-    return [...new Set(this.roamingOffres.map(o => o.operator))].sort();
+    return [...new Set(this.roamingOffres.map(o => o.operator).filter(Boolean))].sort() as string[];
   }
 
   get filteredRoamingOffres(): OffreRoaming[] {

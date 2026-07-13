@@ -10,9 +10,9 @@ import { Operator } from '../models/operator.model';
 export interface RoamingCompareItem {
   operator: string;
   zone_operateur: string | null;
-  tarif_appel_fcfa: number | null;
-  tarif_sms_fcfa: number | null;
-  tarif_data_fcfa: number | null;
+  tarif_appel: number | null;
+  tarif_sms: number | null;
+  tarif_data: number | null;
   unite_data: string | null;
   validite: string | null;
   avantage: string | null;

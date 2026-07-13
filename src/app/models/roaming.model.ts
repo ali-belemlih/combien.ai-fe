@@ -11,7 +11,6 @@ export interface OffreRoaming {
   tarif_data: number | null;
   unite_data: string | null;
   validite: string | null;
-  type_roaming: string;  // 'international' | 'free_roaming' | 'internet'
 }
 
 export interface RoamingCompareItem {
@@ -22,7 +21,6 @@ export interface RoamingCompareItem {
   tarif_data: number | null;
   unite_data: string | null;
   validite: string | null;
-  type_roaming: string;
   avantage: string | null;
 }
 
