@@ -21,7 +21,7 @@ import {
 @Component({
   selector: 'app-questionnaire',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TagModule, ProgressBarModule, DividerModule, KnobModule, RatingModule],
+  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TagModule, ProgressBarModule, DividerModule, KnobModule],
   templateUrl: './questionnaire.component.html',
   styleUrl: './questionnaire.component.scss',
 })
@@ -128,6 +128,7 @@ export class QuestionnaireComponent implements OnInit {
           this.recommendations = result.recommendations ?? [];
           this.explanation = result.explanation ?? null;
           this.currentStep = -1; // étape résultats
+          console.log('[Questionnaire] Finished — recommendations:', this.recommendations.length, this.recommendations);
         } else {
           this.currentQuestion = result.next_question;
           this.currentStep = this.answers.length + 1;

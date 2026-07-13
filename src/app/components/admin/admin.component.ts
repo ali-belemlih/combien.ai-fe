@@ -247,6 +247,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   voixJobUrl = '';
   voixJobJsEnabled = false;
   voixJobPays = 'Bénin';
+  voixJobExtractionRules = '{}';
   voixJobLaunching = false;
   voixJobSuccess: string | null = null;
   voixJobError: string | null = null;
@@ -986,6 +987,11 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     if (!url.trim()) { this.voixJobError = 'URL requise.'; return; }
 
+    let extractionRules: Record<string, unknown> = {};
+    try {
+      extractionRules = JSON.parse(this.voixJobExtractionRules || '{}');
+    } catch { this.voixJobError = 'extraction_rules : JSON invalide.'; return; }
+
     this.voixJobLaunching = true;
     this.voixJobError = null;
     this.voixJobSuccess = null;
@@ -995,13 +1001,14 @@ export class AdminComponent implements OnInit, OnDestroy {
       target_url: url,
       js_enabled: this.voixJobJsEnabled,
       pays: this.voixJobPays,
-      extraction_rules: {},
+      extraction_rules: extractionRules,
     }).subscribe({
       next: (job) => {
         this.jobs = [job, ...this.jobs];
         this.voixJobLaunching = false;
         this.voixJobSuccess = `Job voix lancé (ID: ${job.id.slice(0, 8)}…) — statut : ${job.status}`;
         this.showVoixJobForm = false;
+        this.voixJobExtractionRules = '{}';
         this._startPolling(job.id);
       },
       error: (e: Error) => { this.voixJobError = e.message; this.voixJobLaunching = false; },

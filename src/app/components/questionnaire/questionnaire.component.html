@@ -196,7 +196,7 @@
             </div>
 
             <div class="quiz__results-grid">
-              @for (rec of recommendations; track rec.source_id; let i = $index) {
+              @for (rec of recommendations; track rec.rank; let i = $index) {
                 <div class="result-card" [class.result-card--best]="i === 0">
 
                   @if (i === 0) {
@@ -217,12 +217,12 @@
                       }
                     </div>
                     <div class="result-card__score-wrap">
-                      <p-rating
-                        [ngModel]="getStars(rec.score)"
-                        [readonly]="true"
-                        [stars]="5"
-                        styleClass="result-card__rating"
-                      />
+                      <span class="result-card__stars">
+                        @for (s of [1,2,3,4,5]; track s) {
+                          @if (s <= getStars(rec.score)) { <span class="star star--filled">★</span> }
+                          @else { <span class="star star--empty">☆</span> }
+                        }
+                      </span>
                       <span class="result-card__score-num" [class]="'score-' + getScoreSeverity(rec.score)">
                         {{ getScoreLabel(rec.score) }} · {{ rec.score }}%
                       </span>

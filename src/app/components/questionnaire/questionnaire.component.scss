@@ -205,6 +205,8 @@ $danger:     #dc2626;
 
   &--results {
     max-width: 1200px;
+    overflow: visible;
+    overflow-y: auto;
   }
 }
 
@@ -684,37 +686,13 @@ $danger:     #dc2626;
     align-items: flex-end;
     gap: 0.3rem;
     flex-shrink: 0;
-    --p-rating-icon-color: #d1d5db;
-    --p-rating-icon-active-color: #f59e0b;
+  }
 
-    ::ng-deep .result-card__rating {
-      .p-rating-icon {
-        font-size: 1rem !important;
-        color: #d1d5db !important;
-        fill: #d1d5db !important;
-      }
-
-      .p-rating-icon.p-rating-icon-active,
-      .p-icon-field .p-rating-icon-active {
-        color: #f59e0b !important;
-        fill: #f59e0b !important;
-      }
-
-      svg {
-        width: 1rem !important;
-        height: 1rem !important;
-      }
-    }
-
-    /* fallback global pour les étoiles actives dans result-card */
-    ::ng-deep .result-card__rating .p-icon {
-      color: #d1d5db !important;
-    }
-
-    ::ng-deep .result-card__rating [data-p-active="true"] .p-icon,
-    ::ng-deep .result-card__rating .p-rating-item-active .p-icon {
-      color: #f59e0b !important;
-    }
+  &__stars {
+    font-size: 1rem;
+    letter-spacing: 2px;
+    .star--filled { color: #f59e0b; }
+    .star--empty  { color: #d1d5db; }
   }
 
   &__score-num {

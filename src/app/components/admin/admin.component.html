@@ -694,6 +694,14 @@
                 <span>Activer JavaScript</span>
               </label>
             </div>
+            <div class="admin__form-row">
+              <div class="admin__field admin__field--wide">
+                <label class="admin__label">extraction_rules (JSON — optionnel)</label>
+                <textarea class="admin__textarea" rows="5" placeholder='{"strategy": "auto"}'
+                  [(ngModel)]="voixJobExtractionRules"></textarea>
+                <p class="admin__form-hint">Règles d'extraction. Laissez vide pour le mode auto.</p>
+              </div>
+            </div>
             @if (voixJobError) { <div class="admin__error">⚠️ {{ voixJobError }}</div> }
             <div class="admin__form-actions">
               <button class="btn btn--ghost" (click)="showVoixJobForm = false">Annuler</button>
